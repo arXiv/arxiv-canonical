@@ -1,0 +1,17 @@
+{
+  "title": "License",
+  "type": "object",
+  "properties": {
+    "@type": {
+      "type": "string"
+    },
+    "href": {
+      "type": "string",
+      "nullable": true
+    },
+    "label": {
+      "type": "string",
+      "nullable": true
+    }
+  }
+}

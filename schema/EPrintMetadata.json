@@ -1,0 +1,121 @@
+{
+  "EPrintMetadata": {
+    "title": "EPrintMetadata",
+    "description": "Canonical metadata record for an arXiv e-print.",
+    "type": "object",
+    "properties": {
+      "@type": {
+        "type": "string"
+      },
+      "arxiv_id": {
+        "description": "Canonical arXiv e-print identifier",
+        "type": "string"
+      },
+      "version": {
+        "description": "The version number for this e-print.",
+        "minimum": 1,
+        "type": "integer"
+      },
+      "legacy": {
+        "description": "Legacy records were carried forward from arXiv Classic.",
+        "type": "boolean"
+      },
+      "submitter": {
+        "description": "The person who submitted the e-print.",
+        "type": "object",
+        "$ref": "./Person.json"
+      },
+      "submitted_date": {
+        "description": "Date this version of the e-print was submitted.",
+        "type": "string",
+        "format": "date-time"
+      },
+      "announced_date": {
+        "description": "Year and month (``%Y-%m``) this e-print version was announced.",
+        "type": "string"
+      },
+      "license": {
+        "$ref": "./License.json"
+      },
+      "previous_versions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "arxiv_id": {
+              "description": "Canonical arXiv e-print identifier",
+              "type": "string"
+            },
+            "version": {
+              "description": "The version number for this e-print.",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "submitted_date": {
+              "description": "Date this version of the e-print was submitted.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "announced_date": {
+              "description": "Year and month (``%Y-%m``) this e-print version was announced.",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "history": {
+        "type": "array",
+        "description": "Log of all transformative events for this e-print, up to and including this version.",
+        "items": {
+          "$ref": "./Event.json"
+        }
+      },
+      "primary_classification": {
+        "$ref": "./Classification.json"
+      },
+      "secondary_classification": {
+        "type": "array",
+        "items": {"$ref": "./Classification.json"}
+      },
+
+      "title": {
+        "type": "string"
+      },
+      "abstract": {
+        "type": "string"
+      },
+      "authors": {
+        "type": "string"
+      },
+      "comments": {
+        "type": "string"
+      },
+
+      "journal_ref": {
+        "type": "string"
+      },
+      "report_num": {
+        "type": "string"
+      },
+      "doi": {
+        "type": "string"
+      },
+      "msc_class": {
+        "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC)",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      },
+      "acm_class": {
+        "description": "Classifications from ACM Computing Classification System",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "Listing": {
+    "title": "Listing",
+    "description": "Canonical announcement record.",
+    "type": "object",
+    "properties": {
+      "@type": {
+        "type": "string"
+      },
+      "period": {
+        "type": "string",
+        "enum": ["day", "week", "month", "year"]
+      },
+      "start_date": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "end_date": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "./Event.json"
+        }
+      }
+    }
+  }
+}
