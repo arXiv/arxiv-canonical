@@ -1,3 +1,5 @@
+"""Tests for :mod:`.serialize.classic`."""
+
 from unittest import TestCase
 import os
 import json
@@ -18,6 +20,8 @@ ALL_ABS = [
 
 
 class TestClassicDeserialize(TestCase):
+    """Test deserialization of the classic abs format."""
+
     SCHEMA_PATH = os.path.abspath('schema/')
 
     def setUp(self):
@@ -26,15 +30,15 @@ class TestClassicDeserialize(TestCase):
         self.resolver = jsonschema.RefResolver(resolver_path, None)
 
     def test_parse(self):
+        """Parse and reserialize a variety of classic abs records."""
         with open(os.path.join(self.SCHEMA_PATH, 'EPrintMetadata.json')) as f:
             schema = json.load(f)
 
-        # print(schema)
         for abs in ALL_ABS:
-            # print(classic.parse(abs))
-            jsonschema.validate(json.loads(serialize.dumps(classic.parse(abs))),
-                                schema,
-                                resolver=self.resolver)
-            # self.assertIsNone(
-            #
-            # )
+            self.assertIsNone(
+                jsonschema.validate(
+                    json.loads(serialize.dumps(classic.parse(abs))),
+                    schema,
+                    resolver=self.resolver
+                )
+            )
