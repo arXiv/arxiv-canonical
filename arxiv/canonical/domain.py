@@ -68,7 +68,7 @@ class EPrintMetadata(NamedTuple):
     submitted_date: datetime
     announced_date: str
     license: License
-    primary_classification: Classification
+    primary_classification: str
     title: str
     abstract: str
     authors: str
@@ -84,7 +84,7 @@ class EPrintMetadata(NamedTuple):
     doi: Optional[str] = None
     previous_versions: List[VersionReference] = []
     history: List[Event] = []
-    secondary_classification: List[Classification] = []
+    secondary_classification: List[str] = []
     msc_class: Optional[str] = None
     acm_class: Optional[str] = None
 

@@ -11,7 +11,6 @@ backports-datetime-fromisoformat = "*"
 jsonschema = "*"
 python-dateutil = "*"
 pytz = "*"
-arxiv-base = "*"
 
 [requires]
 python_version = "3.6"

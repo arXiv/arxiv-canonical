@@ -9,8 +9,6 @@ from pytz import timezone
 from datetime import datetime
 from dateutil.tz import tzutc, gettz
 
-from arxiv import taxonomy
-
 from .. import domain
 
 EASTERN = gettz('US/Eastern')
@@ -117,14 +115,14 @@ def parse(path: str) -> domain.EPrintMetadata:
     secondary_classification = []
 
     if 'categories' in fields and fields['categories']:
-        clsns = [_get_classification(c) for c in fields['categories'].split()]
-        primary_classification = clsns[0]
-        secondary_classification = clsns[1:]
+        classifications = fields['categories'].split()
+        primary_classification = classifications[0]
+        secondary_classification = classifications[1:]
     else:
         match = RE_ARXIV_OLD_ID.match(arxiv_id)
         if not match:
             raise IOError('Could not determine primary classification')
-        primary_classification = domain.Classification(match.group('archive'))
+        primary_classification = match.group('archive')
 
     if 'license' in fields:
         license = domain.License(fields['license'])
@@ -203,13 +201,3 @@ def _parse_versions(arxiv_id: str, version_entry_list: List) \
                                     size_kilobytes=size_kilobytes))
 
     return version_entries
-
-
-# TODO: need to verify that this covers weird edge-cases like math-ph.MP.
-def _get_classification(category: str) -> domain.Classification:
-    if category in taxonomy.CATEGORIES:
-        archive = taxonomy.CATEGORIES[category]['in_archive']
-    elif category in taxonomy.ARCHIVES:
-        archive = category
-        category = None
-    return domain.Classification(archive=archive, category=category)

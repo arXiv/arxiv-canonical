@@ -73,12 +73,12 @@
         }
       },
       "primary_classification": {
-        "$ref": "./Classification.json"
+        "type": "string"
       },
       "secondary_classification": {
         "type": "array",
         "items": {
-          "$ref": "./Classification.json"
+          "type": "string"
         }
       },
       "source_type": {
