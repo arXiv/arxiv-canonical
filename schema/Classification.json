@@ -1,12 +1,18 @@
 {
-  "title": "Classification",
+  "title": "Event",
   "type": "object",
   "properties": {
-      "@type": {
-        "type": "string"
-      },
-      "archive": {"$ref": "./ClassificationTerm.json"},
-      "group": {"$ref": "./ClassificationTerm.json"},
-      "category": {"$ref": "./ClassificationTerm.json"}
+    "@type": {
+      "type": "string"
+    },
+    "archive": {
+      "type": "string"
+    },
+    "category": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    }
   }
 }

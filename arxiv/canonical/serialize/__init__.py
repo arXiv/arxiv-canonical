@@ -7,7 +7,7 @@ from enum import Enum
 
 from backports.datetime_fromisoformat import MonkeyPatch
 
-from . import domain
+from .. import domain
 
 
 MonkeyPatch.patch_fromisoformat()

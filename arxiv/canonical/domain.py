@@ -5,26 +5,10 @@ from enum import Enum
 from datetime import datetime
 
 
-class ClassificationTerm(NamedTuple):
-    """Classification term from the arXiv taxonomy."""
-
-    id: str
-    name: str
-
-
-class Classification(NamedTuple):
-    """An arXiv e-print classification."""
-
-    group: ClassificationTerm
-    archive: ClassificationTerm
-    category: ClassificationTerm
-
-
 class License(NamedTuple):
     """License under which the e-print was provided to arXiv."""
 
     href: str
-    label: str
 
 
 class Person(NamedTuple):
@@ -66,6 +50,13 @@ class VersionReference(NamedTuple):
     version: int
     submitted_date: datetime
     announced_date: str
+    source_type: str
+    size_kilobytes: int
+
+
+class Classification(NamedTuple):
+    archive: str
+    category: Optional[str] = None
 
 
 class EPrintMetadata(NamedTuple):
@@ -74,7 +65,6 @@ class EPrintMetadata(NamedTuple):
     arxiv_id: str
     version: int
     legacy: bool
-    submitter: Person
     submitted_date: datetime
     announced_date: str
     license: License
@@ -82,16 +72,21 @@ class EPrintMetadata(NamedTuple):
     title: str
     abstract: str
     authors: str
-    comments: str
-    journal_ref: str
-    report_num: str
-    doi: str
+    source_type: str
+    """Internal code for the source type."""
+    size_kilobytes: int
 
+    submitter: Optional[Person] = None
+    proxy: Optional[str] = None
+    comments: Optional[str] = None
+    journal_ref: Optional[str] = None
+    report_num: Optional[str] = None
+    doi: Optional[str] = None
     previous_versions: List[VersionReference] = []
     history: List[Event] = []
     secondary_classification: List[Classification] = []
-    msc_class: List[str] = []
-    acm_class: List[str] = []
+    msc_class: Optional[str] = None
+    acm_class: Optional[str] = None
 
 
 domain_classes = [obj for obj in locals().values()

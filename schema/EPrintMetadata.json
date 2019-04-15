@@ -1,8 +1,8 @@
 {
-  "EPrintMetadata": {
     "title": "EPrintMetadata",
     "description": "Canonical metadata record for an arXiv e-print.",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "@type": {
         "type": "string"
@@ -22,8 +22,10 @@
       },
       "submitter": {
         "description": "The person who submitted the e-print.",
-        "type": "object",
-        "$ref": "./Person.json"
+        "oneOf": [
+          {"$ref": "./Person.json"},
+          {"type": "null"}
+        ]
       },
       "submitted_date": {
         "description": "Date this version of the e-print was submitted.",
@@ -75,9 +77,22 @@
       },
       "secondary_classification": {
         "type": "array",
-        "items": {"$ref": "./Classification.json"}
+        "items": {
+          "$ref": "./Classification.json"
+        }
       },
-
+      "source_type": {
+        "type": "string"
+      },
+      "size_kilobytes": {
+        "type": "number"
+      },
+      "proxy": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
       "title": {
         "type": "string"
       },
@@ -88,34 +103,43 @@
         "type": "string"
       },
       "comments": {
-        "type": "string"
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       },
 
       "journal_ref": {
-        "type": "string"
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       },
       "report_num": {
-        "type": "string"
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       },
       "doi": {
-        "type": "string"
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       },
       "msc_class": {
         "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC)",
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "uniqueItems": true
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       },
       "acm_class": {
         "description": "Classifications from ACM Computing Classification System",
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "uniqueItems": true
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
       }
     }
   }
-}

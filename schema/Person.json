@@ -12,15 +12,24 @@
     },
     "last_name": {
       "description": "The family or surname part of the person's name, if available.",
-      "type": "string"
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
     },
     "first_name": {
       "description": "The personal or forename part of the person's name, if available.",
-      "type": "string"
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
     },
     "suffix": {
       "description": "The suffix part of the person's name, if available.",
-      "type": "string"
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
     },
     "affiliation": {
       "description": "Institutional affiliations as entered at the time of submission, if available.",
