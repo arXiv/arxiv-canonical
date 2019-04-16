@@ -12,11 +12,9 @@ from ..serialize import classic
 DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 ABS_ROOT = os.path.join(DATA, 'orig')
 
-ALL_ABS = [
-    os.path.join(base, fname)
-    for base, dirs, fnames in os.walk(ABS_ROOT)
-    for fname in fnames if fname.endswith('.abs')
-]
+ALL_ABS = [os.path.join(base, fname)
+           for base, dirs, fnames in os.walk(ABS_ROOT)
+           for fname in fnames if fname.endswith('.abs')]
 
 
 class TestClassicDeserialize(TestCase):
@@ -37,7 +35,7 @@ class TestClassicDeserialize(TestCase):
         for abs in ALL_ABS:
             self.assertIsNone(
                 jsonschema.validate(
-                    json.loads(serialize.dumps(classic.parse(abs))),
+                    json.loads(serialize.dumps(classic.abs.parse(abs))),
                     schema,
                     resolver=self.resolver
                 )

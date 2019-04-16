@@ -9,7 +9,7 @@ from pytz import timezone
 from datetime import datetime
 from dateutil.tz import tzutc, gettz
 
-from .. import domain
+from ... import domain
 
 EASTERN = gettz('US/Eastern')
 
@@ -106,12 +106,7 @@ def parse(path: str) -> domain.EPrintMetadata:
 
     versions = _parse_versions(arxiv_id=arxiv_id,
                                version_entry_list=parsed_version_entries)
-    version = versions[-1].version
-    submitted_date = versions[-1].submitted_date
-    source_type = versions[-1].source_type
-    size_kilobytes = versions[-1].size_kilobytes
 
-    # some transformations
     secondary_classification = []
 
     if 'categories' in fields and fields['categories']:
@@ -131,18 +126,18 @@ def parse(path: str) -> domain.EPrintMetadata:
 
     return domain.EPrintMetadata(
         arxiv_id=arxiv_id,
-        version=version,
+        version=versions[-1].version,
         legacy=True,
         submitter=domain.Person(full_name=name) if name else None,
-        submitted_date=submitted_date,
+        submitted_date=versions[-1].submitted_date,
         announced_date='',
         license=license,
         primary_classification=primary_classification,
         title=fields['title'],
         abstract=fields['abstract'],
         authors=fields['authors'],
-        source_type=source_type,
-        size_kilobytes=size_kilobytes,
+        source_type=versions[-1].source_type,
+        size_kilobytes=versions[-1].size_kilobytes,
         secondary_classification=secondary_classification,
         journal_ref=fields.get('journal_ref'),
         report_num=fields.get('report_num'),
@@ -151,8 +146,8 @@ def parse(path: str) -> domain.EPrintMetadata:
         acm_class=fields.get('acm_class'),
         proxy=fields.get('proxy'),
         comments=fields.get('comments', ''),
-        previous_versions=versions[:-1]
-
+        previous_versions=versions[:-1],
+        history=[]
     )
 
 
@@ -176,6 +171,18 @@ def _parse_metadata(key_value_block: str) -> Dict[str, str]:
     return fields_builder
 
 
+def _parse_announced(arxiv_id: str) -> str:
+    match = RE_ARXIV_OLD_ID.match(arxiv_id)
+    if not match:
+        match = RE_ARXIV_NEW_ID.match(arxiv_id)
+    if not match:
+        raise ValueError('Not a valid arXiv ID')
+    yy = int(match.group('yy'))
+    mm = int(match.group('mm'))
+    year = f'19{yy}' if yy > 90 else f'20{yy}'
+    return f'{year}-{mm}'
+
+
 def _parse_versions(arxiv_id: str, version_entry_list: List) \
         -> List[domain.VersionReference]:
     """Parse the version entries from the arXiv .abs file."""
@@ -196,7 +203,7 @@ def _parse_versions(arxiv_id: str, version_entry_list: List) \
             domain.VersionReference(arxiv_id=arxiv_id,
                                     version=len(version_entries) + 1,
                                     submitted_date=submitted_date,
-                                    announced_date='',
+                                    announced_date=_parse_announced(arxiv_id),
                                     source_type=source_type,
                                     size_kilobytes=size_kilobytes))
 

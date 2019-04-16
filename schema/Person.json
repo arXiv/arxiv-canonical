@@ -33,11 +33,16 @@
     },
     "affiliation": {
       "description": "Institutional affiliations as entered at the time of submission, if available.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 0
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        {"type": "null"}
+      ]
     },
     "orcid": {
       "description": "ORCID identifier, if available.",

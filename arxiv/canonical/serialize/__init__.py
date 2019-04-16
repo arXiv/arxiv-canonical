@@ -1,4 +1,4 @@
-"""JSON serialization for submission core."""
+"""Serialization of the canonical record."""
 
 from typing import Any, Union, List
 import json
@@ -7,6 +7,7 @@ from enum import Enum
 
 from backports.datetime_fromisoformat import MonkeyPatch
 
+from . import classic
 from .. import domain
 
 
@@ -17,6 +18,7 @@ class CanonicalJSONEncoder(json.JSONEncoder):
     """Encodes domain objects in this package for serialization."""
 
     def unpack(self, obj: Any) -> Any:
+        """Recursively search for domain objects, and unpack them to dicts."""
         if isinstance(obj, dict):
             return {key: self.unpack(value) for key, value in obj.items()}
         elif isinstance(obj, list):
@@ -33,14 +35,12 @@ class CanonicalJSONEncoder(json.JSONEncoder):
         return obj
 
     def encode(self, obj: Any) -> Any:
-        return super(CanonicalJSONEncoder, self).encode(self.unpack(obj))
-
-    def default(self, obj: Any) -> Any:
         """Serialize objects in this application domain."""
-        return super(CanonicalJSONEncoder, self).default(self.unpack(obj))
+        return super(CanonicalJSONEncoder, self).encode(self.unpack(obj))
 
 
 class CanonicalJSONDecoder(json.JSONDecoder):
+    """Decode domain objects."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Pass :func:`object_hook` to the base constructor."""

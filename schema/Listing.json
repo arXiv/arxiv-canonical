@@ -6,10 +6,6 @@
     "@type": {
       "type": "string"
     },
-    "period": {
-      "type": "string",
-      "enum": ["day", "week", "month", "year"]
-    },
     "start_date": {
       "type": "string",
       "format": "date-time"
@@ -21,7 +17,7 @@
     "events": {
       "type": "array",
       "items": {
-        "$ref": "./Event.json"
+        "$ref": "./ListingEvent.json"
       }
     }
   }

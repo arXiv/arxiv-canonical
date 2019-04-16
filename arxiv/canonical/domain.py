@@ -20,7 +20,7 @@ class Person(NamedTuple):
     suffix: Optional[str] = None
     orcid: Optional[str] = None
     author_id: Optional[str] = None
-    affiliation: List[str] = []
+    affiliation: Optional[List[str]] = None
 
 
 class Event(NamedTuple):
@@ -29,8 +29,9 @@ class Event(NamedTuple):
     class Type(Enum):
         """Supported event types."""
 
-        CREATED = 'created'
+        NEW = 'new'
         UPDATED = 'updated'
+        REPLACED = 'replaced'
         CROSSLIST = 'cross'
         WITHDRAWN = 'withdrawn'
 
@@ -75,6 +76,9 @@ class EPrintMetadata(NamedTuple):
     source_type: str
     """Internal code for the source type."""
     size_kilobytes: int
+    previous_versions: List[VersionReference]
+    secondary_classification: List[str]
+    history: List[Event]
 
     submitter: Optional[Person] = None
     proxy: Optional[str] = None
@@ -82,11 +86,21 @@ class EPrintMetadata(NamedTuple):
     journal_ref: Optional[str] = None
     report_num: Optional[str] = None
     doi: Optional[str] = None
-    previous_versions: List[VersionReference] = []
-    history: List[Event] = []
-    secondary_classification: List[str] = []
     msc_class: Optional[str] = None
     acm_class: Optional[str] = None
+
+
+class ListingEvent(NamedTuple):
+    event: Event
+    eprint: EPrintMetadata
+
+
+class Listing(NamedTuple):
+    """A collection of announcement-related events."""
+
+    start_date: datetime
+    end_date: datetime
+    events: List[ListingEvent]
 
 
 domain_classes = [obj for obj in locals().values()
