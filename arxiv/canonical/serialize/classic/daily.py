@@ -27,6 +27,11 @@ should be split up.
  [CVS: $Id: DailyLog.pm,v 1.6 2010/03/23 03:53:09 arxiv Exp $]
 ```
 
+The main goal of this implementation is parsing the log file for the purpose
+of transforming it into the arXiv Canonical format. Specifically, we want to
+use this legacy data structure to generate :class:`.Event` data that can be
+serialized in the daily listing files.
+
 """
 
 from typing import Tuple, List, Mapping, Iterable

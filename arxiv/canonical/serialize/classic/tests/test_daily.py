@@ -1,3 +1,4 @@
+"""Tests for :mod:`.serialize.classic.daily`."""
 
 from unittest import TestCase
 import os
