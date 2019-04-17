@@ -36,12 +36,14 @@ class Event(NamedTuple):
         WITHDRAWN = 'withdrawn'
 
     arxiv_id: str
-    version: int
     event_date: datetime
     event_type: Type
-    event_agent: str
-    description: str
+    categories: List[str]
+
+    description: str = ''
     legacy: bool = False
+    event_agent: Optional[str] = None
+    version: int = -1
 
 
 class VersionReference(NamedTuple):

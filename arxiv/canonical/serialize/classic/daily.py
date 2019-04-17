@@ -29,31 +29,37 @@ should be split up.
 
 """
 
-from typing import Tuple, List, Mapping
+from typing import Tuple, List, Mapping, Iterable
 from collections import defaultdict
 from datetime import date
 import string
 import re
+from itertools import chain, groupby
 
-OLD_PTN = r'^(?P<announcement_date>\d{6})\|(?P<archive>[a-z-]+)\|(?P<line>.*)$'
+from ...domain import Event
 
-PIPE = '|'
-SPACE = ' '
-HYPHEN = '-'
-DOT = '.'
-DIGITS = string.digits
-AZ = string.ascii_lowercase
-CATEGORY_CHARS = AZ + HYPHEN + DOT
-ID_CHARS = DIGITS + DOT
-TERMINATORS = PIPE + SPACE + DIGITS
+Entry = Tuple[str, str]
+"""An ``arxiv_id, category`` tuple."""
+
+LINE = re.compile(r'^(?P<event_date>\d{6})\|(?P<archive>[a-z-]+)'
+                  r'\|(?P<data>.*)$')
+"""Each line in the log file begins with a date stamp and an archive."""
 
 NEW_STYLE_CUTOVER_AFTER = date(2007, 4, 2)
+"""Date after which the new-style format was adopted."""
+
 IDENTIFIER = re.compile(r'^(([a-z\-]+\/\d{7})|(\d{4}\.\d{4,5}))')
 SQUASHED_IDENTIFIER = re.compile(r'(?P<archive>[a-z])(?P<identifier>\d{7})')
+"""The old-style format ommitted the forward slash in the old identifier."""
+
 IDENTIFIER_RANGE = re.compile(r'^(?P<start_id>\d{7})\-(?P<end_id>\d{7})$')
+"""The old-style format supported ranges of identifiers, e.g. ``1234-1238``."""
 SINGLE_IDENTIFIER = re.compile(r'^(\d{7})$')
+"""Numeric part of an old-style arXiv ID."""
 OLD_STYLE_CROSS = re.compile(r'^(?P<archive>[\w\-]+)(\.[\w\-]+)?'
                              r'(?P<identifier>\d{7})(?P<category>\.[\w\-]+)?')
+
+# The semantics of these patterns are not clear to me. -Erick 2019-04-17
 THREEPART_REPLACEMENT = re.compile(r'^(?P<archive>\.[a-zA-Z\-]+)?'
                                    r'(?P<identifier>\d{7})'
                                    r'(?P<category>\.[a-zA-Z\-]+)?$')
@@ -62,83 +68,154 @@ FOURPART_REPLACEMENT = re.compile(r'^(?P<archive>[a-z\-]+)(\.[a-zA-Z\-]+)?'
                                   r'(?P<category>\.[a-zA-Z\-]+)?$')
 
 
-def parse_line(raw: str) -> Tuple[str, List[str]]:
-    match = re.match(OLD_PTN, raw)
-    announcement_date_raw = match.group('announcement_date')
-    yy = int(announcement_date_raw[:2])
-    month = int(announcement_date_raw[2:4])
-    day = int(announcement_date_raw[4:])
+class DailyLogParser:
+    """Parses the daily log file."""
 
-    # This will be OK until 2091.
-    year = 1900 + yy if yy > 90 else 2000 + yy
-    announcement_date = date(year=year, month=month, day=day)
+    def __init__(self):
+        """Initialize both styles of parsers."""
+        self.newstyle_parser = NewStyleLineParser()
+        self.oldstyle_parser = OldStyleLineParser()
 
-    archive = match.group('archive')
-    line = match.group('line')
-    # ($date,$archive,$new,$cross,$replace) = split(/\|/,$entry);
-    new, cross, replace = line.split('|')
+    def _parse_date(self, event_date_raw: str) -> date:
+        """Parse date stamp in the format ``yymmdd``."""
+        yy = int(event_date_raw[:2])
+        month = int(event_date_raw[2:4])
+        day = int(event_date_raw[4:])
 
-    # Includes both primary and cross-list on new e-print.
-    new_eprints = parse_new(announcement_date, archive, new)
+        # This will be OK until 2091.
+        year = 1900 + yy if yy > 90 else 2000 + yy
+        event_date = date(year=year, month=month, day=day)
+        return event_date
 
-    # These are only the cross-list categories.
-    cross_eprints = parse_cross(announcement_date, archive, cross)
+    def parse(self, path: str) -> Iterable[Event]:
+        """
+        Parse the daily log file.
 
-    # Includes both primary and cross-list on replacement e-print.
-    replace_eprints = parse_replacement(announcement_date, archive, replace)
+        Parameters
+        ----------
+        path : str
+            Path to the daily log file.
 
-    return announcement_date, archive, new_eprints, cross_eprints, replace_eprints
+        Returns
+        -------
+        iterable
+            Each item is an :class:`.Event` from the log file.
+
+        """
+        return chain.from_iterable((self.parse_line(line)
+                                    for line in open(path, 'r', -1)))
+
+    def parse_line(self, raw: str) -> Iterable[Event]:
+        """
+        Parse a single line from the daily log file.
+
+        Parameters
+        ----------
+        raw : str
+            A single line.
+
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from the line.
+
+        """
+        match = LINE.match(raw)
+        archive = match.group('archive')
+        data = match.group('data')
+        event_date = self._parse_date(match.group('event_date'))
+        if event_date > NEW_STYLE_CUTOVER_AFTER:
+            return self.newstyle_parser.parse(event_date, archive, data)
+        return self.oldstyle_parser.parse(event_date, archive, data)
 
 
-def parse_new(announcement_date: date, archive: str, frag: str) -> List[Tuple[str, str]]:
-    entries = []
-    if announcement_date > NEW_STYLE_CUTOVER_AFTER:
-        for paper_id in frag.split():
-            paper_id, dummy, categories = parse_newstyle_entry(paper_id)
-            for category in categories:
-                entries.append((paper_id, category))
-    else:
-        match_range = IDENTIFIER_RANGE.match(frag)
+class LineParser:
+    """Shared behavior among newstyle and oldstyle line parsing."""
+
+    def _to_events(self, e_date: date, e_type: Event.Type,
+                   entries: Iterable[Entry],
+                   version: int = -1) -> Iterable[Event]:
+        for paper_id, entries in groupby(entries, key=lambda o: o[0]):
+            yield Event(arxiv_id=paper_id, event_date=e_date,
+                        event_type=e_type, version=version,
+                        categories=[category for _, category in entries])
+
+    def parse(self, e_date: date, archive: str, data: str) -> Iterable[Event]:
+        """Parse data from a daily log file line."""
+        new, cross, replace = data.split('|')
+        return chain(self._to_events(e_date, Event.Type.NEW,
+                                     self.parse_new(archive, new), 1),
+                     self._to_events(e_date, Event.Type.CROSSLIST,
+                                     self.parse_cross(archive, cross)),
+                     self._to_events(e_date, Event.Type.REPLACED,
+                                     self.parse_replace(archive, replace)))
+
+
+class OldStyleLineParser(LineParser):
+    """
+    Parses data from old-style log lines.
+
+    The original format used a separate line for each archive. The line
+    contained three sections: e-prints newly announced in that archive,
+    e-prints cross-listed to that archive, and e-prints replaced either in that
+    archive or with a new cross-list category in that archive. Thus there may
+    be multiple lines for a given announcement day, one per archive in which
+    announcement activity occurred.
+    """
+
+    def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for new e-prints.
+
+        Parameters
+        ----------
+        archive : str
+            Archive to which entries on this line apply.
+        fragment : str
+            Section of the line containing new e-print entries.
+
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
+
+        """
+        match_range = IDENTIFIER_RANGE.match(fragment)
         if match_range:
             start_id = int(match_range.group('start_id'))
             end_id = int(match_range.group('end_id'))
             for identifier in range(start_id, end_id + 1):  # Inclusive.
                 identifier = str(identifier).zfill(7)
                 paper_id = f'{archive}/{identifier}'
-                entries.append((paper_id, archive))
-        elif SINGLE_IDENTIFIER.match(frag):
-            entries.append((f'{archive}/{frag}', archive))
+                yield paper_id, archive
+        elif SINGLE_IDENTIFIER.match(fragment):
+            yield f'{archive}/{fragment}', archive
         elif re.match(r'\S') is None:   # Blank is OK
             pass
         else:
             # Warn "Bad new entires for $date|$archive\n"
             pass
-    return entries
 
+    def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for cross-list e-prints.
 
-def parse_cross(announcement_date: date, archive: str, frag: str):
-    """
-    Parse the cross section of the line.
+        Parameters
+        ----------
+        archive : str
+            Archive to which entries on this line apply (to which the
+            e-print has been cross-listed).
+        fragment : str
+            Section of the line containing cross-list entries.
 
-    Old entries for $archive lines are like
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
 
-       |math|...|hep-th9901001.MP        => hep-th/9901001 crossed to math.MP
-       |astro-ph|...|gr-qc0609044        => gr-qc/0609044 crossed to astro-ph
-       |arxiv|...|0703.0003:astro-ph     => 0703.0003 crossed to astro-ph
-       |arxiv|...|hep-th0501001:math.DG  => hep-th/0501001 crossed to math.DG
-
-    This routine populates @$crossptr with two element arrays [$paperid,$to].
-    """
-    frag = frag.strip()     # Zap head or tail spaces to avoid blank entry.
-    crossed_to: str     # What is it crossed to, a category name.
-    entries = []
-    for paper_id in frag.split():
-        if announcement_date > NEW_STYLE_CUTOVER_AFTER:
-            paper_id, dummy, categories = parse_newstyle_entry(paper_id)
-            for crossed_to in categories:
-                entries.append((paper_id, crossed_to))
-        else:
-            match = OLD_STYLE_CROSS.match(frag)
+        """
+        for paper_id in fragment.strip().split():
+            match = OLD_STYLE_CROSS.match(paper_id)
             if match:
                 paper_id = '/'.join([match.group('archive'),
                                      match.group('identifier')])
@@ -146,35 +223,29 @@ def parse_cross(announcement_date: date, archive: str, frag: str):
                 category = match.group('category')
                 if category:
                     crossed_to += category
-                entries.append((paper_id, crossed_to))
+                yield paper_id, crossed_to
             else:
                 # Warn "Bad cross entry for ($date|$archive) '$paperid'\n"
                 pass
-    return entries
 
+    def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for replacements.
 
-def parse_replacement(announcement_date: date, archive: str, frag: str):
-    """
-    Parse the replacement part of the string.
+        Parameters
+        ----------
+        archive : str
+            Archive to which entries on this line apply.
+        fragment : str
+            Section of the line containing replacement entries.
 
-    Replaces might have .abs after them => abs only replace.
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
 
-    This routine accepts two array pointers, which may point to
-    the same or different arrays, one for full replacements and
-    the other for abstract-only replacements.
-    """
-    frag = frag.strip()  # Zap head or tail spaces to avoid blank entry.
-    abs_only_replacements = []
-    full_replacements = []
-    for paper_id in frag.split():
-        if announcement_date > NEW_STYLE_CUTOVER_AFTER:
-            paper_id, abs_only, categories = parse_newstyle_entry(paper_id)
-            entries = [(paper_id, category) for category in categories]
-            if abs_only:
-                abs_only_replacements += entries
-            else:
-                full_replacements += entries
-        else:
+        """
+        for paper_id in fragment.strip().split():
             abs_only = False
             if paper_id.endswith('.abs'):
                 abs_only = True
@@ -196,23 +267,109 @@ def parse_replacement(announcement_date: date, archive: str, frag: str):
             else:
                 # Warn "Bad rep entry for ($date|$archive) '$paperid'\n"
                 continue
-            if abs_only:
-                abs_only_replacements.append((paper_id, crossed_to))
-            else:
-                full_replacements.append((paper_id, crossed_to))
-    return abs_only_replacements + full_replacements
+            yield paper_id, crossed_to
 
 
-def parse_newstyle_entry(entry: str) -> Tuple[str, bool, List[str]]:
-    abs_only = False
-    if entry.endswith('.abs'):
-        abs_only = True
-        entry = entry[:-4]
-    paper_id, categories = entry.split(':', 1)
-    categories = categories.split(':')
-    # unsquash old identifier, if squashed
-    squashed = SQUASHED_IDENTIFIER.match(paper_id)
-    if squashed:
-        paper_id = '/'.join(squashed.groups())
-    assert IDENTIFIER.match(paper_id) is not None
-    return paper_id, abs_only, categories
+class NewStyleLineParser(LineParser):
+    """
+    Parses new-style daily log lines.
+
+    Starting after 2007-04-02 (:const:`NEW_STYLE_CUTOVER_AFTER`), the format
+    changed to put all announcement-related events on a given day on the same
+    line. The three original sections of the line are preserved, but within
+    each section are entries for e-prints from all archives.
+    """
+
+    def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for new e-prints.
+
+        Parameters
+        ----------
+        archive : str
+            Literally just ``"arxiv"``; this is a dummy place-holder, since
+            new-style lines contain entries for all archives for which
+            announcements occurred on a particular day.
+        fragment : str
+            Section of the line containing new e-print entries.
+
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
+
+        """
+        for paper_id in fragment.split():
+            paper_id, dummy, categories = self._parse_entry(paper_id)
+            for category in categories:
+                yield paper_id, category
+
+    def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for cross-lists.
+
+        Parameters
+        ----------
+        archive : str
+            Literally just ``"arxiv"``; this is a dummy place-holder, since
+            new-style lines contain entries for all archives for which
+            announcements occurred on a particular day.
+        fragment : str
+            Section of the line containing cross-list entries.
+
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
+
+        """
+        for paper_id in fragment.split():
+            paper_id, dummy, categories = self._parse_entry(paper_id)
+            for crossed_to in categories:
+                yield paper_id, crossed_to
+
+    def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """
+        Parse entries for replaced e-prints.
+
+        Parameters
+        ----------
+        archive : str
+            Literally just ``"arxiv"``; this is a dummy place-holder, since
+            new-style lines contain entries for all archives for which
+            announcements occurred on a particular day.
+        fragment : str
+            Section of the line containing replacement entries.
+
+        Returns
+        -------
+        iterable
+            Yields :class:`.Event` instances from this section.
+
+        """
+        for paper_id in fragment.split():
+            paper_id, abs_only, categories = self._parse_entry(paper_id)
+            for category in categories:
+                yield paper_id, category
+
+    def _parse_entry(self, entry: str) -> Tuple[str, bool, List[str]]:
+        """
+        Parse a single entry from within a section of the log line.
+
+        An entry represents an announcement-related event for a single e-print.
+        Data in the entry is delimited by a colon (``:``). The first item is
+        the e-print identifier, followed by each of the categories associated
+        with the event.
+        """
+        abs_only = False
+        if entry.endswith('.abs'):
+            abs_only = True
+            entry = entry[:-4]
+        paper_id, categories = entry.split(':', 1)
+        categories = categories.split(':')
+        # unsquash old identifier, if squashed
+        squashed = SQUASHED_IDENTIFIER.match(paper_id)
+        if squashed:
+            paper_id = '/'.join(squashed.groups())
+        assert IDENTIFIER.match(paper_id) is not None
+        return paper_id, abs_only, categories
