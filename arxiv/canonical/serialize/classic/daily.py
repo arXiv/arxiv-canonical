@@ -41,6 +41,8 @@ import string
 import re
 from itertools import chain, groupby
 
+import warnings
+
 from ...domain import Event
 
 Entry = Tuple[str, str]
@@ -54,7 +56,7 @@ NEW_STYLE_CUTOVER_AFTER = date(2007, 4, 2)
 """Date after which the new-style format was adopted."""
 
 IDENTIFIER = re.compile(r'^(([a-z\-]+\/\d{7})|(\d{4}\.\d{4,5}))')
-SQUASHED_IDENTIFIER = re.compile(r'(?P<archive>[a-z])(?P<identifier>\d{7})')
+SQUASHED_IDENTIFIER = re.compile(r'(?P<archive>[a-z\-]+)(?P<identifier>\d{7})')
 """The old-style format ommitted the forward slash in the old identifier."""
 
 IDENTIFIER_RANGE = re.compile(r'^(?P<start_id>\d{7})\-(?P<end_id>\d{7})$')
@@ -71,6 +73,30 @@ THREEPART_REPLACEMENT = re.compile(r'^(?P<archive>\.[a-zA-Z\-]+)?'
 FOURPART_REPLACEMENT = re.compile(r'^(?P<archive>[a-z\-]+)(\.[a-zA-Z\-]+)?'
                                   r'(?P<identifier>\d{7})'
                                   r'(?P<category>\.[a-zA-Z\-]+)?$')
+
+WEIRD_INVERTED_ENTRY = re.compile(r'^(?P<identifier>\d{7})(?:\.\d)?'
+                                  r'(?P<archive>[a-z\-]+)(\.[a-zA-Z\-]+)?$')
+"""
+Pattern for a weird edge case not handled in the legacy code.
+
+Here is an example:
+
+.. code-block::
+
+   quant-ph9902016 9704019.0chao-dyn 9902003.0chao-dyn 9904021.0chao-dyn
+
+``quant-ph9902016`` is normal. But ``9704019.0chao-dyn`` does not match any
+patterns in the legacy code. In this particular case (from 1999), we can infer
+that ``9704019`` belongs with ``chao-dyn`` rather than ``quant-ph`` because
+``quant-ph/9704019`` was last updated in 1997 and this entry is in 1999 when
+``chao-dyn/9704019`` was last updated.
+
+Not sure what the decimal part is supposed to mean. It does not appear to refer
+to the e-print version. I also considered the possibility that it is a range
+of some kind, e.g. ``9912003.4solv-int`` -> ``solv-int/9912003`` and
+``solv-int/9912004``, but this is in a replacement section and there is only
+one version of ``solv-int/9912004``.
+"""
 
 
 class DailyLogParser:
@@ -129,6 +155,7 @@ class DailyLogParser:
         archive = match.group('archive')
         data = match.group('data')
         event_date = self._parse_date(match.group('event_date'))
+
         if event_date > NEW_STYLE_CUTOVER_AFTER:
             return self.newstyle_parser.parse(event_date, archive, data)
         return self.oldstyle_parser.parse(event_date, archive, data)
@@ -195,11 +222,10 @@ class OldStyleLineParser(LineParser):
                 yield paper_id, archive
         elif SINGLE_IDENTIFIER.match(fragment):
             yield f'{archive}/{fragment}', archive
-        elif re.match(r'\S') is None:   # Blank is OK
+        elif re.match(r'\S', fragment) is None:   # Blank is OK
             pass
         else:
-            # Warn "Bad new entires for $date|$archive\n"
-            pass
+            warnings.warn(f'Failed parsing new entry (old style): {fragment}')
 
     def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
         """
@@ -230,8 +256,7 @@ class OldStyleLineParser(LineParser):
                     crossed_to += category
                 yield paper_id, crossed_to
             else:
-                # Warn "Bad cross entry for ($date|$archive) '$paperid'\n"
-                pass
+                warnings.warn(f'Failed parsing cross (old style): {paper_id}')
 
     def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
         """
@@ -257,6 +282,7 @@ class OldStyleLineParser(LineParser):
                 paper_id = paper_id[:-4]
             match_threepart = THREEPART_REPLACEMENT.match(paper_id)
             match_fourpart = FOURPART_REPLACEMENT.match(paper_id)
+            match_weird = WEIRD_INVERTED_ENTRY.match(paper_id)
             if match_threepart:
                 identifier = match_threepart.group('identifier')
                 paper_id = f'{archive}/{identifier}'
@@ -269,8 +295,13 @@ class OldStyleLineParser(LineParser):
                 crossed_to = archive
                 if category:
                     crossed_to += f'.{category}'
+            elif match_weird:
+                this_archive = match_weird.group('archive')
+                identifier = match_weird.group('identifier')
+                paper_id = f'{this_archive}/{identifier}'
+                crossed_to = archive
             else:
-                # Warn "Bad rep entry for ($date|$archive) '$paperid'\n"
+                warnings.warn(f'Failed parsing repl (old style): {paper_id}')
                 continue
             yield paper_id, crossed_to
 
@@ -305,7 +336,11 @@ class NewStyleLineParser(LineParser):
 
         """
         for paper_id in fragment.split():
-            paper_id, dummy, categories = self._parse_entry(paper_id)
+            try:
+                paper_id, dummy, categories = self._parse_entry(paper_id)
+            except AssertionError:
+                warnings.warn(f'Failed parsing new (new style): {paper_id}')
+                continue
             for category in categories:
                 yield paper_id, category
 
@@ -329,7 +364,11 @@ class NewStyleLineParser(LineParser):
 
         """
         for paper_id in fragment.split():
-            paper_id, dummy, categories = self._parse_entry(paper_id)
+            try:
+                paper_id, dummy, categories = self._parse_entry(paper_id)
+            except AssertionError:
+                warnings.warn(f'Failed parsing cross (new style): {paper_id}')
+                continue
             for crossed_to in categories:
                 yield paper_id, crossed_to
 
@@ -353,7 +392,11 @@ class NewStyleLineParser(LineParser):
 
         """
         for paper_id in fragment.split():
-            paper_id, abs_only, categories = self._parse_entry(paper_id)
+            try:
+                paper_id, abs_only, categories = self._parse_entry(paper_id)
+            except AssertionError:
+                warnings.warn(f'Failed parsing repl (new style): {paper_id}')
+                continue
             for category in categories:
                 yield paper_id, category
 

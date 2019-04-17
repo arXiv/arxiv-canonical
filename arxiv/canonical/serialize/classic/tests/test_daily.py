@@ -109,3 +109,35 @@ class TestParse(TestCase):
 
         events = [e for e in iterable]
         self.assertEqual(len(events), 1882, 'Reads 1,882 events from the log.')
+
+
+class TestWeirdEdgeCase(TestCase):
+    """
+    Test the weird edge case described in :const:`.daily.WEIRD_INVERTED_ENTRY`.
+    """
+
+    def test_weird_line(self):
+        """Test this weird line that is not handled in legacy code."""
+        line = "991210|nlin-sys||cond-mat.mes-hall9912038 cond-mat.stat-mech9912081 cond-mat.stat-mech9912110 hep-th9908090 math.SG9912021 quant-ph9912007|quant-ph9902015 quant-ph9902016 9704019.0chao-dyn 9902003.0chao-dyn 9904021.0chao-dyn 9907001.0chao-dyn 9912003.4solv-int cond-mat.stat-mech9908480 cond-mat.stat-mech9911291"
+
+        events = [e for e in daily.DailyLogParser().parse_line(line)]
+        new = [e for e in events if e.event_type is Event.Type.NEW]
+        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+
+        self.assertEqual(len(new), 0)
+        self.assertEqual(len(cross), 6)
+        self.assertEqual(len(replaced), 9)
+
+        self.assertIn('quant-ph/9902015', [e.arxiv_id for e in replaced])
+        self.assertIn('quant-ph/9902016', [e.arxiv_id for e in replaced])
+        self.assertIn('chao-dyn/9704019', [e.arxiv_id for e in replaced])
+
+        self.assertIn('chao-dyn/9704019', [e.arxiv_id for e in replaced])
+        self.assertIn('chao-dyn/9902003', [e.arxiv_id for e in replaced])
+        self.assertIn('chao-dyn/9904021', [e.arxiv_id for e in replaced])
+        self.assertIn('chao-dyn/9907001', [e.arxiv_id for e in replaced])
+        self.assertIn('solv-int/9912003', [e.arxiv_id for e in replaced])
+
+        self.assertIn('cond-mat/9908480', [e.arxiv_id for e in replaced])
+        self.assertIn('cond-mat/9911291', [e.arxiv_id for e in replaced])
