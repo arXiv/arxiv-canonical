@@ -20,6 +20,7 @@ python-dateutil = "*"
 pytz = "*"
 typing-extensions = "*"
 arxiv-base = "==0.15.8.post1"
+arxiv-auth = "*"
 
 [requires]
 python_version = "3.6"

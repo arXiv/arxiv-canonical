@@ -10,15 +10,15 @@ python:
 script:
   - pip install -U pip pipenv
   - pipenv install --dev
-  - pipenv run pytest --cov=arxiv --cov=announcement --cov=repository --cov-report=term-missing arxiv announcement repository
+  - pipenv run pytest --cov=arxiv --cov=announcement/announcement --cov=repository/repository --cov-report=term-missing arxiv announcement/announcement repository/repository
 after_success:
   - coveralls
   - "./tests/lint.sh arxiv"
-  - "./tests/lint.sh announcement"
-  - "./tests/lint.sh repository"
+  - "./tests/lint.sh announcement/announcement"
+  - "./tests/lint.sh repository/repository"
   - "./tests/style.sh arxiv"
-  - "./tests/style.sh announcement"
-  - "./tests/style.sh repository"
+  - "./tests/style.sh announcement/announcement"
+  - "./tests/style.sh repository/repository"
   - "./tests/type-check.sh arxiv"
-  - "./tests/type-check.sh announcement"
-  - "./tests/type-check.sh repository"
+  - "./tests/type-check.sh announcement/announcement"
+  - "./tests/type-check.sh repository/repository"
