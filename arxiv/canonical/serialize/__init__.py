@@ -1,4 +1,4 @@
-"""Serialization of the canonical record."""
+"""(De)Serialization of the canonical record."""
 
 from typing import Any
 import json

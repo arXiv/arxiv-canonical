@@ -1,9 +1,11 @@
 """Transform Classic abs files into NG canonical format."""
 
-from typing import Iterable
 import os
-from arxiv import canonical
+from typing import Iterable
+
 import click
+
+from arxiv import canonical
 
 
 @click.command()

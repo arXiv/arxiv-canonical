@@ -1,8 +1,40 @@
 # arXiv NG Canonical Record
 
+This repository contains a library and applications for working with the core
+arXiv canonical record. The canonical record is the authoritative history and 
+state for announced e-prints on the arXiv platform.
 
-## Goals
-In priority order:
+Work on this project will proceed in two phases, each corresponding to a major 
+version:
+
+## Version 0: Replication of the Legacy Record to the Canonical Record
+
+The first major objective of this project is to replicate all of the core 
+announcement events that occur in the legacy system to the cloud-native 
+canonical record.
+
+- The legacy system emits event notifications via a Kinesis stream for new 
+  e-prints, replacements, cross-listing, withdrawals, and updates.
+- An announcement agent (``announcement/`` in this repo)...
+  
+  - consumes legacy events,
+  - retrieves metadata, source package, and first-compiled PDF from legacy,
+  - formats and stores content as part of the canonical record
+
+The canonical record is designed to work on any storage platform that supports
+a key-value behavior. The first implementation will target AWS S3.
+
+## Version 1: Orchestration of the Announcement Process
+
+Once several other dependencies are resolved in the legacy system, this project
+will assume primary responsibility for announcing submitted e-prints on a 
+daily basis. This is a bit further down the road.
+
+# Background
+
+## Record design goals
+
+The goals for the canonical record itself, in priority order:
 
 1. Record article source and metadata
 2. Record announcement record (what articles were announced on what day)

@@ -1,0 +1,24 @@
+language: python
+cache: pip
+sudo: required
+services:
+  - docker
+os:
+  - linux
+python:
+  - "3.6"
+script:
+  - pip install -U pip pipenv
+  - pipenv install --dev
+  - pipenv run pytest --cov=arxiv --cov=announcement --cov=repository --cov-report=term-missing arxiv announcement repository
+after_success:
+  - coveralls
+  - "./tests/lint.sh arxiv"
+  - "./tests/lint.sh announcement"
+  - "./tests/lint.sh repository"
+  - "./tests/style.sh arxiv"
+  - "./tests/style.sh announcement"
+  - "./tests/style.sh repository"
+  - "./tests/type-check.sh arxiv"
+  - "./tests/type-check.sh announcement"
+  - "./tests/type-check.sh repository"

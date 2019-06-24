@@ -1,0 +1,1 @@
+"""Core announcement agent implementation."""

@@ -5,6 +5,13 @@ verify_ssl = true
 
 [dev-packages]
 nose2 = "*"
+pytest = "*"
+coverage = "*"
+coveralls = "*"
+pylint = "*"
+pydocstyle = "*"
+mypy = "*"
+pytest-cov = "*"
 
 [packages]
 backports-datetime-fromisoformat = "*"
