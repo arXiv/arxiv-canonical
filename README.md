@@ -19,16 +19,56 @@ canonical record.
   
   - consumes legacy events,
   - retrieves metadata, source package, and first-compiled PDF from legacy,
-  - formats and stores content as part of the canonical record
+  - formats and stores content as part of the canonical record. The canonical
+    record is designed to work on any storage platform that supports a
+    key-value behavior. The first implementation will target AWS S3.
 
-The canonical record is designed to work on any storage platform that supports
-a key-value behavior. The first implementation will target AWS S3.
+- The repository service (``repository/`` in this repo) makes e-print metadata,
+  content, and events available via a RESTful JSON API. This is a Flask
+  application that will be deployed as a Docker container.
+
+Both the ``announcement/`` and ``repository/`` applications use the 
+``arxiv.canonical`` package (``arxiv/canonical/`` in this repo) to interact
+with the canonical record.
 
 ## Version 1: Orchestration of the Announcement Process
 
 Once several other dependencies are resolved in the legacy system, this project
 will assume primary responsibility for announcing submitted e-prints on a 
 daily basis. This is a bit further down the road.
+
+# Contributing 
+
+For a list of things that need doing, please see the issues tracker for this
+repository.
+
+## Quick-start
+
+We use [Pipenv](https://github.com/pypa/pipenv) for dependency management.
+
+```bash
+pipenv install --dev
+```
+
+You can run either the API or the UI using the Flask development server.
+
+```bash
+FLASK_APP=ui.py FLASK_DEBUG=1 pipenv run flask run
+```
+
+Dockerfiles are also provided in the root of this repository. These use uWSGI and the
+corresponding ``wsgi_[xxx].py`` entrypoints.
+
+## Contributor guidelines
+
+Please see the [arXiv contributor
+guidelines](https://github.com/arXiv/.github/blob/master/CONTRIBUTING.md) for
+tips on getting started.
+
+## Code of Conduct
+
+All contributors are expected to adhere to the [arXiv Code of
+Conduct](https://arxiv.org/help/policies/code_of_conduct).
 
 # Background
 
