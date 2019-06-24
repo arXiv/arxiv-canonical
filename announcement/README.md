@@ -27,15 +27,15 @@ The legacy system produces e-print events on a Kinesis stream called
 
 ``event_type`` may be one of:
 
-| Event type | Description                                                   |
-|------------|---------------------------------------------------------------|
-| new        | An e-print is announced for the first time.                   |
-| updated    | An e-print is updated without producing a new version.        |
-| replaced   | A new version of an e-print is announced.                     |                                             |
-| cross-list | Cross-list classifications are added for an e-print.          |
-| withdrawn  | An e-print is withdrawn. This generates a new version.        |
+| Event type | Description                                                    |
+|------------|----------------------------------------------------------------|
+| ``new``        | An e-print is announced for the first time.                |
+| ``updated``    | An e-print is updated without producing a new version.     |
+| ``replaced``   | A new version of an e-print is announced.                  |
+| ``cross-list`` | Cross-list classifications are added for an e-print.       |
+| ``withdrawn``  | An e-print is withdrawn. This generates a new version.     |
 
-``identifier`` is an arXiv identifier; see :class:`.Identifier`. 
+``identifier`` is an arXiv identifier without a version affix.
 
 ``version`` is a positive integer.
 
@@ -46,9 +46,9 @@ The legacy system produces e-print events on a Kinesis stream called
 Metadata, PDFs, and source are retrieved from the legacy system via HTTP 
 request.
 
-- Metadata: arxiv.org/docmeta/{IDENTIFIER}v{VERSION}
-- PDF: arxiv.org/pdf/{IDENTIFIER}v{VERSION}
-- Source: arxiv.org/src/{IDENTIFIER}v{VERSION}
+- Metadata: ``arxiv.org/docmeta/{IDENTIFIER}v{VERSION}``
+- PDF: ``arxiv.org/pdf/{IDENTIFIER}v{VERSION}``
+- Source: ``arxiv.org/src/{IDENTIFIER}v{VERSION}``
 
 
 # Contributing 
