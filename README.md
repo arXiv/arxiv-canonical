@@ -56,8 +56,14 @@ You can run either the API or the UI using the Flask development server.
 FLASK_APP=ui.py FLASK_DEBUG=1 pipenv run flask run
 ```
 
-Dockerfiles are also provided in the root of this repository. These use uWSGI and the
-corresponding ``wsgi_[xxx].py`` entrypoints.
+Dockerfiles are also provided in the root of this repository. These use uWSGI
+and the corresponding ``wsgi_[xxx].py`` entrypoints.
+
+## AWS services, mocking
+
+It's helpful to use a live API when developing components against AWS services.
+We use [Localstack](https://github.com/localstack/localstack) for this 
+purpose.
 
 ## Contributor guidelines
 
