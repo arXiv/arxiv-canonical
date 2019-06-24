@@ -88,13 +88,14 @@ The preservation record is a daily digest containing e-print content,
 announcement listings, and any suppress or remove directives (with
 corresponding tombstones).
 
+
 ```
 announcement/<listing>.json
 e-prints/<arXiv ID>v<version>/
-	Metadata record: <arXiv ID>v<version>.json
-Source package: <arXiv ID>v<version>.tar.gz
-PDF: <arXiv ID>v<version>.pdf
-Manifest: <arXiv ID>v<version>.manifest.json
+	<arXiv ID>v<version>.json         # Metadata record
+<arXiv ID>v<version>.tar.gz           # Source package
+<arXiv ID>v<version>.pdf              # First PDF
+<arXiv ID>v<version>.manifest.json    # Manifest.
 suppress/<arXiv ID>v<version>/tombstone
 preservation.manifest.json
 ```
