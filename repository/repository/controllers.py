@@ -9,6 +9,9 @@ from http import HTTPStatus
 
 from werkzeug.datastructures import MultiDict
 
+from arxiv.canonical.services import MockCanonicalStore
+
+
 Response = Tuple[Dict[str, Any], HTTPStatus, Dict[str, str]]
 
 

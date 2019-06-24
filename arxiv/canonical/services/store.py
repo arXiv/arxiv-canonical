@@ -5,8 +5,10 @@ Provides a :class:`.CanonicalStore` that stores :class:`.Listing` and
 :class:`.EPrint` resources in S3.
 """
 
+import io
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
+from pytz import UTC
 
 from flask import Flask
 import boto3
@@ -16,7 +18,8 @@ from botocore.exceptions import ClientError
 
 from arxiv.base.globals import get_application_global, get_application_config
 
-from ..domain import Listing, EPrint, Identifier
+from ..domain import Listing, EPrint, Identifier, Event, Classification, \
+        License, File, Person
 
 
 class DoesNotExist(Exception):
@@ -119,8 +122,8 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
     
-    def load_listing(self, start_date: datetime, 
-                     end_date: Optional[datetime] = None) -> PersistentListing:
+    def load_listing(self, start_date: date, end_date: Optional[date] = None) \
+            -> PersistentListing:
         """
         Load a listing, and all of its attendant events and e-prints.
         
@@ -182,3 +185,126 @@ class CanonicalStore:
             g.store = cls.get_session()
         store: CanonicalStore = g.store
         return store
+
+
+class MockPersistentListing(PersistentListing):
+    @property
+    def is_changed(self) -> bool:
+        return False
+
+
+class MockPersistentEPrint(PersistentEPrint):
+    @property
+    def is_changed(self) -> bool:
+        return False
+
+
+class MockCanonicalStore(CanonicalStore):
+    """
+    A mock implementation of the canonical store.
+    
+    Methods to store things don't do anything, so don't expect data to stick
+    around.
+    """
+
+    def store_listing(self, listing: PersistentListing) -> None:
+        return
+    
+    def store_eprint(self, eprint: EPrint) -> None:
+        return
+
+    def load_listing(self, start_date: date, end_date: Optional[date] = None) \
+            -> PersistentListing:
+        return MockPersistentListing(
+            start_date=start_date,
+            end_date=start_date,
+            events=[
+                Event(arxiv_id=Identifier('2004.00321'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.NEW,
+                      classifications=[Classification('cs.DL'),
+                                       Classification('cs.AI')],
+                      version=1),
+                Event(arxiv_id=Identifier('2004.00322'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.NEW,
+                      classifications=[Classification('cs.DL'),
+                                       Classification('cs.AI')],
+                      version=1),
+                Event(arxiv_id=Identifier('2003.00021'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.CROSSLIST,
+                      classifications=[Classification('cs.AR')],
+                      version=1),
+                Event(arxiv_id=Identifier('2003.00001'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.REPLACED,
+                      classifications=[Classification('cs.AR')],
+                      version=2)
+            ]
+        )
+
+    def load_eprint(self, identifier: Identifier, version: int) \
+            -> PersistentEPrint:
+        return MockPersistentEPrint(
+            arxiv_id=identifier,
+            announced_date=date.today(),
+            version=1,
+            legacy=True,
+            submitted_date=datetime.now(UTC),
+            license=License(
+                href="https://arxiv.org/licenses/nonexclusive-distrib/1.0/"
+                     "license.html"
+            ),
+            primary_classification=Classification("cs", "cs.DL"),
+            title="Adventures in Flatland",
+            abstract="As Gregor Samsa awoke one morning from uneasy dreams he"
+                     " found himself transformed in his bed into a gigantic"
+                     " insect. He was lying on his hard, as it were"
+                     " armor-plated, back and when he lifted his head a little"
+                     " he could see his dome-like brown belly divided into"
+                     " stiff arched segments on top of which the bed quilt"
+                     " could hardly keep in position and was about to slide"
+                     " off completely. His numerous legs, which were pitifully"
+                     " thin compared to the rest of his bulk, waved helplessly"
+                     " before his eyes.",
+            authors="Ima N. Author (FSU)",
+            source_type="tex",
+            size_kilobytes=543,
+            previous_versions=[],
+            secondary_classification=[Classification('cs.AI', 'cs.AR')],
+            history=[
+                Event(arxiv_id=identifier,
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.NEW,
+                      classifications=[Classification('cs.DL'),
+                                       Classification('cs.AI'),
+                                       Classification('cs.AR')],
+                      version=1),
+            ],
+            submitter=Person(
+                full_name="Ima N. Author",
+                last_name="Author",
+                first_name="Ima N.",
+                affiliation=["FSU"]
+            ),
+            comments="4 figures, 2 turtles",
+            source_package=File(
+                filename=f"{identifier}.tar.gz",
+                mime_type="application/tar+gzip",
+                checksum="asdf1234==",
+                content=io.BytesIO(b'foocontent'),
+                created=datetime.now(UTC),
+                modified=datetime.now(UTC)
+            ),
+            pdf=File(
+                filename=f"{identifier}.pdf",
+                mime_type="application/pdf",
+                checksum="qwer9876==",
+                content=io.BytesIO(b'foopdf'),
+                created=datetime.now(UTC),
+                modified=datetime.now(UTC)
+            )
+        )
+        
+

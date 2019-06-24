@@ -4,6 +4,9 @@ from typing import NamedTuple, Type, List, Optional
 from datetime import datetime
 from enum import Enum
 
+from .identifier import Identifier
+from .classification import Classification
+
 
 class Event(NamedTuple):
     """An announcement-related event."""
@@ -17,10 +20,10 @@ class Event(NamedTuple):
         CROSSLIST = 'cross'
         WITHDRAWN = 'withdrawn'
 
-    arxiv_id: str
+    arxiv_id: Identifier
     event_date: datetime
     event_type: Type
-    categories: List[str]
+    classifications: List[Classification]
 
     description: str = ''
     legacy: bool = False
