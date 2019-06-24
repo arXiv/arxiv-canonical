@@ -3,6 +3,7 @@
 from unittest import TestCase
 import os
 import json
+from pprint import pprint
 
 import jsonschema
 
@@ -20,7 +21,7 @@ ALL_ABS = [os.path.join(base, fname)
 class TestClassicDeserialize(TestCase):
     """Test deserialization of the classic abs format."""
 
-    SCHEMA_PATH = os.path.abspath('schema/')
+    SCHEMA_PATH = os.path.abspath('schema/resources')
 
     def setUp(self):
         """Get a JSON Schema reference resolver."""

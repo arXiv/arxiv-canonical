@@ -10,7 +10,7 @@
       "$ref": "./Event.json"
     },
     "eprint": {
-      "$ref": "./EPrintMetadata.json"
+      "$ref": "./EPrint.json"
     }
   }
 }

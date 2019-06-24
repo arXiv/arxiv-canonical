@@ -62,7 +62,7 @@ ASSUMED_LICENSE = domain.License(
 )
 
 
-def parse(path: str) -> domain.EPrintMetadata:
+def parse(path: str) -> domain.EPrint:
     with open(path, mode='r', encoding='latin-1') as f:
         raw = f.read()
 
@@ -124,7 +124,7 @@ def parse(path: str) -> domain.EPrintMetadata:
     else:
         license = ASSUMED_LICENSE
 
-    return domain.EPrintMetadata(
+    return domain.EPrint(
         arxiv_id=arxiv_id,
         version=versions[-1].version,
         legacy=True,

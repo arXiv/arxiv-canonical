@@ -11,6 +11,8 @@ backports-datetime-fromisoformat = "*"
 jsonschema = "*"
 python-dateutil = "*"
 pytz = "*"
+typing-extensions = "*"
+arxiv-base = "==0.15.8.post1"
 
 [requires]
 python_version = "3.6"

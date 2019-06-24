@@ -25,7 +25,7 @@ The canonical record can be stored on any system that supports a key-binary
 data structure, such as a filesystem or an object store. The two core data
 structures in the record are:
 
-- E-prints, comprised of metadata(:class:`.domain.EPrintMetadata`), submitted
+- E-prints, comprised of metadata(:class:`.domain.EPrint`), submitted
   content, and the first rendering of the PDF.
 - Announcement records, representing a single announcement-related event, such
   as a new version, a withdrawal, or a cross-list; these records are:

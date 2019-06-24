@@ -21,7 +21,7 @@ class TestSerializeDeserialize(TestCase):
 class TestAgainstSchema(TestCase):
     """Test serialized domain objects against JSON schema."""
 
-    SCHEMA_PATH = os.path.abspath('schema/')
+    SCHEMA_PATH = os.path.abspath('schema/resources')
 
     def setUp(self):
         """Get a JSON Schema reference resolver."""

@@ -1,5 +1,5 @@
 {
-  "title": "Event",
+  "title": "Classification",
   "type": "object",
   "properties": {
     "@type": {

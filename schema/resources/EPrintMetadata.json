@@ -1,5 +1,5 @@
 {
-    "title": "EPrintMetadata",
+    "title": "EPrint",
     "description": "Canonical metadata record for an arXiv e-print.",
     "type": "object",
     "additionalProperties": false,
@@ -138,6 +138,18 @@
         "description": "Classifications from ACM Computing Classification System",
         "oneOf": [
           {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "source_package": {
+        "oneOf": [
+          {"$ref": "./File.json"},
+          {"type": "null"}
+        ]
+      },
+      "pdf": {
+        "oneOf": [
+          {"$ref": "./File.json"},
           {"type": "null"}
         ]
       }
