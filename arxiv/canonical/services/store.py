@@ -179,19 +179,19 @@ class CanonicalStore:
         return store
 
 
-class MockPersistentListing(PersistentListing):
+class FakePersistentListing(PersistentListing):
     @property
     def is_changed(self) -> bool:
         return False
 
 
-class MockPersistentEPrint(PersistentEPrint):
+class FakePersistentEPrint(PersistentEPrint):
     @property
     def is_changed(self) -> bool:
         return False
 
 
-class MockCanonicalStore(CanonicalStore):
+class FakeCanonicalStore(CanonicalStore):
     """
     A mock implementation of the canonical store.
     
@@ -200,7 +200,7 @@ class MockCanonicalStore(CanonicalStore):
     """
 
     @classmethod
-    def current_session(cls) -> 'MockCanonicalStore':
+    def current_session(cls) -> 'FakeCanonicalStore':
         return cls('foo')
 
     def store_listing(self, listing: PersistentListing) -> None:
@@ -211,7 +211,7 @@ class MockCanonicalStore(CanonicalStore):
 
     def load_listing(self, start_date: date, end_date: Optional[date] = None) \
             -> PersistentListing:
-        return MockPersistentListing(
+        return FakePersistentListing(
             start_date=start_date,
             end_date=start_date,
             events=[
@@ -240,7 +240,7 @@ class MockCanonicalStore(CanonicalStore):
 
     def load_eprint(self, identifier: Identifier, version: int) \
             -> PersistentEPrint:
-        return MockPersistentEPrint(
+        return FakePersistentEPrint(
             arxiv_id=identifier,
             announced_date=date.today(),
             version=1,
