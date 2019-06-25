@@ -181,6 +181,18 @@ class LineParser:
                                      self.parse_cross(archive, cross)),
                      self._to_events(e_date, Event.Type.REPLACED,
                                      self.parse_replace(archive, replace)))
+    
+    def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """Parse entries for new e-prints."""
+        raise NotImplementedError('Not implemented in this base class')
+    
+    def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """Parse entries for cross-list e-prints."""
+        raise NotImplementedError('Not implemented in this base class')
+    
+    def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
+        """Parse entries for replacements."""
+        raise NotImplementedError('Not implemented in this base class')
 
 
 class OldStyleLineParser(LineParser):

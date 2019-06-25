@@ -1,3 +1,3 @@
-"""HTTP routes for funding service."""
+"""HTTP routes for repository service."""
 
-from . import api, ui
+from . import api

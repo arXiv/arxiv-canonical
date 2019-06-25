@@ -4,8 +4,8 @@ from typing import NamedTuple, Type, List, Optional
 from datetime import datetime
 from enum import Enum
 
+from arxiv.taxonomy import Category
 from .identifier import Identifier
-from .classification import Classification
 
 
 class Event(NamedTuple):
@@ -23,7 +23,7 @@ class Event(NamedTuple):
     arxiv_id: Identifier
     event_date: datetime
     event_type: Type
-    classifications: List[Classification]
+    categories: List[Category]
 
     description: str = ''
     legacy: bool = False

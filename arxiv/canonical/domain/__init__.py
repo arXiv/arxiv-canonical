@@ -3,7 +3,6 @@
 from .license import License
 from .person import Person
 from .event import Event
-from .classification import Classification
 from .identifier import Identifier
 from .file import File
 from .eprint import EPrint, VersionReference

@@ -8,15 +8,21 @@ from arxiv.base import Base, logging
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.users import auth
 
-from . import routes
+from arxiv.canonical.serialize import encoder, decoder
+
+from . import routes, config
 
 
 def create_api_app() -> Flask:
     """Create a new API application."""
     app = Flask('funding')
-    app.config.from_pyfile('config.py')
+    app.config.from_object(config)
     Base(app)
     auth.Auth(app)
+
+    app.json_decoder = decoder.CanonicalJSONDecoder
+    app.json_encoder = encoder.CanonicalJSONEncoder
+
     app.register_blueprint(routes.api.blueprint)
     wrap(app, [auth.middleware.AuthMiddleware])
     register_error_handlers(app)

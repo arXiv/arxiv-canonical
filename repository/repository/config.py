@@ -113,7 +113,7 @@ S3_ENDPOINT = environ.get('S3_ENDPOINT', None)
 S3_VERIFY = bool(int(environ.get('S3_VERIFY', 1)))
 """Enable/disable TLS certificate verification for S3."""
 
-S3_BUCKET = environ.get('S3_BUCKET', f'compiler-submission-{NAMESPACE}')
+S3_BUCKET = environ.get('S3_BUCKET', f'canonical-{NAMESPACE}')
 """Bucket for storing compilation products and logs."""
 
 AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID', None)

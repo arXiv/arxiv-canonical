@@ -17,9 +17,9 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 from arxiv.base.globals import get_application_global, get_application_config
+from arxiv.taxonomy import Category
 
-from ..domain import Listing, EPrint, Identifier, Event, Classification, \
-        License, File, Person
+from ..domain import Listing, EPrint, Identifier, Event, License, File, Person
 
 
 class DoesNotExist(Exception):
@@ -35,10 +35,6 @@ class PersistentListing(Listing):
     requires storing in a request/operation context.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
-        """Set up private structs for tracking what has changed."""
-        raise NotImplementedError('Implement me!')
-    
     @property
     def is_changed(self):
         """Indicate whether or not this listing has unpersisted changes."""
@@ -53,10 +49,6 @@ class PersistentEPrint(EPrint):
     The objective of this class is to keep track of what has changed and 
     requires storing in a request/operation context.
     """
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Set up private structs for tracking what has changed."""
-        raise NotImplementedError('Implement me!')
     
     @property
     def is_changed(self):
@@ -207,6 +199,10 @@ class MockCanonicalStore(CanonicalStore):
     around.
     """
 
+    @classmethod
+    def current_session(cls) -> 'MockCanonicalStore':
+        return cls('foo')
+
     def store_listing(self, listing: PersistentListing) -> None:
         return
     
@@ -222,24 +218,22 @@ class MockCanonicalStore(CanonicalStore):
                 Event(arxiv_id=Identifier('2004.00321'),
                       event_date=datetime.now(UTC),
                       event_type=Event.Type.NEW,
-                      classifications=[Classification('cs.DL'),
-                                       Classification('cs.AI')],
+                      categories=[Category('cs.DL'), Category('cs.AI')],
                       version=1),
                 Event(arxiv_id=Identifier('2004.00322'),
                       event_date=datetime.now(UTC),
                       event_type=Event.Type.NEW,
-                      classifications=[Classification('cs.DL'),
-                                       Classification('cs.AI')],
+                      categories=[Category('cs.DL'), Category('cs.AI')],
                       version=1),
                 Event(arxiv_id=Identifier('2003.00021'),
                       event_date=datetime.now(UTC),
                       event_type=Event.Type.CROSSLIST,
-                      classifications=[Classification('cs.AR')],
+                      categories=[Category('cs.AR')],
                       version=1),
                 Event(arxiv_id=Identifier('2003.00001'),
                       event_date=datetime.now(UTC),
                       event_type=Event.Type.REPLACED,
-                      classifications=[Classification('cs.AR')],
+                      categories=[Category('cs.AR')],
                       version=2)
             ]
         )
@@ -256,7 +250,7 @@ class MockCanonicalStore(CanonicalStore):
                 href="https://arxiv.org/licenses/nonexclusive-distrib/1.0/"
                      "license.html"
             ),
-            primary_classification=Classification("cs", "cs.DL"),
+            primary_classification=Category("cs.DL"),
             title="Adventures in Flatland",
             abstract="As Gregor Samsa awoke one morning from uneasy dreams he"
                      " found himself transformed in his bed into a gigantic"
@@ -272,14 +266,14 @@ class MockCanonicalStore(CanonicalStore):
             source_type="tex",
             size_kilobytes=543,
             previous_versions=[],
-            secondary_classification=[Classification('cs.AI', 'cs.AR')],
+            secondary_classification=[Category('cs.AI'), Category('cs.AR')],
             history=[
                 Event(arxiv_id=identifier,
                       event_date=datetime.now(UTC),
                       event_type=Event.Type.NEW,
-                      classifications=[Classification('cs.DL'),
-                                       Classification('cs.AI'),
-                                       Classification('cs.AR')],
+                      categories=[Category('cs.DL'),
+                                  Category('cs.AI'),
+                                  Category('cs.AR')],
                       version=1),
             ],
             submitter=Person(

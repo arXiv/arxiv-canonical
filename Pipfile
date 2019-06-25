@@ -12,6 +12,7 @@ pylint = "*"
 pydocstyle = "*"
 mypy = "*"
 pytest-cov = "*"
+arxiv-canonical = {path = "."}
 
 [packages]
 backports-datetime-fromisoformat = "*"

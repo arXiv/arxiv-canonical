@@ -36,6 +36,8 @@ class CanonicalJSONEncoder(json.JSONEncoder):
             data = unpack_obj(obj)
             data['@type'] = type(obj).__name__
             return data
+        elif isinstance(obj, Enum):
+            return obj.value
         elif isinstance(obj, tuple):
             return tuple(self.unpack(value) for value in obj)
         elif isinstance(obj, (date, datetime)):
