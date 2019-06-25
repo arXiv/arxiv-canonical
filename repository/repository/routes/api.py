@@ -21,3 +21,11 @@ def service_status() -> Response:
     response.status_code = status_code
     response.headers.extend(headers)
     return response
+
+
+@blueprint.route('/e-print/<arxiv:identifier>v<int:version>/events', 
+                 methods=['GET'])
+def get_eprint_events(identifier: str, version: int) -> Response:
+    """Get events for a specific version of an e-print."""
+    data, code, headers = controllers.get_eprint_events(identifier, version)
+    return jsonify(data), code, headers
