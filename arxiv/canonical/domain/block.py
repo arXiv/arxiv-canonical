@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from .eprint import EPrint
 from .event import Event
-from .identifier import Identifier
+from .identifier import Identifier, VersionedIdentifier
 from .listing import Listing
 from .util import now
 
@@ -16,67 +16,53 @@ class MonthlyBlock(NamedTuple):
 
     year: int
     month: int
-    new: Mapping[Identifier, EPrint] = []
-    replaced: Mapping[Identifier, EPrint] = []
-    cross_listed: Mapping[Identifier, EPrint] = []
-
-    listings: Mapping[date, 'Listing'] = OrderedDict()
-
-    def __post_init__(self) -> None:
-        self.new.sort(key=lambda ep: ep.identifier.incremental_part)
-        self.replaced.sort(key=lambda ep: ep.identifier.incremental_part)
-        self.cross_listed.sort(key=lambda ep: ep.identifier.incremental_part)
+    eprints: Mapping[VersionedIdentifier, EPrint]
 
     @property
     def is_open(self) -> bool:
-        return date.today().month == self.month
+        """Determine whether this block can accept new e-prints."""
+        today = date.today()
+        return bool(today.year == self.year and today.month == self.month)
 
     @property
     def is_closed(self) -> bool:
+        """Inverse of :attr:`.is_open` (of course)."""
         return not self.is_open
 
-    @property
-    def current_listing(self):
-        today = date.today()
-        if today not in self.listings:
-            self.listings[today] = Listing(today, today, [])
-        return self.listings[today]
-
     def get_next_identifier(self) -> Identifier:
-        """Generate the next available arXiv identifier in this block."""
-        last_identifier = self.new[-1].identifier
-        return Identifier.from_parts(self.year, self.month,
-                                     last_identifier.incremental_part + 1)
+        """Get the next available (unused) arXiv identifier in this block."""
+        identifiers = sorted(self.eprints.keys(), 
+                             key=lambda ident: ident.incremental_part) 
+        inc = identifiers[-1].incremental_part + 1 if identifiers else 1
+        return Identifier.from_parts(self.year, self.month, inc)
 
-    def can_announce(self, eprint: EPrint) -> bool:
-        """
-        Determine whether this block can announce an :class:`.EPrint`.
+    def add(self, eprint: EPrint) -> None:
+        if eprint.versioned_identifier in self.eprints:
+            raise ValueError(f'Already exists: {eprint.versioned_identifier}')
+        self._check_right_block(eprint)
+        self.eprints[eprint.versioned_identifier] = eprint
+    
+    def update(self, eprint: EPrint) -> None:
+        if eprint.versioned_identifier not in self.eprints:
+            raise ValueError(f'Not in block: {eprint.versioned_identifier}')
+        self._check_right_block(eprint)
+        self.eprints[eprint.versioned_identifier] = eprint
+    
+    def load_eprint(self, arxiv_id: Identifier, 
+                    version: Optional[int] = None) -> EPrint:
+        if not version:
+            version = self._get_latest_version(arxiv_id)
+        return self.eprints[VersionedIdentifier.from_parts(arxiv_id, version)]
+    
+    def _get_latest_version(self, arxiv_id: Identifier) -> int:
+        versions = [versioned_identifier for versioned_identifier 
+                        in self.eprints.keys() 
+                        if versioned_identifier.arxiv_id == arxiv_id]
+        if not versions:
+            raise KeyError(f'No such eprint: {arxiv_id}')        
+        return sorted(versions, key=lambda k: k.version)[-1].version
 
-        The block must be open, and the e-print must not already be announced.
-        """
-        return self.is_open and not eprint.is_announced
-
-    def make_event(self, eprint: EPrint, event_type: Event.Type, 
-                   timestamp: Optional[datetime] = None) -> Event:
-        if timestamp is None:
-            timestamp = now()
-        return Event(eprint.arxiv_id, timestamp, event_type, 
-                     eprint.all_categories, version=eprint.version)
-
-    def _add(self, eprint_set: Mapping[Identifier, EPrint], eprint: EPrint,
-             event_type: Event.Type) -> None:
-        eprint_set[eprint.identifier] = eprint
-        self.current_listing.add_event(eprint, 
-                                       self.make_event(eprint, event_type))
-
-    def add_new(self, eprint: EPrint) -> None:
-        self._add(self.new, eprint, Event.Type.New)
-
-    def add_replacement(self, eprint: EPrint) -> None:
-        self._add(self.replaced, eprint, Event.Type.REPLACED)
-
-    def add_crosslist(self, eprint: EPrint) -> None:
-        self._add(self.cross_listed, eprint, Event.Type.CROSSLIST)
-
-    def add_withdrawal(self, eprint: EPrint) -> None:
-        self._add(self.replaced, eprint, Event.Type.WITHDRAWN)
+    def _check_right_block(self, eprint: EPrint) -> None:
+        if eprint.arxiv_id.year != self.year \
+                or eprint.arxiv_id.month != self.month:
+            raise ValueError(f'Wrong block: {eprint.versioned_identifier}')

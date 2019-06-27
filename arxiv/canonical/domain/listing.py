@@ -8,12 +8,10 @@ from .event import Event
 
 
 class Listing(NamedTuple):
-    """A collection of announcement-related events."""
+    """A collection of announcement-related events on a particular day."""
 
-    start_date: date
-    """Inclusive start-date for this listing."""
-    end_date: date
-    """Inclusive end-date for this listing."""
+    date: date
+    """Date on which the events occurred."""
     events: List[Event]
     """Events in this listing."""
 
