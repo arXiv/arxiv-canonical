@@ -10,9 +10,7 @@ from http import HTTPStatus
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import NotFound
 
-from arxiv.canonical.services.store import FakeCanonicalStore as CanonicalStore
-from arxiv.canonical.services.store import DoesNotExist
-
+from .services.record import CanonicalStore, DoesNotExist
 
 
 Response = Tuple[Dict[str, Any], HTTPStatus, Dict[str, str]]
