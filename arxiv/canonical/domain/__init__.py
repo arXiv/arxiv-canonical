@@ -3,11 +3,11 @@
 from .license import License
 from .person import Person
 from .event import Event
-from .identifier import Identifier
+from .identifier import Identifier, VersionedIdentifier
 from .file import File
 from .eprint import EPrint, VersionReference
 from .block import MonthlyBlock
-from .repository import Repository
+from .record import CanonicalRecord
 from .listing import Listing
 
 

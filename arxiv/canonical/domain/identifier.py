@@ -12,10 +12,9 @@ class Identifier(str):
     """
 
     def __init__(self, value: str) -> None:
-        super(Identifier, self).__init__(value)
-        if identifier.STANDARD.match(value):
+        if identifier.STANDARD.match(value.__str__()):
             self.is_old_style = False
-        elif identifier.OLD_STYLE.match(value):
+        elif identifier.OLD_STYLE.match(value.__str__()):
             self.is_old_style = True
         else:
             raise ValueError('Not a valid arXiv ID')
@@ -23,7 +22,8 @@ class Identifier(str):
     @classmethod
     def from_parts(cls, year: int, month: int, inc: int) -> 'Identifier':
         """Generate a new-style identifier from its parts."""
-        return cls(f'{year}{month}.{inc.zfill(5)}')
+        prefix = f'{str(year)[-2:]}{str(month).zfill(2)}'
+        return cls(f'{prefix}.{str(inc).zfill(5)}')
 
     @property
     def incremental_part(self) -> int:
@@ -47,3 +47,29 @@ class Identifier(str):
         if self.is_old_style:
             return int(self.split('/', 1)[1][2:4])
         return int(self[2:4])
+
+
+class VersionedIdentifier(str):
+    def __init__(self, value: str) -> None:
+        id_part, version_part = self.split('v', 1)
+        self.arxiv_id = Identifier(id_part)
+        self.version = int(version_part)
+
+    @classmethod
+    def from_parts(cls, arxiv_id: Identifier, version: int) \
+            -> 'VersionedIdentifier':
+        """Generate a new-style versioned identifier from its parts."""
+        return cls(f'{arxiv_id}v{version}')
+
+    @property
+    def incremental_part(self) -> int:
+        """The part of the identifier that is incremental."""
+        return self.arxiv_id.incremental_part
+
+    @property
+    def year(self) -> int:
+        return self.arxiv_id.year
+
+    @property
+    def month(self) -> int:
+        return self.arxiv_id.month

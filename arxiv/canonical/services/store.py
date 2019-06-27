@@ -1,11 +1,11 @@
 """
 Persist changes to the canonical record.
 
-Provides a :class:`.CanonicalStore` that stores :class:`.Listing` and 
-:class:`.EPrint` resources in S3.
+Provides a :class:`.CanonicalStore` that stores resources in S3.
 """
 
 import io
+from unittest import mock    # TODO: remove this when fakes are no longer used.
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 from pytz import UTC
@@ -19,7 +19,8 @@ from botocore.exceptions import ClientError
 from arxiv.base.globals import get_application_global, get_application_config
 from arxiv.taxonomy import Category
 
-from ..domain import Listing, EPrint, Identifier, Event, License, File, Person
+from ..domain import Listing, EPrint, Identifier, Event, License, File, \
+    Person, CanonicalRecord, MonthlyBlock
 
 
 class DoesNotExist(Exception):
@@ -28,13 +29,28 @@ class DoesNotExist(Exception):
 
 # TODO: implement me!
 class CanonicalStore:
-    """Persists the canonical record in S3."""
+    """
+    Persists the canonical record in S3.
+    
+    The intended pattern for working with the canonical record is to use the
+    :class:`.domain.CanonicalRecord` as the primary entrypoint for all 
+    operations. Consequently, this service offers only a single public instance
+    method, :fund:`.load_record`.
+
+    Persistence is achieved by attaching members to
+    :class:`.domain.CanonicalRecord`, :class`.domain.MonthlyBlock`, and
+    :class:`.domain.Listing` instances that implement reads/writes to S3. In
+    this way, consumers of ``arxiv.canonical.domain`` can largely work directly
+    with :class:`.domain.CanonicalRecord`, and persistence is handled
+    transparently.
+    """
 
     def __init__(self, bucket: str, verify: bool = False,
                  region_name: Optional[str] = None,
                  endpoint_url: Optional[str] = None,
                  aws_access_key_id: Optional[str] = None,
-                 aws_secret_access_key: Optional[str] = None) -> None:
+                 aws_secret_access_key: Optional[str] = None,
+                 read_only: bool = True) -> None:
         """Initialize with connection config parameters."""
         self._bucket = bucket
         self._region_name = region_name
@@ -42,7 +58,19 @@ class CanonicalStore:
         self._verify = verify
         self._aws_access_key_id = aws_access_key_id
         self._aws_secret_access_key = aws_secret_access_key
+        self._read_only = read_only
         self.client = self._new_client()
+
+    @property
+    def read_only(self) -> bool:
+        """
+        Determine whether or not this is a read-only session.
+
+        This is read-only property to discourage users of this class to mess
+        with it in runtime code. Should only be set via application
+        configuration.
+        """
+        return self._read_only
 
     def _new_client(self, config: Optional[Config] = None) -> boto3.client:
         # Only add credentials to the client if they are explicitly set.
@@ -68,34 +96,31 @@ class CanonicalStore:
                      connect_timeout: int = 5) -> bool:
         """Determine whether or not we can read from/write to the store."""
         raise NotImplementedError('Implement me!')
-
-    def store_listing(self, listing: Listing) -> None:
+    
+    def load_record(self) -> CanonicalRecord:
         """
-        Store a :class:`.Listing`.
+        Initialize and return the :class:`.CanonicalRecord`.
+        
+        The ``blocks`` and ``listings`` members must be mappings that implement
+        ``__getitem__`` methods such that, when called, an object of the
+        expected type (:class:`.MonthlyBlock` and :class:`.Listing`,
+        respectively) is always returned. 
         """
         raise NotImplementedError('Implement me!')
-    
-    def store_eprint(self, eprint: EPrint) -> None:
-        """
-        Store a :class:`.EPrint`.
 
-        If the :attr:`.EPrint.source_package` or :attr:`.EPrint.pdf` content
-        has changed, those should also be stored.
+    def _load_listing(self, listing_date: date) -> Listing:
         """
-        raise NotImplementedError('Implement me!')
-    
-    def load_listing(self, start_date: date, end_date: Optional[date] = None) \
-            -> Listing:
-        """
-        Load a listing, and all of its attendant events and e-prints.
+        Load a :class:`.Listing`.
+
+        If ``self.read_only`` is ``False``, the ``events`` member of the listing
+        must be a subclass of ``list``, and implement an ``append(event: Event)
+        -> None`` method that, when called, writes the current state of the
+        listing to S3.
         
         Parameters
         ----------
-        start_date : datetime
-            Start date for selecting listing events.
-        end_date : datetime or None
-            End date for selecting listing events (inclusive). If ``None``,
-            should default to ``start_date`` (load listings for a single day).
+        listing_date : datetime
+            Date for selecting listing events.
 
         Returns
         -------
@@ -104,7 +129,54 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
 
-    def load_eprint(self, identifier: Identifier, version: int) \
+    def _load_block(self, year: int, month: int) -> MonthlyBlock:
+        """
+        Load a :class:`.MonthlyBlock`.
+
+        The ``eprints`` member of the block must be a mapping (e.g. subclass of
+        ``dict``), and implement:
+        
+        - If ``self.read_only`` is ``False``, a method
+          ``__setitem__(identifier: VersionedIdentifier, eprint: EPrint) ->
+          None`` that, when called, writes the :class:`.EPrint` to S3.
+        - A method ``__getitem__(identifier: VersionedIdentifier) -> EPrint:``
+          that, when called, reads the corresponding :class:`.EPrint` from 
+          S3 if it exists (otherwise raises ``KeyError``).
+
+        Parameters
+        ----------
+        year : int
+        month : int
+
+        Returns
+        -------
+        :class:`.MonthlyBlock`
+
+        """
+        raise NotImplementedError('Implement me!')
+    
+
+    def _store_listing(self, listing: Listing) -> None:
+        """
+        Store a :class:`.Listing`.
+
+        Should complain loudly if ``self.read_only`` is ``True``.
+        """
+        raise NotImplementedError('Implement me!')
+    
+    def _store_eprint(self, eprint: EPrint) -> None:
+        """
+        Store a :class:`.EPrint`.
+
+        If the :attr:`.EPrint.source_package` or :attr:`.EPrint.pdf` content
+        has changed, those should also be stored.
+
+        Should complain loudly if ``self.read_only`` is ``True``.
+        """
+        raise NotImplementedError('Implement me!')
+    
+
+    def _load_eprint(self, identifier: Identifier, version: int) \
             -> EPrint:
         """
         Load an :class:`.EPrint`.
@@ -167,38 +239,10 @@ class FakeCanonicalStore(CanonicalStore):
     def store_eprint(self, eprint: EPrint) -> None:
         return
 
-    def load_listing(self, start_date: date, end_date: Optional[date] = None) \
-            -> Listing:
-        return Listing(
-            start_date=start_date,
-            end_date=start_date,
-            events=[
-                Event(arxiv_id=Identifier('2004.00321'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.NEW,
-                      categories=[Category('cs.DL'), Category('cs.AI')],
-                      version=1),
-                Event(arxiv_id=Identifier('2004.00322'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.NEW,
-                      categories=[Category('cs.DL'), Category('cs.AI')],
-                      version=1),
-                Event(arxiv_id=Identifier('2003.00021'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.CROSSLIST,
-                      categories=[Category('cs.AR')],
-                      version=1),
-                Event(arxiv_id=Identifier('2003.00001'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.REPLACED,
-                      categories=[Category('cs.AR')],
-                      version=2)
-            ]
-        )
-
-    def load_eprint(self, identifier: Identifier, version: int) \
-            -> EPrint:
-        return EPrint(
+    def load_record(self) -> CanonicalRecord:
+        fake_eprints = mock.MagicMock(spec=dict)
+        identifier = Identifier('1901.00123')
+        fake_eprint = EPrint(
             arxiv_id=identifier,
             announced_date=date.today(),
             version=1,
@@ -258,5 +302,37 @@ class FakeCanonicalStore(CanonicalStore):
                 modified=datetime.now(UTC)
             )
         )
-        
+        fake_eprints.__getitem__.return_value = fake_eprint
+        fake_block = mock.MagicMock(spec=MonthlyBlock,
+                                    eprints=fake_eprints)
+        fake_block.load_eprint.return_value = fake_eprint
+        fake_blocks = mock.MagicMock(spec=dict)
+        fake_blocks.__getitem__.return_value = fake_block
 
+        fake_listings = mock.MagicMock(spec=dict)
+        fake_listings.__getitem__.return_value = Listing(
+            date=date.today(),
+            events=[
+                Event(arxiv_id=Identifier('2004.00321'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.NEW,
+                      categories=[Category('cs.DL'), Category('cs.AI')],
+                      version=1),
+                Event(arxiv_id=Identifier('2004.00322'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.NEW,
+                      categories=[Category('cs.DL'), Category('cs.AI')],
+                      version=1),
+                Event(arxiv_id=Identifier('2003.00021'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.CROSSLIST,
+                      categories=[Category('cs.AR')],
+                      version=1),
+                Event(arxiv_id=Identifier('2003.00001'),
+                      event_date=datetime.now(UTC),
+                      event_type=Event.Type.REPLACED,
+                      categories=[Category('cs.AR')],
+                      version=2)
+            ]
+        )    
+        return CanonicalRecord(blocks=fake_blocks, listings=fake_listings)

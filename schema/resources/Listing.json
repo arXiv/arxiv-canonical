@@ -6,11 +6,7 @@
     "@type": {
       "type": "string"
     },
-    "start_date": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "end_date": {
+    "date": {
       "type": "string",
       "format": "date-time"
     },
