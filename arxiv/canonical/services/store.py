@@ -27,36 +27,6 @@ class DoesNotExist(Exception):
 
 
 # TODO: implement me!
-class PersistentListing(Listing):
-    """
-    A :class:`.Listing` with persistent features.
-    
-    The objective of this class is to keep track of what has changed and 
-    requires storing in a request/operation context.
-    """
-
-    @property
-    def is_changed(self):
-        """Indicate whether or not this listing has unpersisted changes."""
-        raise NotImplementedError('Implement me!')
-
-
-# TODO: implement me!
-class PersistentEPrint(EPrint):
-    """
-    A :class:`.EPrint` with persistent features.
-    
-    The objective of this class is to keep track of what has changed and 
-    requires storing in a request/operation context.
-    """
-    
-    @property
-    def is_changed(self):
-        """Indicate whether or not this e-print has unpersisted changes."""
-        raise NotImplementedError('Implement me!')
-
-
-# TODO: implement me!
 class CanonicalStore:
     """Persists the canonical record in S3."""
 
@@ -99,13 +69,13 @@ class CanonicalStore:
         """Determine whether or not we can read from/write to the store."""
         raise NotImplementedError('Implement me!')
 
-    def store_listing(self, listing: PersistentListing) -> None:
+    def store_listing(self, listing: Listing) -> None:
         """
         Store a :class:`.Listing`.
         """
         raise NotImplementedError('Implement me!')
     
-    def store_eprint(self, eprint: PersistentEPrint) -> None:
+    def store_eprint(self, eprint: EPrint) -> None:
         """
         Store a :class:`.EPrint`.
 
@@ -115,7 +85,7 @@ class CanonicalStore:
         raise NotImplementedError('Implement me!')
     
     def load_listing(self, start_date: date, end_date: Optional[date] = None) \
-            -> PersistentListing:
+            -> Listing:
         """
         Load a listing, and all of its attendant events and e-prints.
         
@@ -129,13 +99,13 @@ class CanonicalStore:
 
         Returns
         -------
-        :class:`.PersistentListing`
+        :class:`.Listing`
 
         """
         raise NotImplementedError('Implement me!')
 
     def load_eprint(self, identifier: Identifier, version: int) \
-            -> PersistentEPrint:
+            -> EPrint:
         """
         Load an :class:`.EPrint`.
 
@@ -179,18 +149,6 @@ class CanonicalStore:
         return store
 
 
-class FakePersistentListing(PersistentListing):
-    @property
-    def is_changed(self) -> bool:
-        return False
-
-
-class FakePersistentEPrint(PersistentEPrint):
-    @property
-    def is_changed(self) -> bool:
-        return False
-
-
 class FakeCanonicalStore(CanonicalStore):
     """
     A mock implementation of the canonical store.
@@ -203,15 +161,15 @@ class FakeCanonicalStore(CanonicalStore):
     def current_session(cls) -> 'FakeCanonicalStore':
         return cls('foo')
 
-    def store_listing(self, listing: PersistentListing) -> None:
+    def store_listing(self, listing: Listing) -> None:
         return
     
     def store_eprint(self, eprint: EPrint) -> None:
         return
 
     def load_listing(self, start_date: date, end_date: Optional[date] = None) \
-            -> PersistentListing:
-        return FakePersistentListing(
+            -> Listing:
+        return Listing(
             start_date=start_date,
             end_date=start_date,
             events=[
@@ -239,8 +197,8 @@ class FakeCanonicalStore(CanonicalStore):
         )
 
     def load_eprint(self, identifier: Identifier, version: int) \
-            -> PersistentEPrint:
-        return FakePersistentEPrint(
+            -> EPrint:
+        return EPrint(
             arxiv_id=identifier,
             announced_date=date.today(),
             version=1,
