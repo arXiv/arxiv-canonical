@@ -7,6 +7,7 @@ from werkzeug.exceptions import NotFound
 
 from arxiv.canonical.domain import Event
 from arxiv.canonical.services import store
+from ..services.record import CanonicalStore
 from .. import controllers
 
 
@@ -26,8 +27,7 @@ class TestGetEPrintEvents(TestCase):
     def test_request_for_existant_eprint(self, mock_CanonicalStore):
         """A request is received for an existant e-print."""
         mock_CanonicalStore.current_session.return_value \
-            = store.FakeCanonicalStore.current_session()
-        
+            = CanonicalStore.current_session()
         data, code, headers = controllers.get_eprint_events('1901.00123', 4)
         self.assertIsInstance(data, list, 'Returns a list of objects')
         self.assertGreater(len(data), 0, 'Returns at least one object')
