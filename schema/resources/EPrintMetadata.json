@@ -16,6 +16,15 @@
         "minimum": 1,
         "type": "integer"
       },
+      "is_withdrawn": {
+        "type": "boolean"
+      },
+      "reason_for_withdrawal": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
       "legacy": {
         "description": "Legacy records were carried forward from arXiv Classic.",
         "type": "boolean"
