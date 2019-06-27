@@ -16,9 +16,9 @@ class MonthlyBlock(NamedTuple):
 
     year: int
     month: int
-    new: List[EPrint] = []
-    replaced: List[EPrint] = []
-    cross_listed: List[EPrint] = []
+    new: Mapping[Identifier, EPrint] = []
+    replaced: Mapping[Identifier, EPrint] = []
+    cross_listed: Mapping[Identifier, EPrint] = []
 
     listings: Mapping[date, 'Listing'] = OrderedDict()
 
@@ -63,9 +63,9 @@ class MonthlyBlock(NamedTuple):
         return Event(eprint.arxiv_id, timestamp, event_type, 
                      eprint.all_categories, version=eprint.version)
 
-    def _add(self, eprint_set: List[EPrint], eprint: EPrint,
+    def _add(self, eprint_set: Mapping[Identifier, EPrint], eprint: EPrint,
              event_type: Event.Type) -> None:
-        eprint_set.append(eprint)
+        eprint_set[eprint.identifier] = eprint
         self.current_listing.add_event(eprint, 
                                        self.make_event(eprint, event_type))
 
