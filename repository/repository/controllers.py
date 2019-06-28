@@ -48,4 +48,28 @@ def get_eprint_events(identifier: str, version: int) -> Response:
     except DoesNotExist as e:
         raise NotFound(f'No such e-print: {identifier}v{version}') from e
     return eprint.history, HTTPStatus.OK, {}
-    
+
+
+def get_eprint_pdf(identifier: str, version: int) -> Response:
+    """
+    Retrieve pdf for a specific e-print version.
+
+    Parameters
+    ----------
+    identifier : str
+        A valid arXiv identifier.
+    version : int
+        Numeric version of the e-print.
+
+    Raises
+    ------
+    :class:`.NotFound`
+        Raised when the requested identifier + version does not exist.
+
+    """
+    estore = CanonicalStore.current_session()
+    try:
+        eprint = estore.load_eprint(identifier, version)
+    except DoesNotExist as e:
+        raise NotFound(f'No such e-print: {identifier}v{version}') from e
+    return eprint.pdf, HTTPStatus.OK, {}
