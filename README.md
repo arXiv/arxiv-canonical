@@ -53,7 +53,7 @@ pipenv install --dev
 You can run either the API or the UI using the Flask development server.
 
 ```bash
-FLASK_APP=ui.py FLASK_DEBUG=1 pipenv run flask run
+FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
 ```
 
 Dockerfiles are also provided in the root of this repository. These use uWSGI
