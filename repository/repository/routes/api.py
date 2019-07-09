@@ -36,8 +36,10 @@ def get_eprint_events(identifier: str, version: int) -> Response:
                  methods=['GET'])
 def get_eprint_pdf(identifier: str, version: int) -> Response:
     """Get PDF for a specific version of an e-print."""
-    pdf, code, headers = controllers.get_eprint_pdf(identifier, version)
-    response = send_file(pdf.content, as_attachment=True,
-                         attachment_filename=pdf.filename,
-                         last_modified=pdf.modified)
-    return response, code, headers
+    pdf, status_code, headers = controllers.get_eprint_pdf(identifier, version)
+    response: Response = send_file(pdf.content, as_attachment=True,
+                                   attachment_filename=pdf.filename,
+                                   last_modified=pdf.modified)
+    response.status_code = status_code
+    response.headers.extend(headers)
+    return response
