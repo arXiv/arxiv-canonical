@@ -27,9 +27,12 @@ class CanonicalJSONDecoder(json.JSONDecoder):
         if type(value) is not str:
             return value
         try:
-            return datetime.fromisoformat(value)  # type: ignore
+            return date.fromisoformat(value)   # type: ignore
         except ValueError:
-            return value
+            try:
+                return datetime.fromisoformat(value)  # type: ignore
+            except ValueError:
+                return value
 
     def object_hook(self, obj: dict, **extra: Any) -> Any:
         """Decode domain objects in this package."""

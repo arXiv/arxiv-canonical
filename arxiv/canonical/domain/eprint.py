@@ -1,4 +1,7 @@
-"""Provides the core domain concept and logic for e-prints."""
+"""
+Provides the core domain concept and logic for e-prints.
+
+"""
 
 from typing import NamedTuple, Optional, List
 from datetime import datetime, date
@@ -108,7 +111,7 @@ class EPrint(NamedTuple):
             source_package=self.source_package,
             pdf=self.pdf
         )
-    
+
     def add_secondaries(self, *new_secondaries: Category) -> None:
         for category in new_secondaries:
             if category not in self.secondary_classification:
@@ -119,4 +122,3 @@ class EPrint(NamedTuple):
         if not self.arxiv_id or not self.version:
             raise ValueError('arXiv ID or version not set')
         return f'{self.arxiv_id}v{self.version}'
-    

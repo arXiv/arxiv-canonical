@@ -1,6 +1,6 @@
 """Provides file-related concepts and logic."""
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from datetime import datetime
 from typing_extensions import Protocol
 
@@ -30,6 +30,6 @@ class File(NamedTuple):
     filename: str
     mime_type: str
     checksum: str
-    content: Readable
     created: datetime
     modified: datetime
+    content: Optional[Readable] = None

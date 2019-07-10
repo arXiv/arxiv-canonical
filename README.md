@@ -1,22 +1,22 @@
 # arXiv NG Canonical Record
 
 This repository contains a library and applications for working with the core
-arXiv canonical record. The canonical record is the authoritative history and 
+arXiv canonical record. The canonical record is the authoritative history and
 state for announced e-prints on the arXiv platform.
 
-Work on this project will proceed in two phases, each corresponding to a major 
+Work on this project will proceed in two phases, each corresponding to a major
 version:
 
 ## Version 0: Replication of the Legacy Record to the Canonical Record
 
-The first major objective of this project is to replicate all of the core 
-announcement events that occur in the legacy system to the cloud-native 
+The first major objective of this project is to replicate all of the core
+announcement events that occur in the legacy system to the cloud-native
 canonical record.
 
-- The legacy system emits event notifications via a Kinesis stream for new 
+- The legacy system emits event notifications via a Kinesis stream for new
   e-prints, replacements, cross-listing, withdrawals, and updates.
 - An announcement agent (``announcement/`` in this repo)...
-  
+
   - consumes legacy events,
   - retrieves metadata, source package, and first-compiled PDF from legacy,
   - formats and stores content as part of the canonical record. The canonical
@@ -27,17 +27,17 @@ canonical record.
   content, and events available via a RESTful JSON API. This is a Flask
   application that will be deployed as a Docker container.
 
-Both the ``announcement/`` and ``repository/`` applications use the 
+Both the ``announcement/`` and ``repository/`` applications use the
 ``arxiv.canonical`` package (``arxiv/canonical/`` in this repo) to interact
 with the canonical record.
 
 ## Version 1: Orchestration of the Announcement Process
 
 Once several other dependencies are resolved in the legacy system, this project
-will assume primary responsibility for announcing submitted e-prints on a 
+will assume primary responsibility for announcing submitted e-prints on a
 daily basis. This is a bit further down the road.
 
-# Contributing 
+# Contributing
 
 For a list of things that need doing, please see the issues tracker for this
 repository.
@@ -62,7 +62,7 @@ and the corresponding ``wsgi_[xxx].py`` entrypoints.
 ## AWS services, mocking
 
 It's helpful to use a live API when developing components against AWS services.
-We use [Localstack](https://github.com/localstack/localstack) for this 
+We use [Localstack](https://github.com/localstack/localstack) for this
 purpose.
 
 ## Contributor guidelines
@@ -101,16 +101,16 @@ The canonical record can be stored on any system that supports a key-binary
 data structure, such as a filesystem or an object store. The two core data
 structures in the record are:
 
-1. E-prints, comprised of... 
+1. E-prints, comprised of...
 
-  - metadata, 
-  - submitted content, 
+  - metadata,
+  - submitted content,
   - and the first rendering of the PDF.
 
 2. Announcement records, representing a single announcement-related event, such
    as a new version, a withdrawal, or a cross-list; these records are:
 
-  - organized into daily announcement listing files and 
+  - organized into daily announcement listing files and
   - emitted via a notification broker in real time, to trigger updates to
     downstream services and data stores.
 
@@ -119,7 +119,7 @@ An e-print is comprised of (1) a metadata record, (2) a source package,
 containing the original content provided by the submitter, and (3) a canonical
 rendering of the e-print in PDF format. A manifest is also stored for each
 e-print, containing the keys for the resources above and a base-64 encoded MD5
-hash of their binary content. 
+hash of their binary content.
 
 The key prefix structure for an e-print record is:
 
@@ -128,7 +128,7 @@ e-prints/<YYYY>/<MM>/<arXiv ID>/v<version>/
 ```
 
 Where ``YYYY`` is the year and ``MM`` the month during which the first version
-of the e-print was announced. 
+of the e-print was announced.
 
 Sub-keys are:
 
@@ -144,7 +144,7 @@ versions of an e-print.
 ## Announcement listings
 The announcement listings commemorate the announcement-related events that
 occur on a given day. This includes new e-prints/versions, withdrawals,
-cross-lists, etc. 
+cross-lists, etc.
 
 The key prefix structure for an announcement listing file is:
 
@@ -155,11 +155,11 @@ announcement/<YYYY>/<MM>/<DD>/
 Each daily key prefix may contain one or more sub-keys. Each sub-key ending in
 .json is treated as a listing file. This allows for the possibility of
 sharded/multi-threaded announcement processes that write separate listing
-files, e.g. for specific classification domains. 
+files, e.g. for specific classification domains.
 
 ``YYYY`` is the year, ``MM`` the month, and ``DD`` the day on which the
 announcement events encoded therein occurred and on which the subordinate
-listing files were generated. 
+listing files were generated.
 
 ## Preservation record
 The preservation record is a daily digest containing e-print content,
@@ -170,10 +170,10 @@ corresponding tombstones).
 ```
 announcement/<listing>.json
 e-prints/<arXiv ID>v<version>/
-	<arXiv ID>v<version>.json         # Metadata record
-<arXiv ID>v<version>.tar.gz           # Source package
-<arXiv ID>v<version>.pdf              # First PDF
-<arXiv ID>v<version>.manifest.json    # Manifest.
+    <arXiv ID>v<version>.json         # Metadata record
+    <arXiv ID>v<version>.tar.gz           # Source package
+    <arXiv ID>v<version>.pdf              # First PDF
+    <arXiv ID>v<version>.manifest.json    # Manifest.
 suppress/<arXiv ID>v<version>/tombstone
 preservation.manifest.json
 ```

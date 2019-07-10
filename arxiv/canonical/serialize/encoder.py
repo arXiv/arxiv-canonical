@@ -2,7 +2,7 @@
 
 import re
 import json
-from typing import Any, Union, List, Dict
+from typing import Any, Union, List, Dict, Type
 from datetime import datetime, date
 from enum import Enum
 
@@ -31,7 +31,7 @@ class CanonicalJSONEncoder(json.JSONEncoder):
             return [self.unpack(value) for value in obj]
         elif type(obj) in domain.domain_classes:
             type_snake = _camel_to_snake(type(obj).__name__)
-            unpack_obj = getattr(self, f'unpack_{type_snake}', 
+            unpack_obj = getattr(self, f'unpack_{type_snake}',
                                  self.unpack_default)
             data = unpack_obj(obj)
             data['@type'] = type(obj).__name__
@@ -47,14 +47,12 @@ class CanonicalJSONEncoder(json.JSONEncoder):
     def encode(self, obj: Any) -> Any:
         """Serialize objects in this application domain."""
         return super(CanonicalJSONEncoder, self).encode(self.unpack(obj))
-    
+
     def unpack_default(self, obj: Any) -> Dict:
         """Fallback unpack method for any domain object."""
         return {key: self.unpack(val) for key, val in obj._asdict().items()}
-    
+
     def unpack_file(self, obj: domain.File) -> Dict:
         """Unpack a :class:`.domain.File`."""
         return {key: self.unpack(val) for key, val in obj._asdict().items()
                 if key != 'content'}
-
-
