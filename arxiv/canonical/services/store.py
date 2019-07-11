@@ -184,9 +184,9 @@ class CanonicalStore:
         Load an :class:`.EPrint`.
 
         The content of the :attr:`.EPrint.source_package` and
-        :attr:`.EPrint.pdf.content` should implement :class:`.Readable`. The ``read()``
-        method should be a closure that, when called, retrieves the content of
-        the corresponding resource from storage.
+        :attr:`.EPrint.pdf.content` should provide a ``read()`` method that,
+        when called, retrieves the content of the corresponding resource from
+        storage.
         """
         prefix = eprint.EPrintRecord.key_prefix(arxiv_id.year, arxiv_id.month,
                                                 str(arxiv_id), version)
