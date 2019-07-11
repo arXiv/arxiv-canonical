@@ -73,11 +73,11 @@ class PreservationRecord(NamedTuple):
     suppress: List[SupressionEntry]
     manifest: PreservationManifestEntry
 
-    def __iter__(self) -> Iterator[Tuple[str, IEntry]]:
+    def iter_members(self) -> Iterator[Tuple[str, IEntry]]:
         for listing in self.listings:
             yield listing.key, listing
         for eprint in self.eprints:
-            for key, entry in eprint:
+            for key, entry in eprint.iter_members():
                 yield key, entry
         for suppression in self.suppress:
             yield suppression.key, suppression

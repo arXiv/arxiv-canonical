@@ -15,7 +15,7 @@ class MetadataEntry(BaseEntry):
     content_type = 'application/json'
 
     @staticmethod
-    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+    def make_key(key_prefix: str, arxiv_id: str, version: int) -> str:
         return '/'.join([key_prefix, f'{arxiv_id}v{version}.json'])
 
 
@@ -23,7 +23,7 @@ class SourceEntry(BaseEntry):
     content_type = 'application/gzip'
 
     @staticmethod
-    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+    def make_key(key_prefix: str, arxiv_id: str, version: int) -> str:
         return '/'.join([key_prefix, f'{arxiv_id}v{version}.tar.gz'])
 
 
@@ -31,7 +31,7 @@ class PDFEntry(BaseEntry):
     content_type = 'application/pdf'
 
     @staticmethod
-    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+    def make_key(key_prefix: str, arxiv_id: str, version: int) -> str:
         return '/'.join([key_prefix, f'{arxiv_id}v{version}.pdf'])
 
 
@@ -39,7 +39,7 @@ class ManifestEntry(BaseEntry):
     content_type = 'application/json'
 
     @staticmethod
-    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+    def make_key(key_prefix: str, arxiv_id: str, version: int) -> str:
         return '/'.join([key_prefix, f'{arxiv_id}v{version}.manifest.json'])
 
 
@@ -83,14 +83,14 @@ class EPrintRecord(NamedTuple):
     manifest: ManifestEntry
     """JSON document containing checksums for the metadata, source, and PDF."""
 
-    def __iter__(self) -> Iterator[Tuple[str, IEntry]]:
+    def iter_members(self) -> Iterator[Tuple[str, IEntry]]:
         yield self.metadata.key, self.metadata
         yield self.source.key, self.source
         yield self.pdf.key, self.pdf
         yield self.manifest.key, self.manifest
 
     @staticmethod
-    def key_prefix(year: int, month: int, arxiv_id: str, version: str) -> str:
+    def key_prefix(year: int, month: int, arxiv_id: str, version: int) -> str:
         """
         Make a key prefix for an e-print record.
 
@@ -104,7 +104,7 @@ class EPrintRecord(NamedTuple):
             announced.
         arxiv_id : str
             arXiv identifier (without version affix).
-        version : str
+        version : int
             The numeric version of the e-print.
 
         Returns
@@ -117,7 +117,8 @@ class EPrintRecord(NamedTuple):
         ])
 
 
-def _validate_checksum(key: str, content: IO[bytes], manifest: Dict[str, str]) -> None:
+def _validate_checksum(key: str, content: IO[bytes],
+                       manifest: Dict[str, str]) -> None:
     calculated = checksum(content)
     if calculated != manifest[key]:
         raise ChecksumError(f'{key} has non-matching checksum; expected'
@@ -125,9 +126,11 @@ def _validate_checksum(key: str, content: IO[bytes], manifest: Dict[str, str]) -
 
 def deserialize(record: EPrintRecord, validate: bool = True) -> EPrint:
     """Deserialize an :class:`.EPrintRecord` to an :class:`.EPrint`."""
-    metadata = load(record.metadata.content, cls=CanonicalJSONDecoder)
-    source = metadata.source_package.with_content(record.source.content)
-    pdf = metadata.pdf.with_content(record.pdf.content)
+    eprint: EPrint = load(record.metadata.content, cls=CanonicalJSONDecoder)
+    if eprint.source_package is None or eprint.pdf is None:
+        raise ValueError('Failed to deserialize source or PDF metadata')
+    source = eprint.source_package.with_content(record.source.content)
+    pdf = eprint.pdf.with_content(record.pdf.content)
     if validate:    # Compare calculated checksums to the manifest.
         manifest = load(record.manifest.content)
         _validate_checksum(record.metadata.key, record.metadata.content,
@@ -136,12 +139,12 @@ def deserialize(record: EPrintRecord, validate: bool = True) -> EPrint:
                            manifest)
         _validate_checksum(record.source.key, record.source.content,
                            manifest)
-    return metadata.with_files(source_package=source, pdf=pdf)
+    return eprint.with_files(source_package=source, pdf=pdf)
 
 
 def serialize(eprint: EPrint, prefix: Optional[str] = None) -> EPrintRecord:
     """Serialize an :class:`.EPrint` to an :class:`.EPrintRecord`."""
-    if eprint.arxiv_id is None:
+    if eprint.arxiv_id is None or eprint.version is None:
         raise ValueError('Record serialization requires announced e-prints')
     if prefix is None:
         prefix = EPrintRecord.key_prefix(eprint.arxiv_id.year,
@@ -158,7 +161,7 @@ def serialize(eprint: EPrint, prefix: Optional[str] = None) -> EPrintRecord:
                         manifest=manifest)
 
 def _serialize_metadata(eprint: EPrint, prefix: str) -> MetadataEntry:
-    if eprint.arxiv_id is None:
+    if eprint.arxiv_id is None or eprint.version is None:
         raise ValueError('Record serialization requires announced e-prints')
     metadata_json = dumps(eprint, cls=CanonicalJSONEncoder)
     metadata_content = io.BytesIO(metadata_json.encode('utf-8'))
@@ -168,16 +171,20 @@ def _serialize_metadata(eprint: EPrint, prefix: str) -> MetadataEntry:
                          content=metadata_content)
 
 def _serialize_source(eprint: EPrint, prefix: str) -> SourceEntry:
-    if eprint.arxiv_id is None:
+    if eprint.arxiv_id is None or eprint.version is None:
         raise ValueError('Record serialization requires announced e-prints')
+    if eprint.source_package is None or eprint.source_package.content is None:
+        raise ValueError('Record serialization requires attendant source')
     return SourceEntry(key=SourceEntry.make_key(prefix,
                                                 str(eprint.arxiv_id),
                                                 eprint.version),
                        content=eprint.source_package.content)
 
 def _serialize_pdf(eprint: EPrint, prefix: str) -> PDFEntry:
-    if eprint.arxiv_id is None:
+    if eprint.arxiv_id is None or eprint.version is None:
         raise ValueError('Record serialization requires announced e-prints')
+    if eprint.pdf is None or eprint.pdf.content is None:
+        raise ValueError('Record serialization requires attendant PDF')
     return PDFEntry(key=PDFEntry.make_key(prefix,
                                           str(eprint.arxiv_id),
                                           eprint.version),
@@ -187,7 +194,7 @@ def _serialize_pdf(eprint: EPrint, prefix: str) -> PDFEntry:
 def _serialize_manifest(eprint: EPrint, metadata: MetadataEntry,
                         source: SourceEntry, pdf: PDFEntry,
                         prefix: str) -> ManifestEntry:
-    if eprint.arxiv_id is None:
+    if eprint.arxiv_id is None or eprint.version is None:
         raise ValueError('Record serialization requires announced e-prints')
     return ManifestEntry(
         key=ManifestEntry.make_key(

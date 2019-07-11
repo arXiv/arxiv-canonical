@@ -29,9 +29,9 @@ class TestParseLine(TestCase):
         events = [e for e in daily.DailyLogParser().parse_line(
             "980302|hep-th|9802196-9802204|cond-mat.mes-hall9802266 cond-mat.mes-hall9802267 cond-mat.mes-hall9802290 hep-ph9802436|9709125 9712213 gr-qc9708027 hep-ph9708203"
         )]
-        new = [e for e in events if e.event_type is Event.Type.NEW]
-        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
-        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+        new = [e for e in events if e.event_type is Event.EventType.NEW]
+        cross = [e for e in events if e.event_type is Event.EventType.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.EventType.REPLACED]
 
         self.assertEqual(len(new), 9)
         for event in new:
@@ -60,9 +60,9 @@ class TestParseLine(TestCase):
         events = [e for e in daily.DailyLogParser().parse_line(
             "980302|hep-lat|9802036-9802038||"
         )]
-        new = [e for e in events if e.event_type is Event.Type.NEW]
-        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
-        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+        new = [e for e in events if e.event_type is Event.EventType.NEW]
+        cross = [e for e in events if e.event_type is Event.EventType.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.EventType.REPLACED]
 
         self.assertEqual(len(new), (9802038 - 9802036) + 1)
         self.assertEqual(len(cross), 0)
@@ -73,9 +73,9 @@ class TestParseLine(TestCase):
         events = [e for e in daily.DailyLogParser().parse_line(
             "980302|hep-ex|9802024|hep-ph9802408 physics.ins-det9802015|"
         )]
-        new = [e for e in events if e.event_type is Event.Type.NEW]
-        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
-        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+        new = [e for e in events if e.event_type is Event.EventType.NEW]
+        cross = [e for e in events if e.event_type is Event.EventType.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.EventType.REPLACED]
 
         self.assertEqual(len(new), 1)
         self.assertEqual(len(cross), 2)
@@ -89,9 +89,9 @@ class TestParseLine(TestCase):
         with open(os.path.join(DATA, 'new.daily.log')) as f:
             lines = [line for line in f]
         events = [e for e in parser.parse_line(lines[0])]
-        new = [e for e in events if e.event_type is Event.Type.NEW]
-        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
-        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+        new = [e for e in events if e.event_type is Event.EventType.NEW]
+        cross = [e for e in events if e.event_type is Event.EventType.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.EventType.REPLACED]
         self.assertEqual(len(new), 530)
         self.assertEqual(len(cross), 15)
         self.assertEqual(len(replaced), 406)
@@ -121,9 +121,9 @@ class TestWeirdEdgeCase(TestCase):
         line = "991210|nlin-sys||cond-mat.mes-hall9912038 cond-mat.stat-mech9912081 cond-mat.stat-mech9912110 hep-th9908090 math.SG9912021 quant-ph9912007|quant-ph9902015 quant-ph9902016 9704019.0chao-dyn 9902003.0chao-dyn 9904021.0chao-dyn 9907001.0chao-dyn 9912003.4solv-int cond-mat.stat-mech9908480 cond-mat.stat-mech9911291"
 
         events = [e for e in daily.DailyLogParser().parse_line(line)]
-        new = [e for e in events if e.event_type is Event.Type.NEW]
-        cross = [e for e in events if e.event_type is Event.Type.CROSSLIST]
-        replaced = [e for e in events if e.event_type is Event.Type.REPLACED]
+        new = [e for e in events if e.event_type is Event.EventType.NEW]
+        cross = [e for e in events if e.event_type is Event.EventType.CROSSLIST]
+        replaced = [e for e in events if e.event_type is Event.EventType.REPLACED]
 
         self.assertEqual(len(new), 0)
         self.assertEqual(len(cross), 6)

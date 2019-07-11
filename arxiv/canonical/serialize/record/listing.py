@@ -49,7 +49,8 @@ def make_key_prefix(year: int, month: int, day: int) -> str:
 
 def deserialize(record: ListingEntry) -> Listing:
     """Deserialize an :class:`.ListingEntry` to an :class:`.Listing`."""
-    return load(record.content, cls=CanonicalJSONDecoder)
+    listing: Listing = load(record.content, cls=CanonicalJSONDecoder)
+    return listing
 
 
 def serialize(listing: Listing) -> ListingEntry:

@@ -5,7 +5,7 @@ Serialization and deserialization of the canonical record.
 
 import io
 from json import dumps, loads
-from typing import NamedTuple, IO, Iterable, Tuple, Optional
+from typing import NamedTuple, IO, Iterable, Tuple, Optional, BinaryIO
 from hashlib import md5
 from base64 import urlsafe_b64encode
 
@@ -45,7 +45,7 @@ class BaseEntry(NamedTuple):
 
     key: str
 
-    content: IO
+    content: IO[bytes]
     """Raw content of the entry."""
 
     @property

@@ -11,7 +11,7 @@ from .identifier import Identifier
 class Event(NamedTuple):
     """An announcement-related event."""
 
-    class Type(Enum):
+    class EventType(Enum):
         """Supported event types."""
 
         NEW = 'new'
@@ -22,7 +22,7 @@ class Event(NamedTuple):
 
     arxiv_id: Identifier
     event_date: datetime
-    event_type: Type
+    event_type: EventType
     categories: List[Category]
 
     description: str = ''

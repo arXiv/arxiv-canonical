@@ -164,7 +164,7 @@ class DailyLogParser:
 class LineParser:
     """Shared behavior among newstyle and oldstyle line parsing."""
 
-    def _to_events(self, e_date: date, e_type: Event.Type,
+    def _to_events(self, e_date: date, e_type: Event.EventType,
                    entries: Iterable[Entry],
                    version: int = -1) -> Iterable[Event]:
         for paper_id, entries in groupby(entries, key=lambda o: o[0]):
@@ -175,21 +175,21 @@ class LineParser:
     def parse(self, e_date: date, archive: str, data: str) -> Iterable[Event]:
         """Parse data from a daily log file line."""
         new, cross, replace = data.split('|')
-        return chain(self._to_events(e_date, Event.Type.NEW,
+        return chain(self._to_events(e_date, Event.EventType.NEW,
                                      self.parse_new(archive, new), 1),
-                     self._to_events(e_date, Event.Type.CROSSLIST,
+                     self._to_events(e_date, Event.EventType.CROSSLIST,
                                      self.parse_cross(archive, cross)),
-                     self._to_events(e_date, Event.Type.REPLACED,
+                     self._to_events(e_date, Event.EventType.REPLACED,
                                      self.parse_replace(archive, replace)))
-    
+
     def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
         """Parse entries for new e-prints."""
         raise NotImplementedError('Not implemented in this base class')
-    
+
     def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
         """Parse entries for cross-list e-prints."""
         raise NotImplementedError('Not implemented in this base class')
-    
+
     def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
         """Parse entries for replacements."""
         raise NotImplementedError('Not implemented in this base class')

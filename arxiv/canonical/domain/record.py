@@ -16,12 +16,12 @@ class CanonicalRecord(NamedTuple):
 
     blocks: Mapping[Tuple[Year, Month], MonthlyBlock]
     """
-    Blocks are monthly storage units. 
-    
-    E-prints are grouped into blocks based on the month in which the first 
+    Blocks are monthly storage units.
+
+    E-prints are grouped into blocks based on the month in which the first
     version of the e-print was announced.
 
-    This mapping must always produce a result, creating the appropriate 
+    This mapping must always produce a result, creating the appropriate
     :class:`.MonthlyBlock` if necessary.
     """
 
@@ -49,7 +49,7 @@ class CanonicalRecord(NamedTuple):
         eprint = eprint.as_announced(self.current_block.get_next_identifier(),
                                      version, today)
         self.current_block.add(eprint)
-        self._emit(eprint, Event.Type.NEW)
+        self._emit(eprint, Event.EventType.NEW)
         return eprint
 
     def announce_replacement(self, eprint: EPrint) -> EPrint:
@@ -62,12 +62,12 @@ class CanonicalRecord(NamedTuple):
         """
         if not self.current_block.can_announce(eprint):
             raise ValueError('Cannot announce this e-print')
-        eprint = eprint.as_announced(eprint.arxiv_id, eprint.version + 1, 
+        eprint = eprint.as_announced(eprint.arxiv_id, eprint.version + 1,
                                      date.today())
         self._get_block_for_id(eprint.arxiv_id).add(eprint)
-        self._emit(eprint, Event.Type.REPLACED)
+        self._emit(eprint, Event.EventType.REPLACED)
         return eprint
-    
+
     def announce_withdrawal(self, eprint: EPrint) -> EPrint:
         """
         Announce a withdrawal.
@@ -80,18 +80,18 @@ class CanonicalRecord(NamedTuple):
             raise ValueError('Cannot announce this e-print')
         eprint = eprint.as_withdrawn(eprint.version + 1, date.today())
         self._get_block_for_id(eprint.arxiv_id).add(eprint)
-        self._emit(eprint, Event.Type.WITHDRAWAL)
+        self._emit(eprint, Event.EventType.WITHDRAWAL)
         return eprint
 
     def announce_crosslist(self, eprint: EPrint) -> EPrint:
         """
         Announce a cross-list.
 
-        This involves updating the e-print and issuing a new event on the 
+        This involves updating the e-print and issuing a new event on the
         appropriate :class:`.Listing`.
         """
         self._get_block_for_id(eprint.arxiv_id).update(eprint)
-        self._emit(eprint, Event.Type.CROSSLIST)
+        self._emit(eprint, Event.EventType.CROSSLIST)
         return eprint
 
     def update(self, eprint: EPrint) -> EPrint:
@@ -102,10 +102,10 @@ class CanonicalRecord(NamedTuple):
         version. Intended for correcting minor errors.
         """
         self._get_block_for_id(eprint.arxiv_id).update(eprint)
-        self._emit(eprint, Event.Type.UPDATED)
+        self._emit(eprint, Event.EventType.UPDATED)
         return eprint
-    
-    def load_eprint(self, arxiv_id: Identifier, 
+
+    def load_eprint(self, arxiv_id: Identifier,
                     version: Optional[int] = None) -> EPrint:
         block = self._get_block_for_id(arxiv_id)
         return block.load_eprint(arxiv_id, version)
@@ -113,13 +113,13 @@ class CanonicalRecord(NamedTuple):
     def _get_block_for_id(self, arxiv_id: Identifier) -> MonthlyBlock:
         return self.blocks[(arxiv_id.year, arxiv_id.month)]
 
-    def _make_event(self, eprint: EPrint, event_type: Event.Type, 
+    def _make_event(self, eprint: EPrint, event_type: Event.EventType,
                     timestamp: Optional[datetime] = None) -> Event:
         if timestamp is None:
             timestamp = now()
-        return Event(eprint.arxiv_id, timestamp, event_type, 
+        return Event(eprint.arxiv_id, timestamp, event_type,
                      eprint.all_categories, version=eprint.version)
-    
-    def _emit(self, eprint: EPrint, event_type: Event.Type) -> None:
+
+    def _emit(self, eprint: EPrint, event_type: Event.EventType) -> None:
         listing = self.listings[date.today()]
         listing.add_event(eprint, self._make_event(eprint, event_type))
