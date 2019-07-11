@@ -11,18 +11,10 @@ from datetime import datetime, date
 
 from ...domain import CanonicalRecord, Listing
 from ..encoder import CanonicalJSONEncoder
-from .base import BaseEntry, IEntry, checksum
+from .base import BaseEntry, IEntry, checksum, ChecksumError
 from .eprint import EPrintRecord
 from .eprint import serialize as serialize_eprint
 from .listing import ListingEntry
-
-
-# class PreservationListingEntry(BaseEntry):
-#     content_type = 'application/json'
-
-#     @staticmethod
-#     def make_key(key_prefix: str, year: int, month: int, day: int) -> str:
-#         return '/'.join([key_prefix, ListingEntry.make_key(year, month, day)])
 
 
 class SupressionEntry(BaseEntry):

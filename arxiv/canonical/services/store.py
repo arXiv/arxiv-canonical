@@ -113,10 +113,10 @@ class CanonicalStore:
         """
         Load a :class:`.Listing`.
 
-        If ``self.read_only`` is ``False``, the ``events`` member of the listing
-        must be a subclass of ``list``, and implement an ``append(event: Event)
-        -> None`` method that, when called, writes the current state of the
-        listing to S3.
+        If ``self.read_only`` is ``False``, the ``events`` member of the
+        listing must be a subclass of ``list``, and implement an
+        ``append(event: Event) -> None`` method that, when called, writes the
+        current state of the listing to S3.
 
         Parameters
         ----------

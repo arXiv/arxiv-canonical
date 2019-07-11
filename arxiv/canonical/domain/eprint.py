@@ -76,6 +76,38 @@ class EPrint(NamedTuple):
         """
         return self.arxiv_id is not None and self.announced_date is not None
 
+    def with_files(self, source_package: Optional[File] = None,
+                   pdf: Optional[File] = None) -> 'EPrint':
+        return EPrint(
+            arxiv_id=self.arxiv_id,
+            version=self.version,
+            announced_date=self.announced_date,
+            legacy=self.legacy,
+            submitted_date=self.submitted_date,
+            license=self.license,
+            primary_classification=self.primary_classification,
+            title=self.title,
+            abstract=self.abstract,
+            authors=self.authors,
+            source_type=self.source_type,
+            size_kilobytes=self.size_kilobytes,
+            previous_versions=self.previous_versions,
+            secondary_classification=self.secondary_classification,
+            history=self.history,
+            submitter=self.submitter,
+            proxy=self.proxy,
+            comments=self.comments,
+            journal_ref=self.journal_ref,
+            report_num=self.report_num,
+            doi=self.doi,
+            msc_class=self.msc_class,
+            acm_class=self.acm_class,
+            is_withdrawn=self.is_withdrawn,
+            reason_for_withdrawal=self.reason_for_withdrawal,
+            source_package=source_package,
+            pdf=pdf
+        )
+
     def as_announced(self, arxiv_id: Identifier, version: int, on: date) \
             -> 'EPrint':
         _, _, _, *data = self

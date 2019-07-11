@@ -1,13 +1,14 @@
 """
 """
 import io
-from json import dumps
+from json import dumps, loads, load
 from typing import NamedTuple, List, IO, Iterator, Tuple, Optional
 from datetime import datetime, date
 
 from ...domain import EPrint
 from ..encoder import CanonicalJSONEncoder
-from .base import BaseEntry, IEntry, checksum
+from ..decoder import CanonicalJSONDecoder
+from .base import BaseEntry, IEntry, checksum, ChecksumError
 
 
 class MetadataEntry(BaseEntry):
@@ -114,6 +115,22 @@ class EPrintRecord(NamedTuple):
         return '/'.join([
             'e-prints', str(year), str(month).zfill(2), arxiv_id, f'v{version}'
         ])
+
+
+def deserialize(record: EPrintRecord, validate: bool = True) -> EPrint:
+    """Deserialize an :class:`.EPrintRecord` to an :class:`.EPrint`."""
+    metadata = load(record.metadata.content, cls=CanonicalJSONDecoder)
+    source = metadata.source_package.with_content(record.source.content)
+    pdf = metadata.pdf.with_content(record.pdf.content)
+    if validate:    # Compare calculated checksums to the manifest.
+        manifest = load(record.manifest.content)
+        if checksum(record.metadata.content) != manifest[record.metadata.key]:
+            raise ChecksumError('Metadata has non-matching checksum')
+        if checksum(pdf.content) != manifest[record.pdf.key]:
+            raise ChecksumError('PDF has non-matching checksum')
+        if checksum(source.content) != manifest[record.source.key]:
+            raise ChecksumError('Source has non-matching checksum')
+    return metadata.with_files(source_package=source, pdf=pdf)
 
 
 def serialize(eprint: EPrint, prefix: Optional[str] = None) -> EPrintRecord:

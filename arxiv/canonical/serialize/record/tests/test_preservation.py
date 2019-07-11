@@ -71,9 +71,3 @@ class TestSerializePreservationRecord(TestCase):
         listings = {(date.today()): today_listing}
         self.record = CanonicalRecord(blocks, listings)
         eprint = self.record.announce_new(eprint)
-
-    def test_foo(self):
-        print(serialize(self.record, date.today()))
-
-        for key, entry in serialize(self.record, date.today()):
-            print(key, entry.checksum)

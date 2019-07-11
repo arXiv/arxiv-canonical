@@ -22,13 +22,14 @@ listing files were generated.
 """
 
 import io
-from json import dumps
+from json import dumps, load
 from typing import NamedTuple, List, IO, Iterator, Tuple
 from datetime import datetime, date
 
 from ...domain import CanonicalRecord, Listing
 from ..encoder import CanonicalJSONEncoder
-from .base import BaseEntry, IEntry, checksum
+from ..decoder import CanonicalJSONDecoder
+from .base import BaseEntry, IEntry, checksum, ChecksumError
 from .eprint import serialize as serialize_eprint
 
 
@@ -44,6 +45,15 @@ def make_key_prefix(year: int, month: int, day: int) -> str:
     return '/'.join([
         'announcement', str(year), str(month).zfill(2), str(day).zfill(2)
     ])
+
+
+def deserialize(record: ListingEntry, validate: bool = True) -> Listing:
+    """Deserialize an :class:`.ListingEntry` to an :class:`.Listing`."""
+    listing = load(record.content, cls=CanonicalJSONDecoder)
+    if validate:    # Compare calculated checksum to recorded checksum.
+        if checksum(record.content) != record.checksum:
+            raise ChecksumError('Listing has non-matching checksum')
+    return listing
 
 
 def serialize(listing: Listing) -> ListingEntry:

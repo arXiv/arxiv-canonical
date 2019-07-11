@@ -14,6 +14,14 @@ from typing_extensions import Protocol
 from ..encoder import CanonicalJSONEncoder
 
 
+class ValidationError(Exception):
+    """A data consistency problem was encountered."""
+
+
+class ChecksumError(ValidationError):
+    """An unexpected checksum value was encountered."""
+
+
 class IEntry(Protocol):
     content_type: str
 
@@ -46,9 +54,10 @@ class BaseEntry(NamedTuple):
 
 def checksum(content: IO[bytes]) -> str:
     """Generate an URL-safe base64-encoded md5 hash of an IO."""
+    content.seek(0)     # Make sure that we are at the start of the stream.
     hash_md5 = md5()
     for chunk in iter(lambda: content.read(4096), b""):
         hash_md5.update(chunk)
-    content.seek(0)
+    content.seek(0)     # Be a good neighbor for subsequent users.
     return urlsafe_b64encode(hash_md5.digest()).decode('utf-8')
 

@@ -33,3 +33,12 @@ class File(NamedTuple):
     created: datetime
     modified: datetime
     content: Optional[Readable] = None
+
+    def with_content(self, content: Optional[Readable]) -> 'File':
+      """Generate a copy of this :class:`.File` with ``content``."""
+      return File(filename=self.filename,
+                  mime_type=self.mime_type,
+                  checksum=self.checksum,
+                  created=self.created,
+                  modified=self.modified,
+                  content=content)
