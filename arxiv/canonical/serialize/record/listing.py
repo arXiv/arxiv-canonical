@@ -28,30 +28,30 @@ from datetime import datetime, date
 
 from ...domain import CanonicalRecord, Listing
 from ..encoder import CanonicalJSONEncoder
-from .base import EPrintRecord, BaseEntry, BaseEPrintEntry, BaseDailyEntry, \
-    IEntry, checksum
-from .base import serialize as serialize_eprint
+from .base import BaseEntry, IEntry, checksum
+from .eprint import serialize as serialize_eprint
 
 
-class ListingEntry(BaseDailyEntry):
+class ListingEntry(BaseEntry):
     content_type = 'application/json'
 
-    @property
-    def key(self) -> str:
-        _date = date(year=self.year, month=self.month, day=self.day)
-        return '/'.join(['announcement',
-                         str(self.year),
-                         str(self.month).zfill(2),
-                         str(self.day).zfill(2),
-                         'listing.json'])
+    @staticmethod
+    def make_key(key_prefix: str) -> str:
+        return '/'.join([key_prefix, 'listing.json'])
+
+
+def make_key_prefix(year: int, month: int, day: int) -> str:
+    return '/'.join([
+        'announcement', str(year), str(month).zfill(2), str(day).zfill(2)
+    ])
 
 
 def serialize(listing: Listing) -> ListingEntry:
     """Serialize a :class:`.Listing`."""
     listing_json = dumps(listing, cls=CanonicalJSONEncoder)
     listing_content = io.BytesIO(listing_json.encode('utf-8'))
-    return ListingEntry(year=listing.date.year,
-                        month=listing.date.month,
-                        day=listing.date.day,
+    prefix = make_key_prefix(listing.date.year, listing.date.month,
+                             listing.date.day)
+    return ListingEntry(key=ListingEntry.make_key(prefix),
                         content=listing_content,
                         checksum=checksum(listing_content))

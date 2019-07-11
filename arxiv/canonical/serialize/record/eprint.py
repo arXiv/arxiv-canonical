@@ -1,72 +1,45 @@
+"""
+"""
 import io
 from json import dumps
-from typing import NamedTuple, List, IO, Iterator, Tuple
+from typing import NamedTuple, List, IO, Iterator, Tuple, Optional
 from datetime import datetime, date
 
 from ...domain import EPrint
 from ..encoder import CanonicalJSONEncoder
-from .base import BaseEntry, BaseDailyEntry, IEntry, checksum
+from .base import BaseEntry, IEntry, checksum
 
 
-class BaseEPrintEntry(NamedTuple):
-    year: int
-    """The year in which the first version of the e-print was announced."""
-
-    month: int
-    """The month in which the first version of the e-print was announced."""
-
-    content: IO
-    """Raw content of the entry."""
-
-    checksum: str
-    """URL-safe base64-encoded MD5 hash of the entry content."""
-
-    arxiv_id: str
-    """The arXiv identifier of the e-print."""
-
-    version: int
-    """The version of the e-print."""
-
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        raise NotImplementedError('Must be implemented by child class')
-
-
-class MetadataEntry(BaseEPrintEntry):
+class MetadataEntry(BaseEntry):
     content_type = 'application/json'
 
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        return f'{self.arxiv_id}v{self.version}.json'
+    @staticmethod
+    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+        return '/'.join([key_prefix, f'{arxiv_id}v{version}.json'])
 
 
-class SourceEntry(BaseEPrintEntry):
+class SourceEntry(BaseEntry):
     content_type = 'application/gzip'
 
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        return f'{self.arxiv_id}v{self.version}.tar.gz'
+    @staticmethod
+    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+        return '/'.join([key_prefix, f'{arxiv_id}v{version}.tar.gz'])
 
 
-class PDFEntry(BaseEPrintEntry):
+class PDFEntry(BaseEntry):
     content_type = 'application/pdf'
 
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        return f'{self.arxiv_id}v{self.version}.pdf'
+    @staticmethod
+    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+        return '/'.join([key_prefix, f'{arxiv_id}v{version}.pdf'])
 
 
-class ManifestEntry(BaseEPrintEntry):
+class ManifestEntry(BaseEntry):
     content_type = 'application/json'
 
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        return f'{self.arxiv_id}v{self.version}.manifest.json'
+    @staticmethod
+    def make_key(key_prefix: str, arxiv_id: str, version: str) -> str:
+        return '/'.join([key_prefix, f'{arxiv_id}v{version}.manifest.json'])
 
 
 class EPrintRecord(NamedTuple):
@@ -96,102 +69,104 @@ class EPrintRecord(NamedTuple):
     - Manifest: ``<arXiv ID>v<version>.manifest.json``
 
     """
-    year: int
-    """The year in which the first version of the e-print was announced."""
 
-    month: int
-    """The month in which the first version of the e-print was announced."""
-
-    arxiv_id: str
-    """The arXiv identifier of the e-print."""
-
-    version: int
-    """The version of the e-print."""
-
-    metadata: BaseEPrintEntry
+    metadata: MetadataEntry
     """JSON document containing canonical e-print metadata."""
 
-    source: BaseEPrintEntry
+    source: SourceEntry
     """Gzipped tarball containing the e-print source."""
 
-    pdf: BaseEPrintEntry
+    pdf: PDFEntry
     """Canonical PDF for the e-print."""
 
-    manifest: BaseEPrintEntry
+    manifest: ManifestEntry
     """JSON document containing checksums for the metadata, source, and PDF."""
 
-    @property
-    def _base_key(self) -> str:
-        return '/'.join(['e-prints',
-                         str(self.year),
-                         str(self.month).zfill(2),
-                         self.arxiv_id,
-                         f'v{self.version}'])
-
-    def get_full_key(self, entry: IEntry) -> str:
-        """Get the full key for a :class:`.BaseEntry` in this record."""
-        return '/'.join([self._base_key, entry.key])
-
     def __iter__(self) -> Iterator[Tuple[str, IEntry]]:
-        yield self.get_full_key(self.metadata), self.metadata
-        yield self.get_full_key(self.source), self.source
-        yield self.get_full_key(self.pdf), self.pdf
-        yield self.get_full_key(self.manifest), self.manifest
+        yield self.metadata.key, self.metadata
+        yield self.source.key, self.source
+        yield self.pdf.key, self.pdf
+        yield self.manifest.key, self.manifest
+
+    @staticmethod
+    def key_prefix(year: int, month: int, arxiv_id: str, version: str) -> str:
+        """
+        Make a key prefix for an e-print record.
+
+        Parameters
+        ----------
+        year : int
+            The year during which the first version of the e-print was
+            announced.
+        month : int
+            The month during which the first version of the e-print was
+            announced.
+        arxiv_id : str
+            arXiv identifier (without version affix).
+        version : str
+            The numeric version of the e-print.
+
+        Returns
+        -------
+        str
+
+        """
+        return '/'.join([
+            'e-prints', str(year), str(month).zfill(2), arxiv_id, f'v{version}'
+        ])
 
 
-def serialize(eprint: EPrint) -> EPrintRecord:
+def serialize(eprint: EPrint, prefix: Optional[str] = None) -> EPrintRecord:
     """Serialize an :class:`.EPrint` to an :class:`.EPrintRecord`."""
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
-    metadata = _serialize_metadata(eprint)
-    source = _serialize_source(eprint)
-    pdf = _serialize_pdf(eprint)
-    manifest = _serialize_manifest(eprint, metadata, source, pdf)
-    return EPrintRecord(year=eprint.arxiv_id.year,
-                        month=eprint.arxiv_id.month,
-                        arxiv_id=str(eprint.arxiv_id),
-                        version=eprint.version,
-                        metadata=metadata,
+    if prefix is None:
+        prefix = EPrintRecord.key_prefix(eprint.arxiv_id.year,
+                                         eprint.arxiv_id.month,
+                                         str(eprint.arxiv_id),
+                                         eprint.version)
+    metadata = _serialize_metadata(eprint, prefix)
+    source = _serialize_source(eprint, prefix)
+    pdf = _serialize_pdf(eprint, prefix)
+    manifest = _serialize_manifest(eprint, metadata, source, pdf, prefix)
+    return EPrintRecord(metadata=metadata,
                         source=source,
                         pdf=pdf,
                         manifest=manifest)
 
-
-def _serialize_metadata(eprint: EPrint) -> MetadataEntry:
+def _serialize_metadata(eprint: EPrint, prefix: str) -> MetadataEntry:
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
     metadata_json = dumps(eprint, cls=CanonicalJSONEncoder)
     metadata_content = io.BytesIO(metadata_json.encode('utf-8'))
-    return MetadataEntry(year=eprint.arxiv_id.year,
-                         month=eprint.arxiv_id.month,
-                         arxiv_id=str(eprint.arxiv_id),
-                         version=eprint.version,
+    return MetadataEntry(key=MetadataEntry.make_key(prefix,
+                                                    str(eprint.arxiv_id),
+                                                    eprint.version),
                          content=metadata_content,
                          checksum=checksum(metadata_content))
 
-def _serialize_source(eprint: EPrint) -> SourceEntry:
+def _serialize_source(eprint: EPrint, prefix: str) -> SourceEntry:
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
-    return SourceEntry(year=eprint.arxiv_id.year,
-                       month=eprint.arxiv_id.month,
-                       arxiv_id=str(eprint.arxiv_id),
-                       version=eprint.version,
+    return SourceEntry(key=SourceEntry.make_key(prefix,
+                                                str(eprint.arxiv_id),
+                                                eprint.version),
                        content=eprint.source_package.content,
                        checksum=eprint.source_package.checksum)
 
-def _serialize_pdf(eprint: EPrint) -> PDFEntry:
+def _serialize_pdf(eprint: EPrint, prefix: str) -> PDFEntry:
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
-    return PDFEntry(year=eprint.arxiv_id.year,
-                    month=eprint.arxiv_id.month,
-                    arxiv_id=str(eprint.arxiv_id),
-                    version=eprint.version,
+    return PDFEntry(key=PDFEntry.make_key(prefix,
+                                          str(eprint.arxiv_id),
+                                          eprint.version),
                     content=eprint.pdf.content,
                     checksum=eprint.pdf.checksum)
 
 
 def _serialize_manifest(eprint: EPrint, metadata: MetadataEntry,
-                        source: SourceEntry, pdf: PDFEntry) -> ManifestEntry:
+                        source: SourceEntry, pdf: PDFEntry,
+                        prefix: str) -> ManifestEntry:
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
     manifest_content = io.BytesIO(dumps({
@@ -199,10 +174,9 @@ def _serialize_manifest(eprint: EPrint, metadata: MetadataEntry,
         source.key: source.checksum,
         pdf.key: pdf.checksum
     }).encode('utf-8'))
-    return ManifestEntry(year=eprint.arxiv_id.year,
-                         month=eprint.arxiv_id.month,
-                         arxiv_id=str(eprint.arxiv_id),
-                         version=eprint.version,
+    return ManifestEntry(key=ManifestEntry.make_key(prefix,
+                                                    str(eprint.arxiv_id),
+                                                    eprint.version),
                          content=manifest_content,
                          checksum=checksum(manifest_content))
 

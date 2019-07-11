@@ -15,6 +15,8 @@ from ..encoder import CanonicalJSONEncoder
 
 
 class IEntry(Protocol):
+    content_type: str
+
     @property
     def content(self) -> IO:
         """Raw content of the entry."""
@@ -33,40 +35,13 @@ class IEntry(Protocol):
 class BaseEntry(NamedTuple):
     """A single bitstream in the record."""
 
-    year: int
-    """The year in which the first version of the e-print was announced."""
-
-    month: int
-    """The month in which the first version of the e-print was announced."""
+    key: str
 
     content: IO
     """Raw content of the entry."""
 
     checksum: str
     """URL-safe base64-encoded MD5 hash of the entry content."""
-
-    @property
-    def key(self) -> str:
-        """Key for this entry relative to the e-print base key."""
-        raise NotImplementedError('Must be implemented by child class')
-
-
-class BaseDailyEntry(NamedTuple):
-    year: int
-
-    month: int
-
-    day: int
-
-    content: IO
-    """Raw content of the entry."""
-
-    checksum: str
-    """URL-safe base64-encoded MD5 hash of the entry content."""
-
-    @property
-    def key(self) -> str:
-        raise NotImplementedError('Must be implemented in child class')
 
 
 def checksum(content: IO[bytes]) -> str:

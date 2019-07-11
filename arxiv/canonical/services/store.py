@@ -1,7 +1,8 @@
 """
 Persist changes to the canonical record.
 
-Provides a :class:`.CanonicalStore` that stores resources in S3.
+Provides a :class:`.CanonicalStore` that stores resources in S3, using
+:mod:`.serialize.record` to serialize and deserialize resources.
 """
 
 import io
@@ -31,9 +32,9 @@ class DoesNotExist(Exception):
 class CanonicalStore:
     """
     Persists the canonical record in S3.
-    
+
     The intended pattern for working with the canonical record is to use the
-    :class:`.domain.CanonicalRecord` as the primary entrypoint for all 
+    :class:`.domain.CanonicalRecord` as the primary entrypoint for all
     operations. Consequently, this service offers only a single public instance
     method, :fund:`.load_record`.
 
@@ -91,20 +92,20 @@ class CanonicalStore:
         if exc.response['Error']['Code'] == "NoSuchKey":
             raise DoesNotExist(f'No such object in {self._bucket}') from exc
         raise RuntimeError('Unhandled ClientError') from exc
-    
+
     def is_available(self, retries: int = 0, read_timeout: int = 5,
                      connect_timeout: int = 5) -> bool:
         """Determine whether or not we can read from/write to the store."""
         raise NotImplementedError('Implement me!')
-    
+
     def load_record(self) -> CanonicalRecord:
         """
         Initialize and return the :class:`.CanonicalRecord`.
-        
+
         The ``blocks`` and ``listings`` members must be mappings that implement
         ``__getitem__`` methods such that, when called, an object of the
         expected type (:class:`.MonthlyBlock` and :class:`.Listing`,
-        respectively) is always returned. 
+        respectively) is always returned.
         """
         raise NotImplementedError('Implement me!')
 
@@ -116,7 +117,7 @@ class CanonicalStore:
         must be a subclass of ``list``, and implement an ``append(event: Event)
         -> None`` method that, when called, writes the current state of the
         listing to S3.
-        
+
         Parameters
         ----------
         listing_date : datetime
@@ -135,12 +136,12 @@ class CanonicalStore:
 
         The ``eprints`` member of the block must be a mapping (e.g. subclass of
         ``dict``), and implement:
-        
+
         - If ``self.read_only`` is ``False``, a method
           ``__setitem__(identifier: VersionedIdentifier, eprint: EPrint) ->
           None`` that, when called, writes the :class:`.EPrint` to S3.
         - A method ``__getitem__(identifier: VersionedIdentifier) -> EPrint:``
-          that, when called, reads the corresponding :class:`.EPrint` from 
+          that, when called, reads the corresponding :class:`.EPrint` from
           S3 if it exists (otherwise raises ``KeyError``).
 
         Parameters
@@ -154,7 +155,7 @@ class CanonicalStore:
 
         """
         raise NotImplementedError('Implement me!')
-    
+
 
     def _store_listing(self, listing: Listing) -> None:
         """
@@ -163,7 +164,7 @@ class CanonicalStore:
         Should complain loudly if ``self.read_only`` is ``True``.
         """
         raise NotImplementedError('Implement me!')
-    
+
     def _store_eprint(self, eprint: EPrint) -> None:
         """
         Store a :class:`.EPrint`.
@@ -174,20 +175,20 @@ class CanonicalStore:
         Should complain loudly if ``self.read_only`` is ``True``.
         """
         raise NotImplementedError('Implement me!')
-    
+
 
     def _load_eprint(self, identifier: Identifier, version: int) \
             -> EPrint:
         """
         Load an :class:`.EPrint`.
 
-        The content of the :attr:`.EPrint.source_package` and 
+        The content of the :attr:`.EPrint.source_package` and
         :attr:`.EPrint.pdf` should implement :class:`.Readable`. The ``read()``
-        method should be a closure that, when called, retrieves the content of 
+        method should be a closure that, when called, retrieves the content of
         the corresponding resource from storage.
         """
         raise NotImplementedError('Implement me!')
-    
+
     @classmethod
     def init_app(cls, app: Flask) -> None:
         """Set defaults for required configuration parameters."""
@@ -224,7 +225,7 @@ class CanonicalStore:
 class FakeCanonicalStore(CanonicalStore):
     """
     A mock implementation of the canonical store.
-    
+
     Methods to store things don't do anything, so don't expect data to stick
     around.
     """
@@ -235,7 +236,7 @@ class FakeCanonicalStore(CanonicalStore):
 
     def store_listing(self, listing: Listing) -> None:
         return
-    
+
     def store_eprint(self, eprint: EPrint) -> None:
         return
 
@@ -334,5 +335,5 @@ class FakeCanonicalStore(CanonicalStore):
                       categories=[Category('cs.AR')],
                       version=2)
             ]
-        )    
+        )
         return CanonicalRecord(blocks=fake_blocks, listings=fake_listings)

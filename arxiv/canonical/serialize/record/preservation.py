@@ -1,24 +1,7 @@
 """
 Describes the arXiv preservation record.
 
-The preservation record is a daily digest containing e-print content,
-announcement listings, and any suppress or remove directives (with
-corresponding tombstones).
 
-```
-announcement/<listing>.json
-e-prints/<arXiv ID>v<version>/
-    <arXiv ID>v<version>.json         # Metadata record
-    <arXiv ID>v<version>.tar.gz           # Source package
-    <arXiv ID>v<version>.pdf              # First PDF
-    <arXiv ID>v<version>.manifest.json    # Manifest.
-suppress/<arXiv ID>v<version>/tombstone
-preservation.manifest.json
-```
-
-The ``preservation.manifest.json`` record is similar to the e-print manifest
-record; it contains all of the keys and corresponding checksums for the items
-in the preservation record.
 """
 
 import io
@@ -28,46 +11,72 @@ from datetime import datetime, date
 
 from ...domain import CanonicalRecord, Listing
 from ..encoder import CanonicalJSONEncoder
-from .base import BaseEntry, BaseDailyEntry, IEntry, checksum
-from .eprint import EPrintRecord, BaseEPrintEntry
+from .base import BaseEntry, IEntry, checksum
+from .eprint import EPrintRecord
 from .eprint import serialize as serialize_eprint
+from .listing import ListingEntry
 
 
-class PreservationListingEntry(BaseDailyEntry):
-    content_type = 'application/json'
+# class PreservationListingEntry(BaseEntry):
+#     content_type = 'application/json'
 
-    @property
-    def key(self) -> str:
-        _date = date(year=self.year, month=self.month, day=self.day)
-        return f'announcement/listing-{_date.isoformat()}.json'
+#     @staticmethod
+#     def make_key(key_prefix: str, year: int, month: int, day: int) -> str:
+#         return '/'.join([key_prefix, ListingEntry.make_key(year, month, day)])
 
 
-class SupressionEntry(BaseEPrintEntry):
+class SupressionEntry(BaseEntry):
     content_type = 'text/plain'
 
-    @property
-    def key(self) -> str:
-        return f'suppress/{self.arxiv_id}v{self.version}/tombstone'
+    @staticmethod
+    def make_key(key_prefix: str, arxiv_id: str, version: int) -> str:
+        return '/'.join([
+            key_prefix, 'suppress', f'{arxiv_id}v{version}', 'tombstone'
+        ])
 
 
-class PreservationManifestEntry(BaseDailyEntry):
+class PreservationManifestEntry(BaseEntry):
+    """
+    Preservation manifest.
+
+    This record is similar to the :class:`.ManifestEntry`; it contains all of
+    the keys and corresponding checksums for the items in the preservation
+    record.
+    """
     content_type = 'application/json'
 
-    @property
-    def key(self) -> str:
+    @staticmethod
+    def make_key(key_prefix: str, year: int, month: int, day: int) -> str:
         name = '-'.join(['preservation',
-                         str(self.year),
-                         str(self.month).zfill(2),
-                         str(self.day).zfill(2)])
-        return f'{name}.manifest.json'
+                         str(year),
+                         str(month).zfill(2),
+                         str(day).zfill(2)])
+        return '/'.join([key_prefix, f'{name}.manifest.json'])
 
 
 class PreservationRecord(NamedTuple):
+    """
+    The preservation record is a daily digest containing e-print content,
+    announcement listings, and any suppress or remove directives (with
+    corresponding tombstones).
+
+    ```
+    announcement/<listing>.json
+    e-prints/<arXiv ID>v<version>/
+        <arXiv ID>v<version>.json         # Metadata record
+        <arXiv ID>v<version>.tar.gz           # Source package
+        <arXiv ID>v<version>.pdf              # First PDF
+        <arXiv ID>v<version>.manifest.json    # Manifest.
+    suppress/<arXiv ID>v<version>/tombstone
+    preservation.manifest.json
+    ```
+
+    """
     year: int
     month: int
     day: int
 
-    listings: List[PreservationListingEntry]
+    listings: List[ListingEntry]
     eprints: List[EPrintRecord]
     suppress: List[SupressionEntry]
     manifest: PreservationManifestEntry
@@ -81,6 +90,12 @@ class PreservationRecord(NamedTuple):
         for suppression in self.suppress:
             yield suppression.key, suppression
         yield self.manifest.key, self.manifest
+
+    @staticmethod
+    def key_prefix(year: int, month: int, day: int) -> str:
+        return '/'.join([
+            'archive', str(year), str(month).zfill(2), str(day).zfill(2)
+        ])
 
 
 def serialize(record: CanonicalRecord, for_date: date) -> PreservationRecord:
@@ -100,13 +115,18 @@ def serialize(record: CanonicalRecord, for_date: date) -> PreservationRecord:
 
     """
     listing = record.listings[for_date]
-    listing_entry = _serialize_listing(listing)
+    prefix = PreservationRecord.key_prefix(listing.date.year,
+                                           listing.date.month,
+                                           listing.date.day)
+
+    listing_entry = _serialize_listing(listing, prefix)
     eprints = [
-        serialize_eprint(record.load_eprint(arxiv_id, version))
+        serialize_eprint(record.load_eprint(arxiv_id, version),
+                         prefix='/'.join([prefix, 'e-prints']))
         for arxiv_id, version in
         set((event.arxiv_id, event.version) for event in listing.events)
     ]
-    manifest = _serialize_manifest(eprints, listing_entry)
+    manifest = _serialize_manifest(eprints, listing_entry, listing, prefix)
     return PreservationRecord(year=for_date.year,
                               month=for_date.month,
                               day=for_date.day,
@@ -116,32 +136,34 @@ def serialize(record: CanonicalRecord, for_date: date) -> PreservationRecord:
                               manifest=manifest)
 
 
-def _serialize_listing(listing: Listing) -> PreservationListingEntry:
+
+def _serialize_listing(listing: Listing, prefix: str) -> ListingEntry:
     listing_json = dumps(listing, cls=CanonicalJSONEncoder)
     listing_content = io.BytesIO(listing_json.encode('utf-8'))
-    return PreservationListingEntry(year=listing.date.year,
-                                    month=listing.date.month,
-                                    day=listing.date.day,
-                                    content=listing_content,
-                                    checksum=checksum(listing_content))
+    listing_prefix = '/'.join([prefix, 'announcement'])
+    return ListingEntry(key=ListingEntry.make_key(listing_prefix),
+                        content=listing_content,
+                        checksum=checksum(listing_content))
 
 
 def _serialize_manifest(eprints: List[EPrintRecord],
-                        listing: PreservationListingEntry) \
-        -> PreservationManifestEntry:
+                        listing_entry: ListingEntry, listing: Listing,
+                        prefix: str) -> PreservationManifestEntry:
     manifest = {}
     for eprint in eprints:
         manifest.update({
-            eprint.get_full_key(eprint.metadata): eprint.metadata.checksum,
-            eprint.get_full_key(eprint.source): eprint.source.checksum,
-            eprint.get_full_key(eprint.pdf): eprint.pdf.checksum,
-            eprint.get_full_key(eprint.manifest): eprint.manifest.checksum
+            eprint.metadata.key: eprint.metadata.checksum,
+            eprint.source.key: eprint.source.checksum,
+            eprint.pdf.key: eprint.pdf.checksum,
+            eprint.manifest.key: eprint.manifest.checksum
         })
-    manifest[listing.key] = listing.checksum
+    manifest[listing_entry.key] = listing_entry.checksum
 
     manifest_content = io.BytesIO(dumps(manifest).encode('utf-8'))
-    return PreservationManifestEntry(year=listing.year,
-                                     month=listing.month,
-                                     day=listing.day,
+    key = PreservationManifestEntry.make_key(prefix,
+                                             listing.date.year,
+                                             listing.date.month,
+                                             listing.date.day)
+    return PreservationManifestEntry(key=key,
                                      content=manifest_content,
                                      checksum=checksum(manifest_content))

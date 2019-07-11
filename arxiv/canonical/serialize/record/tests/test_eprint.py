@@ -97,3 +97,7 @@ class TestSerializeRecord(TestCase):
         self.assertEqual(metadata_data.size_kilobytes,
                          self.eprint.size_kilobytes)
 
+    def test_foo(self):
+        for key, elem in self.serialized:
+            print(key)
+
