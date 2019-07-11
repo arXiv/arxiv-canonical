@@ -134,8 +134,7 @@ def _serialize_listing(listing: Listing, prefix: str) -> ListingEntry:
     listing_content = io.BytesIO(listing_json.encode('utf-8'))
     listing_prefix = '/'.join([prefix, 'announcement'])
     return ListingEntry(key=ListingEntry.make_key(listing_prefix),
-                        content=listing_content,
-                        checksum=checksum(listing_content))
+                        content=listing_content)
 
 
 def _serialize_manifest(eprints: List[EPrintRecord],
@@ -143,12 +142,10 @@ def _serialize_manifest(eprints: List[EPrintRecord],
                         prefix: str) -> PreservationManifestEntry:
     manifest = {}
     for eprint in eprints:
-        manifest.update({
-            eprint.metadata.key: eprint.metadata.checksum,
-            eprint.source.key: eprint.source.checksum,
-            eprint.pdf.key: eprint.pdf.checksum,
-            eprint.manifest.key: eprint.manifest.checksum
-        })
+        manifest.update({eprint.metadata.key: eprint.metadata.checksum,
+                         eprint.source.key: eprint.source.checksum,
+                         eprint.pdf.key: eprint.pdf.checksum,
+                         eprint.manifest.key: eprint.manifest.checksum})
     manifest[listing_entry.key] = listing_entry.checksum
 
     manifest_content = io.BytesIO(dumps(manifest).encode('utf-8'))
@@ -156,6 +153,4 @@ def _serialize_manifest(eprints: List[EPrintRecord],
                                              listing.date.year,
                                              listing.date.month,
                                              listing.date.day)
-    return PreservationManifestEntry(key=key,
-                                     content=manifest_content,
-                                     checksum=checksum(manifest_content))
+    return PreservationManifestEntry(key=key, content=manifest_content)

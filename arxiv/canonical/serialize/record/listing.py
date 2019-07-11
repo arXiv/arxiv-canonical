@@ -29,7 +29,7 @@ from datetime import datetime, date
 from ...domain import CanonicalRecord, Listing
 from ..encoder import CanonicalJSONEncoder
 from ..decoder import CanonicalJSONDecoder
-from .base import BaseEntry, IEntry, checksum, ChecksumError
+from .base import BaseEntry, IEntry
 from .eprint import serialize as serialize_eprint
 
 
@@ -47,13 +47,9 @@ def make_key_prefix(year: int, month: int, day: int) -> str:
     ])
 
 
-def deserialize(record: ListingEntry, validate: bool = True) -> Listing:
+def deserialize(record: ListingEntry) -> Listing:
     """Deserialize an :class:`.ListingEntry` to an :class:`.Listing`."""
-    listing = load(record.content, cls=CanonicalJSONDecoder)
-    if validate:    # Compare calculated checksum to recorded checksum.
-        if checksum(record.content) != record.checksum:
-            raise ChecksumError('Listing has non-matching checksum')
-    return listing
+    return load(record.content, cls=CanonicalJSONDecoder)
 
 
 def serialize(listing: Listing) -> ListingEntry:
@@ -63,5 +59,4 @@ def serialize(listing: Listing) -> ListingEntry:
     prefix = make_key_prefix(listing.date.year, listing.date.month,
                              listing.date.day)
     return ListingEntry(key=ListingEntry.make_key(prefix),
-                        content=listing_content,
-                        checksum=checksum(listing_content))
+                        content=listing_content)

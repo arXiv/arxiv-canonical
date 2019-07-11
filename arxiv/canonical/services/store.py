@@ -7,9 +7,10 @@ Provides a :class:`.CanonicalStore` that stores resources in S3, using
 
 import io
 from unittest import mock    # TODO: remove this when fakes are no longer used.
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, IO
 from datetime import datetime, date
 from pytz import UTC
+from functools import partial
 
 from flask import Flask
 import boto3
@@ -22,6 +23,8 @@ from arxiv.taxonomy import Category
 
 from ..domain import Listing, EPrint, Identifier, Event, License, File, \
     Person, CanonicalRecord, MonthlyBlock
+from ..serialize.record import eprint
+from .readable import MemoizedReadable
 
 
 class DoesNotExist(Exception):
@@ -156,7 +159,6 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
 
-
     def _store_listing(self, listing: Listing) -> None:
         """
         Store a :class:`.Listing`.
@@ -167,7 +169,7 @@ class CanonicalStore:
 
     def _store_eprint(self, eprint: EPrint) -> None:
         """
-        Store a :class:`.EPrint`.
+        Store an :class:`.EPrint`.
 
         If the :attr:`.EPrint.source_package` or :attr:`.EPrint.pdf` content
         has changed, those should also be stored.
@@ -176,18 +178,45 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
 
-
-    def _load_eprint(self, identifier: Identifier, version: int) \
+    def _load_eprint(self, arxiv_id: Identifier, version: int) \
             -> EPrint:
         """
         Load an :class:`.EPrint`.
 
         The content of the :attr:`.EPrint.source_package` and
-        :attr:`.EPrint.pdf` should implement :class:`.Readable`. The ``read()``
+        :attr:`.EPrint.pdf.content` should implement :class:`.Readable`. The ``read()``
         method should be a closure that, when called, retrieves the content of
         the corresponding resource from storage.
         """
-        raise NotImplementedError('Implement me!')
+        prefix = eprint.EPrintRecord.key_prefix(arxiv_id.year, arxiv_id.month,
+                                                str(arxiv_id), version)
+        metadata_key = eprint.MetadataEntry.make_key(prefix, arxiv_id, version)
+        pdf_key = eprint.PDFEntry.make_key(prefix, arxiv_id, version)
+        source_key = eprint.SourceEntry.make_key(prefix, arxiv_id, version)
+        manifest_key = eprint.ManifestEntry.make_key(prefix, arxiv_id, version)
+
+        record = eprint.EPrintRecord(
+            metadata=eprint.MetadataEntry(
+                key=metadata_key,
+                content=MemoizedReadable(partial(self._load_key, metadata_key))
+            ),
+            source=eprint.SourceEntry(
+                key=source_key,
+                content=MemoizedReadable(partial(self._load_key, source_key))
+            ),
+            pdf=eprint.PDFEntry(
+                key=pdf_key,
+                content=MemoizedReadable(partial(self._load_key, pdf_key))
+            ),
+            manifest=eprint.ManifestEntry(
+                key=manifest_key,
+                content=MemoizedReadable(partial(self._load_key, manifest_key))
+            )
+        )
+        return eprint.deserialize(record)
+
+    def _load_key(self, key: str) -> bytes:
+        return b'{"fake": "data"}'
 
     @classmethod
     def init_app(cls, app: Flask) -> None:

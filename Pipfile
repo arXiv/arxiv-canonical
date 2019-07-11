@@ -13,6 +13,7 @@ pydocstyle = "*"
 mypy = "*"
 pytest-cov = "*"
 arxiv-canonical = {path = "."}
+moto = "*"
 
 [packages]
 backports-datetime-fromisoformat = "*"

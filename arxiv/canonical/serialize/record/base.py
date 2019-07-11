@@ -5,7 +5,7 @@ Serialization and deserialization of the canonical record.
 
 import io
 from json import dumps, loads
-from typing import NamedTuple, IO, Iterable, Tuple
+from typing import NamedTuple, IO, Iterable, Tuple, Optional
 from hashlib import md5
 from base64 import urlsafe_b64encode
 
@@ -48,8 +48,10 @@ class BaseEntry(NamedTuple):
     content: IO
     """Raw content of the entry."""
 
-    checksum: str
-    """URL-safe base64-encoded MD5 hash of the entry content."""
+    @property
+    def checksum(self) -> str:
+        """URL-safe base64-encoded MD5 hash of the entry content."""
+        return checksum(self.content)
 
 
 def checksum(content: IO[bytes]) -> str:

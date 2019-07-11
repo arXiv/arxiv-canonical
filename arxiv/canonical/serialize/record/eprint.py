@@ -2,7 +2,7 @@
 """
 import io
 from json import dumps, loads, load
-from typing import NamedTuple, List, IO, Iterator, Tuple, Optional
+from typing import NamedTuple, List, IO, Iterator, Tuple, Optional, Dict
 from datetime import datetime, date
 
 from ...domain import EPrint
@@ -117,6 +117,12 @@ class EPrintRecord(NamedTuple):
         ])
 
 
+def _validate_checksum(key: str, content: IO[bytes], manifest: Dict[str, str]) -> None:
+    calculated = checksum(content)
+    if calculated != manifest[key]:
+        raise ChecksumError(f'{key} has non-matching checksum; expected'
+                            f' {manifest[key]}, got {calculated}')
+
 def deserialize(record: EPrintRecord, validate: bool = True) -> EPrint:
     """Deserialize an :class:`.EPrintRecord` to an :class:`.EPrint`."""
     metadata = load(record.metadata.content, cls=CanonicalJSONDecoder)
@@ -124,12 +130,12 @@ def deserialize(record: EPrintRecord, validate: bool = True) -> EPrint:
     pdf = metadata.pdf.with_content(record.pdf.content)
     if validate:    # Compare calculated checksums to the manifest.
         manifest = load(record.manifest.content)
-        if checksum(record.metadata.content) != manifest[record.metadata.key]:
-            raise ChecksumError('Metadata has non-matching checksum')
-        if checksum(pdf.content) != manifest[record.pdf.key]:
-            raise ChecksumError('PDF has non-matching checksum')
-        if checksum(source.content) != manifest[record.source.key]:
-            raise ChecksumError('Source has non-matching checksum')
+        _validate_checksum(record.metadata.key, record.metadata.content,
+                           manifest)
+        _validate_checksum(record.pdf.key, record.pdf.content,
+                           manifest)
+        _validate_checksum(record.source.key, record.source.content,
+                           manifest)
     return metadata.with_files(source_package=source, pdf=pdf)
 
 
@@ -159,8 +165,7 @@ def _serialize_metadata(eprint: EPrint, prefix: str) -> MetadataEntry:
     return MetadataEntry(key=MetadataEntry.make_key(prefix,
                                                     str(eprint.arxiv_id),
                                                     eprint.version),
-                         content=metadata_content,
-                         checksum=checksum(metadata_content))
+                         content=metadata_content)
 
 def _serialize_source(eprint: EPrint, prefix: str) -> SourceEntry:
     if eprint.arxiv_id is None:
@@ -168,8 +173,7 @@ def _serialize_source(eprint: EPrint, prefix: str) -> SourceEntry:
     return SourceEntry(key=SourceEntry.make_key(prefix,
                                                 str(eprint.arxiv_id),
                                                 eprint.version),
-                       content=eprint.source_package.content,
-                       checksum=eprint.source_package.checksum)
+                       content=eprint.source_package.content)
 
 def _serialize_pdf(eprint: EPrint, prefix: str) -> PDFEntry:
     if eprint.arxiv_id is None:
@@ -177,8 +181,7 @@ def _serialize_pdf(eprint: EPrint, prefix: str) -> PDFEntry:
     return PDFEntry(key=PDFEntry.make_key(prefix,
                                           str(eprint.arxiv_id),
                                           eprint.version),
-                    content=eprint.pdf.content,
-                    checksum=eprint.pdf.checksum)
+                    content=eprint.pdf.content)
 
 
 def _serialize_manifest(eprint: EPrint, metadata: MetadataEntry,
@@ -186,15 +189,17 @@ def _serialize_manifest(eprint: EPrint, metadata: MetadataEntry,
                         prefix: str) -> ManifestEntry:
     if eprint.arxiv_id is None:
         raise ValueError('Record serialization requires announced e-prints')
-    manifest_content = io.BytesIO(dumps({
-        metadata.key: metadata.checksum,
-        source.key: source.checksum,
-        pdf.key: pdf.checksum
-    }).encode('utf-8'))
-    return ManifestEntry(key=ManifestEntry.make_key(prefix,
-                                                    str(eprint.arxiv_id),
-                                                    eprint.version),
-                         content=manifest_content,
-                         checksum=checksum(manifest_content))
+    return ManifestEntry(
+        key=ManifestEntry.make_key(
+            prefix,
+            str(eprint.arxiv_id),
+            eprint.version
+        ),
+        content=io.BytesIO(dumps({
+            metadata.key: metadata.checksum,
+            source.key: source.checksum,
+            pdf.key: pdf.checksum
+        }).encode('utf-8'))
+    )
 
 
