@@ -167,7 +167,7 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
 
-    def _store_eprint(self, eprint: EPrint) -> None:
+    def _store_eprint(self, e_print: EPrint) -> None:
         """
         Store an :class:`.EPrint`.
 
@@ -178,8 +178,7 @@ class CanonicalStore:
         """
         raise NotImplementedError('Implement me!')
 
-    def _load_eprint(self, arxiv_id: Identifier, version: int) \
-            -> EPrint:
+    def _load_eprint(self, arxiv_id: Identifier, version: int) -> EPrint:
         """
         Load an :class:`.EPrint`.
 
