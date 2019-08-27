@@ -2,7 +2,7 @@ import json
 from unittest import TestCase, mock
 from moto import mock_s3
 
-from ...domain import Identifier
+from ...domain import Identifier, VersionedIdentifier
 from .. import store
 
 class TestLoadEPrint(TestCase):
@@ -36,7 +36,7 @@ class TestLoadEPrint(TestCase):
             'report_num': None,
             'secondary_classification': ['cs.AI', 'cs.DL'],
             'size_kilobytes': 1,
-            'source_package': {'@type': 'File',
+            'source': {'@type': 'File',
                                 'checksum': 'UkMjgWHli_2o5cX86fJFRg==',
                                 'created': '2019-07-11T15:43:03.031967+00:00',
                                 'filename': '2004.00111.tar.gz',
@@ -72,9 +72,9 @@ class TestLoadEPrint(TestCase):
 
         store_service._load_key = load_fake_data
 
-        eprint = store_service._load_eprint(Identifier('1901.00123'), 1)
+        eprint = store_service.load_eprint(VersionedIdentifier('1901.00123v1'))
         self.assertEqual(eprint.pdf.content.read(), fake_content,
                          'Lazily-loaded fake data is returned')
-        self.assertEqual(eprint.source_package.content.read(), fake_content,
+        self.assertEqual(eprint.source.content.read(), fake_content,
                          'Lazily-loaded fake data is returned')
 

@@ -4,7 +4,7 @@ set -e
 
 PROJECT=$1
 
-touch ${PROJECT}/__init__.py
+touch ${PROJECT}/__init__.py || echo "Not a package..."
 MYPY_STATUS=$( pipenv run mypy -p ${PROJECT}  | grep -v "test.*" | tee /dev/tty | wc -l | tr -d '[:space:]' )
 if [ $MYPY_STATUS -ne 0 ]; then MYPY_STATE="failure" && echo "mypy failed"; else MYPY_STATE="success" &&  echo "mypy passed"; fi
 

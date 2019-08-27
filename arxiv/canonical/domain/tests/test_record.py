@@ -5,7 +5,7 @@ from datetime import date
 
 from arxiv.taxonomy import Category
 from ..eprint import EPrint
-from ..block import MonthlyBlock
+from ..block import Month
 from ..identifier import VersionedIdentifier, Identifier
 from ..record import CanonicalRecord
 from ..listing import Listing
@@ -13,18 +13,18 @@ from ..event import Event
 
 
 class TestCurrentBlock(TestCase):
-    """Property :attr:`.current_block` is the current :class:`.MonthlyBlock."""
+    """Property :attr:`.current_block` is the current :class:`.Month."""
 
     def test_current_block(self):
         """There are several blocks on the record."""
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): MonthlyBlock(year - 1, month, {}),
-            (year, month): MonthlyBlock(year, month, {}),
-            (year, month + 1): MonthlyBlock(year, month + 1, {}),
+            (year - 1, month): Month(year - 1, month, {}),
+            (year, month): Month(year, month, {}),
+            (year, month + 1): Month(year, month + 1, {}),
         }
         record = CanonicalRecord(blocks, {})
-        self.assertIsInstance(record.current_block, MonthlyBlock)
+        self.assertIsInstance(record.current_block, Month)
         self.assertEqual(record.current_block.year, year)
         self.assertEqual(record.current_block.month, month)
         self.assertTrue(record.current_block.is_open)
@@ -56,20 +56,20 @@ class TestAnnounceNew(TestCase):
 
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): MonthlyBlock(year - 1, month, {}),
-            (year, month): MonthlyBlock(year, month, {}),
-            (year, month + 1): MonthlyBlock(year, month + 1, {}),
+            (year - 1, month): Month(year - 1, month, {}),
+            (year, month): Month(year, month, {}),
+            (year, month + 1): Month(year, month + 1, {}),
         }
-        today_listing = Listing(date.today(), [])
+        today_listing = Listing(date.today(), [], mock.MagicMock())
         listings = {(date.today()): today_listing}
         record = CanonicalRecord(blocks, listings)
         eprint = record.announce_new(eprint)
 
         self.assertTrue(eprint.is_announced, 'E-Print is announced')
-        self.assertIn(eprint.versioned_identifier, 
+        self.assertIn(eprint.versioned_identifier,
                       record.current_block.eprints,
                       'E-Print is in the current block')
-        self.assertEqual(len(today_listing.events), 1, 
+        self.assertEqual(len(today_listing.events), 1,
                          'An event is added to the listing')
         self.assertIsInstance(today_listing.events[0], Event)
         self.assertEqual(today_listing.events[0].arxiv_id, eprint.arxiv_id,
@@ -100,14 +100,13 @@ class TestAnnounceNew(TestCase):
 
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): MonthlyBlock(year - 1, month, {}),
-            (year, month): MonthlyBlock(year, month, {}),
-            (year, month + 1): MonthlyBlock(year, month + 1, {}),
+            (year - 1, month): Month(year - 1, month, {}),
+            (year, month): Month(year, month, {}),
+            (year, month + 1): Month(year, month + 1, {}),
         }
         listings = {(date.today()): Listing(date.today(), [])}
         record = CanonicalRecord(blocks, listings)
 
         with self.assertRaises(ValueError):
             record.announce_new(eprint)
-        
-        
+

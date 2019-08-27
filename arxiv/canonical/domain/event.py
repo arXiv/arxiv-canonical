@@ -8,17 +8,18 @@ from arxiv.taxonomy import Category
 from .identifier import Identifier
 
 
+class EventType(Enum):
+    """Supported event types."""
+
+    NEW = 'new'
+    UPDATED = 'updated'
+    REPLACED = 'replaced'
+    CROSSLIST = 'cross'
+    WITHDRAWN = 'withdrawn'
+
+
 class Event(NamedTuple):
     """An announcement-related event."""
-
-    class EventType(Enum):
-        """Supported event types."""
-
-        NEW = 'new'
-        UPDATED = 'updated'
-        REPLACED = 'replaced'
-        CROSSLIST = 'cross'
-        WITHDRAWN = 'withdrawn'
 
     arxiv_id: Identifier
     event_date: datetime

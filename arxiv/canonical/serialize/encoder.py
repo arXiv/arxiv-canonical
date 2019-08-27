@@ -1,4 +1,4 @@
-"""Provides a :class:`.CanonicalJSONEncoder` for domain objects."""
+"""Provides a :class:`.CanonicalEncoder` for domain objects."""
 
 import re
 import json
@@ -20,7 +20,7 @@ def _camel_to_snake(camel: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
-class CanonicalJSONEncoder(json.JSONEncoder):
+class CanonicalEncoder(json.JSONEncoder):
     """Encodes domain objects in this package for serialization."""
 
     def unpack(self, obj: Any) -> Any:
@@ -46,7 +46,7 @@ class CanonicalJSONEncoder(json.JSONEncoder):
 
     def encode(self, obj: Any) -> Any:
         """Serialize objects in this application domain."""
-        return super(CanonicalJSONEncoder, self).encode(self.unpack(obj))
+        return super(CanonicalEncoder, self).encode(self.unpack(obj))
 
     def unpack_default(self, obj: Any) -> Dict:
         """Fallback unpack method for any domain object."""

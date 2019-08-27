@@ -1,13 +1,14 @@
 """Provides the concept of an arXiv identifier."""
 
-from arxiv import identifier
+# Mypy still does not handle namespaced packages correctly.
+from arxiv import identifier  # type: ignore
 
 
 class Identifier(str):
     """
     An arXiv e-print identifier.
-    
-    Supports both old-style (``archive.category/YYMMNNN``) and new-style 
+
+    Supports both old-style (``archive.category/YYMMNNN``) and new-style
     (``YYMM.NNNNN``) identifiers.
     """
 

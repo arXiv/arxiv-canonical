@@ -20,8 +20,8 @@ def create_api_app() -> Flask:
     Base(app)
     auth.Auth(app)
 
-    app.json_decoder = decoder.CanonicalJSONDecoder
-    app.json_encoder = encoder.CanonicalJSONEncoder
+    app.json_decoder = decoder.CanonicalDecoder
+    app.json_encoder = encoder.CanonicalEncoder
 
     app.register_blueprint(routes.api.blueprint)
     wrap(app, [auth.middleware.AuthMiddleware])

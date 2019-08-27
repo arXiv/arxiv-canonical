@@ -1,1 +1,0 @@
-"""Provides the authoritative de/serialization of the canonical record."""

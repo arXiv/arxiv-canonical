@@ -1,3 +1,3 @@
 """Service integrations."""
 
-from .store import FakeCanonicalStore, CanonicalStore
+from .store import CanonicalStore

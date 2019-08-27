@@ -9,9 +9,9 @@ from pytz import UTC
 
 from arxiv.taxonomy import Category
 
-from ....domain import EPrint, Identifier, File, MonthlyBlock, \
+from ....domain import EPrint, Identifier, File, Month, \
     CanonicalRecord, Listing
-from ...decoder import CanonicalJSONDecoder
+from ...decoder import CanonicalDecoder
 from ..base import checksum
 from ..preservation import serialize
 
@@ -57,15 +57,15 @@ class TestSerializePreservationRecord(TestCase):
             previous_versions=[],
             secondary_classification=['cs.AI', 'cs.DL'],
             history=[],
-            source_package=self.source,
+            source=self.source,
             pdf=self.pdf
         )
 
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): MonthlyBlock(year - 1, month, {}),
-            (year, month): MonthlyBlock(year, month, {}),
-            (year, month + 1): MonthlyBlock(year, month + 1, {}),
+            (year - 1, month): Month(year - 1, month, {}),
+            (year, month): Month(year, month, {}),
+            (year, month + 1): Month(year, month + 1, {}),
         }
         today_listing = Listing(date.today(), [])
         listings = {(date.today()): today_listing}

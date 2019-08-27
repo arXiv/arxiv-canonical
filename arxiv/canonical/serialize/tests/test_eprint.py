@@ -10,7 +10,7 @@ from pytz import UTC
 from arxiv.taxonomy import Category
 
 from ....domain import EPrint, Identifier, File
-from ...decoder import CanonicalJSONDecoder
+from ...decoder import CanonicalDecoder
 from ..base import checksum
 from ..eprint import serialize, deserialize
 
@@ -58,7 +58,7 @@ class TestSerializeRecord(TestCase):
             previous_versions=[],
             secondary_classification=[Category('cs.AI'), Category('cs.DL')],
             history=[],
-            source_package=self.source,
+            source=self.source,
             pdf=self.pdf
         )
 
@@ -79,7 +79,7 @@ class TestSerializeRecord(TestCase):
     def test_metadata_consistency(self):
         """Check consistency of the metadata record."""
         metadata_data = json.load(self.serialized.metadata.content,
-                                  cls=CanonicalJSONDecoder)
+                                  cls=CanonicalDecoder)
         self.assertEqual(metadata_data.arxiv_id, self.eprint.arxiv_id)
         self.assertEqual(metadata_data.version, self.eprint.version)
         self.assertEqual(metadata_data.announced_date,
@@ -142,7 +142,7 @@ class TestDeserializeRecord(TestCase):
             previous_versions=[],
             secondary_classification=[Category('cs.AI'), Category('cs.DL')],
             history=[],
-            source_package=self.source,
+            source=self.source,
             pdf=self.pdf
         )
 
@@ -182,10 +182,10 @@ class TestDeserializeRecord(TestCase):
         original_content = self.eprint.pdf.content.read()
         self.assertEqual(deserialized_content, original_content)
 
-        eprint.source_package.content.seek(0)
-        deserialized_content = eprint.source_package.content.read()
-        self.eprint.source_package.content.seek(0)
-        original_content = self.eprint.source_package.content.read()
+        eprint.source.content.seek(0)
+        deserialized_content = eprint.source.content.read()
+        self.eprint.source.content.seek(0)
+        original_content = self.eprint.source.content.read()
         self.assertEqual(deserialized_content, original_content)
 
 

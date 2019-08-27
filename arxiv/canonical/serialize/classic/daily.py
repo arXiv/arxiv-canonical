@@ -36,14 +36,14 @@ serialized in the daily listing files.
 
 from typing import Tuple, List, Mapping, Iterable
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 import string
 import re
 from itertools import chain, groupby
 
 import warnings
 
-from ...domain import Event
+from ...domain import Event, Identifier, EventType
 
 Entry = Tuple[str, str]
 """An ``arxiv_id, category`` tuple."""
@@ -102,7 +102,7 @@ one version of ``solv-int/9912004``.
 class DailyLogParser:
     """Parses the daily log file."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize both styles of parsers."""
         self.newstyle_parser = NewStyleLineParser()
         self.oldstyle_parser = OldStyleLineParser()
@@ -152,6 +152,8 @@ class DailyLogParser:
 
         """
         match = LINE.match(raw)
+        if match is None:
+            raise ValueError(f'Line is malformed: {raw}')
         archive = match.group('archive')
         data = match.group('data')
         event_date = self._parse_date(match.group('event_date'))
@@ -164,22 +166,24 @@ class DailyLogParser:
 class LineParser:
     """Shared behavior among newstyle and oldstyle line parsing."""
 
-    def _to_events(self, e_date: date, e_type: Event.EventType,
+    def _to_events(self, e_date: date, e_type: EventType,
                    entries: Iterable[Entry],
                    version: int = -1) -> Iterable[Event]:
+        event_datetime = datetime(e_date.year, e_date.month, e_date.day)
         for paper_id, entries in groupby(entries, key=lambda o: o[0]):
-            yield Event(arxiv_id=paper_id, event_date=e_date,
+            yield Event(arxiv_id=Identifier(paper_id),
+                        event_date=event_datetime,
                         event_type=e_type, version=version,
                         categories=[category for _, category in entries])
 
     def parse(self, e_date: date, archive: str, data: str) -> Iterable[Event]:
         """Parse data from a daily log file line."""
         new, cross, replace = data.split('|')
-        return chain(self._to_events(e_date, Event.EventType.NEW,
+        return chain(self._to_events(e_date, EventType.NEW,
                                      self.parse_new(archive, new), 1),
-                     self._to_events(e_date, Event.EventType.CROSSLIST,
+                     self._to_events(e_date, EventType.CROSSLIST,
                                      self.parse_cross(archive, cross)),
-                     self._to_events(e_date, Event.EventType.REPLACED,
+                     self._to_events(e_date, EventType.REPLACED,
                                      self.parse_replace(archive, replace)))
 
     def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
@@ -228,8 +232,8 @@ class OldStyleLineParser(LineParser):
         if match_range:
             start_id = int(match_range.group('start_id'))
             end_id = int(match_range.group('end_id'))
-            for identifier in range(start_id, end_id + 1):  # Inclusive.
-                identifier = str(identifier).zfill(7)
+            for _identifier in range(start_id, end_id + 1):  # Inclusive.
+                identifier = str(_identifier).zfill(7)
                 paper_id = f'{archive}/{identifier}'
                 yield paper_id, archive
         elif SINGLE_IDENTIFIER.match(fragment):
@@ -426,10 +430,10 @@ class NewStyleLineParser(LineParser):
             abs_only = True
             entry = entry[:-4]
         paper_id, categories = entry.split(':', 1)
-        categories = categories.split(':')
+        categories_list = categories.split(':')
         # unsquash old identifier, if squashed
         squashed = SQUASHED_IDENTIFIER.match(paper_id)
         if squashed:
             paper_id = '/'.join(squashed.groups())
         assert IDENTIFIER.match(paper_id) is not None
-        return paper_id, abs_only, categories
+        return paper_id, abs_only, categories_list

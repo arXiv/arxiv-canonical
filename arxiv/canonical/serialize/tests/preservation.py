@@ -10,9 +10,9 @@ from typing import NamedTuple, List, IO, Iterator, Tuple
 from datetime import datetime, date
 
 from ...domain import CanonicalRecord, Listing
-from ..encoder import CanonicalJSONEncoder
+from ..encoder import CanonicalEncoder
 from .base import BaseEntry, IEntry, checksum, ChecksumError
-from .eprint import EPrintRecord
+from .eprint import RecordEPrint
 from .eprint import serialize as serialize_eprint
 from .listing import ListingEntry
 
@@ -69,7 +69,7 @@ class PreservationRecord(NamedTuple):
     day: int
 
     listings: List[ListingEntry]
-    eprints: List[EPrintRecord]
+    eprints: List[RecordEPrint]
     suppress: List[SupressionEntry]
     manifest: PreservationManifestEntry
 
@@ -130,14 +130,14 @@ def serialize(record: CanonicalRecord, for_date: date) -> PreservationRecord:
 
 
 def _serialize_listing(listing: Listing, prefix: str) -> ListingEntry:
-    listing_json = dumps(listing, cls=CanonicalJSONEncoder)
+    listing_json = dumps(listing, cls=CanonicalEncoder)
     listing_content = io.BytesIO(listing_json.encode('utf-8'))
     listing_prefix = '/'.join([prefix, 'announcement'])
     return ListingEntry(key=ListingEntry.make_key(listing_prefix),
                         content=listing_content)
 
 
-def _serialize_manifest(eprints: List[EPrintRecord],
+def _serialize_manifest(eprints: List[RecordEPrint],
                         listing_entry: ListingEntry, listing: Listing,
                         prefix: str) -> PreservationManifestEntry:
     manifest = {}

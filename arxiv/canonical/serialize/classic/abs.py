@@ -107,8 +107,7 @@ def parse(path: str) -> domain.EPrint:
     versions = _parse_versions(arxiv_id=arxiv_id,
                                version_entry_list=parsed_version_entries)
 
-    secondary_classification = []
-
+    secondary_classification: List[str] = []
     if 'categories' in fields and fields['categories']:
         classifications = fields['categories'].split()
         primary_classification = classifications[0]
@@ -125,12 +124,12 @@ def parse(path: str) -> domain.EPrint:
         license = ASSUMED_LICENSE
 
     return domain.EPrint(
-        arxiv_id=arxiv_id,
+        arxiv_id=domain.Identifier(arxiv_id),
         version=versions[-1].version,
         legacy=True,
         submitter=domain.Person(full_name=name) if name else None,
         submitted_date=versions[-1].submitted_date,
-        announced_date='',
+        announced_date=None,
         license=license,
         primary_classification=primary_classification,
         title=fields['title'],
@@ -186,7 +185,7 @@ def _parse_announced(arxiv_id: str) -> str:
 def _parse_versions(arxiv_id: str, version_entry_list: List) \
         -> List[domain.VersionReference]:
     """Parse the version entries from the arXiv .abs file."""
-    version_entries = list()
+    version_entries: List[domain.VersionReference] = list()
     for parsed_version_entry in version_entry_list:
         date_match = RE_DATE_COMPONENTS.match(parsed_version_entry)
         if not date_match:
