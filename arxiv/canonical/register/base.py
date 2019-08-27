@@ -16,7 +16,7 @@ from ..integrity import IntegrityEntry, IntegrityVersion, IntegrityEPrint, \
     IntegrityListing, ManifestEntry, Manifest, IntegrityMonth, \
     IntegrityDay, IntegrityListingRange, IntegrityListingMonth, \
     IntegrityListingYear, IntegrityAllListings, IntegrityYear, \
-    IntegrityAllEPrints, get_checksum
+    IntegrityAllEPrints, BaseIntegrity, get_checksum
 from ..serialize.record import RecordEntry, RecordVersion, RecordEPrint, \
     RecordListing, RecordListingRange, RecordMonth, RecordDay, RecordYear, \
     ListingSerializer, RecordAllListings, RecordListingMonth, \
@@ -66,7 +66,7 @@ class IManifestable(Protocol):
 
 Domain = TypeVar('Domain')
 Record = TypeVar('Record')
-Integrity = TypeVar('Integrity')
+Integrity = TypeVar('Integrity', bound=BaseIntegrity)
 Member = TypeVar('Member', bound='_Register')
 Key = TypeVar('Key')
 
@@ -96,32 +96,41 @@ class _Register(Generic[Domain, Record, Integrity, Key, Member]):
         return self._integrity
 
     @property
-    def members(self) -> MutableMapping[Key, Member]:
+    def members(self) -> Optional[MutableMapping[Key, Member]]:
         return self._members
+
+    def add_events(self, storage: ICanonicalStorage, *events: Event) -> None:
+        ...
+
+    def save(self, storage: ICanonicalStorage) -> str:
+        ...
 
     def save_members(self, storage: ICanonicalStorage,
                      members: Iterable[Member]) -> None:
         """Save members that have changed, and update our manifest."""
         for member in members:
             checksum = member.save(storage)
+            assert checksum is not None
+
             found = False
             for entry in self.integrity.manifest['entries']:
+                # Update existing manifest entry.
                 if entry['key'] == member.integrity.manifest_key:
                     entry['checksum'] = checksum
                     found = True
                     break
-            if not found:
+            if not found:   # New manifest entry.
                 self.integrity.manifest['entries'].append({
                     "key": member.integrity.manifest_key,
                     "checksum": member.integrity.checksum
                 })
 
     def update_checksum(self, checksum: str) -> None:
-        # Mypy does not recognize the _replace method on NamedTuple.
-        self._integrity = self.integrity._replace(checksum=checksum)  # typing: ignore
+        self.integrity.update_checksum(checksum)
 
     def _add_events(self, storage: ICanonicalStorage, events: Iterable[Event],
                     key_fnc: Callable[[Event], Any]) -> Iterable[Member]:
+        assert self.members is not None
         altered = set()
         for key, m_events in groupby(sorted(events, key=key_fnc), key=key_fnc):
             member = self.members[key]
@@ -244,10 +253,8 @@ class RegisterListing(_Register[Listing,
         return cls(domain=listing, record=record, integrity=integrity)
 
     def save(self, storage: ICanonicalStorage) -> str:
-        assert self.integrity.manifest is not None
         storage.store_entry(self.integrity.listing)
         self.update_checksum(get_checksum(self.integrity.manifest))
-        assert self.integrity.checksum is not None
         return self.integrity.checksum
 
     def add_event(self, storage: ICanonicalStorage, event: Event) -> None:
@@ -304,6 +311,7 @@ class RegisterListingMonth(_Register[ListingMonth,
         )
 
     def add_event(self, storage: ICanonicalStorage, event: Event) -> None:
+        assert self.members is not None
         member = self.members[event.event_date]
         member.add_event(storage, event)
         member.save(storage)
@@ -318,9 +326,9 @@ class RegisterListingMonth(_Register[ListingMonth,
 
     def add_listing(self, storage: ICanonicalStorage, listing: Listing) -> None:
         assert self.integrity.manifest is not None
+        assert self.members is not None
         member = RegisterListing.create(storage, listing)
-
-        self.members[member.date] = member
+        self.members[member.domain.date] = member
         manifest_entry = IntegrityListingMonth.make_manifest_entry(member.integrity)  # pylint: disable=no-member
 
         self.integrity.manifest['entries'].append(manifest_entry)
@@ -406,6 +414,9 @@ class RegisterAllListings(_Register[AllListings,
         except Exception:    # TODO: need a storage exception here.
             manifest = Manifest(entries=[])
             years = LazyMap([], partial(RegisterListingYear.load, storage))
+            print('excepted')
+
+        print('The manifest!', manifest)
 
         return cls(
             domain=AllListings(
@@ -431,10 +442,8 @@ class RegisterAllListings(_Register[AllListings,
         self.update_checksum(get_checksum(self.integrity.manifest))
 
     def save(self, storage: ICanonicalStorage) -> str:
-        assert self.integrity.manifest is not None
         storage.store_manifest(
             RecordAllListings.make_manifest_key(),    # pylint: disable=no-member
             self.integrity.manifest
         )
-        assert self.integrity.checksum is not None
         return self.integrity.checksum

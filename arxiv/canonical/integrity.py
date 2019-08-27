@@ -4,7 +4,7 @@ from base64 import urlsafe_b64encode
 from hashlib import md5
 from operator import attrgetter, itemgetter
 from typing import IO, NamedTuple, List, Dict, Sequence, Optional, Tuple, \
-    Mapping
+    Mapping, Generic, TypeVar
 
 from mypy_extensions import TypedDict
 
@@ -23,7 +23,7 @@ class Manifest(TypedDict):
     entries: List[ManifestEntry]
 
 
-def checksum(content: IO[bytes]) -> str:
+def io_checksum(content: IO[bytes]) -> str:
     """Generate an URL-safe base64-encoded md5 hash of an IO."""
     if content.seekable:
         content.seek(0)     # Make sure that we are at the start of the stream.
@@ -44,9 +44,32 @@ def get_checksum(manifest: Manifest) -> str:
     return checksum_raw(''.join(components).encode('utf-8'))
 
 
-class IntegrityEntry(NamedTuple):
-    record: RecordEntry
-    checksum: Optional[str] = None
+class BaseIntegrity:
+    def __init__(self, manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        self._manifest = manifest
+        self._checksum = checksum
+
+    @property
+    def checksum(self) -> str:
+        assert self._checksum is not None
+        return self._checksum
+
+    @property
+    def manifest(self) -> Manifest:
+        assert self._manifest is not None
+        return self._manifest
+
+    def update_checksum(self, checksum: str) -> None:
+        self._checksum = checksum
+
+
+class IntegrityEntry(BaseIntegrity):
+    def __init__(self, record: RecordEntry,
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityEntry, self).__init__(manifest, checksum)
+        self.record = record
 
     @property
     def manifest_entry(self) -> ManifestEntry:
@@ -58,7 +81,7 @@ class IntegrityEntry(NamedTuple):
     @classmethod
     def get_checksum(cls, record: RecordEntry) -> str:
         assert record.content is not None
-        return checksum(record.content)
+        return io_checksum(record.content)
 
     @classmethod
     def from_record(cls, record: RecordEntry) -> 'IntegrityEntry':
@@ -71,11 +94,13 @@ class IntegrityEntry(NamedTuple):
 
 # This may seem a little odd, but want to leave the possibility of multiple
 # listing files per day.
-class IntegrityListing(NamedTuple):
-    date: datetime.date
-    listing: IntegrityEntry
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityListing(BaseIntegrity):
+    def __init__(self, date: datetime.date, listing: IntegrityEntry,
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityListing, self).__init__(manifest, checksum)
+        self.date = date
+        self.listing = listing
 
     @classmethod
     def make_manifest(cls, listing: IntegrityEntry) -> Manifest:
@@ -85,7 +110,7 @@ class IntegrityListing(NamedTuple):
     def from_record(cls, record: RecordListing) -> 'IntegrityListing':
         entry = IntegrityEntry.from_record(record.listing)
         manifest = cls.make_manifest(entry)
-        return cls(date=record.date, listing=entry, manifest=manifest,
+        return cls(record.date, entry, manifest=manifest,
                    checksum=get_checksum(manifest))
 
     @property
@@ -94,6 +119,7 @@ class IntegrityListing(NamedTuple):
 
     @property
     def is_valid(self) -> bool:
+        assert self.manifest is not None
         return bool(self.checksum == get_checksum(self.manifest))
 
     def validate(self) -> None:
@@ -109,12 +135,15 @@ class IntegrityListingRange(NamedTuple):
     checksum: Optional[str] = None
 
 
-class IntegrityListingMonth(NamedTuple):
-    year: int
-    month: int
-    days: Mapping[datetime.date, IntegrityListing]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityListingMonth(BaseIntegrity):
+    def __init__(self, year: int, month: int,
+                 days: Mapping[datetime.date, IntegrityListing],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityListingMonth, self).__init__(manifest, checksum)
+        self.year = year
+        self.month = month
+        self.days = days
 
     @classmethod
     def make_manifest_entry(cls, day: IntegrityListing) -> ManifestEntry:
@@ -128,6 +157,7 @@ class IntegrityListingMonth(NamedTuple):
 
     @property
     def is_valid(self) -> bool:
+        assert self.manifest is not None
         return bool(self.checksum == get_checksum(self.manifest))
 
     @property
@@ -135,14 +165,17 @@ class IntegrityListingMonth(NamedTuple):
         return f'{self.year}-{str(self.month).zfill(2)}'
 
 
-class IntegrityListingYear(NamedTuple):
-    year: int
-    months: Mapping[datetime.date, IntegrityListingMonth]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityListingYear(BaseIntegrity):
+    def __init__(self, year: int,
+                 months: Mapping[datetime.date, IntegrityListingMonth],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityListingYear, self).__init__(manifest, checksum)
+        self.year = year
+        self.months = months
 
     @classmethod
-    def make_manifest(cls, months: Mapping[datetime.date,
+    def make_manifest(cls, months: Mapping[Tuple[int, int],
                                            IntegrityListingMonth]) -> Manifest:
         return Manifest(entries=[
             {'key': months[(year, month)].manifest_key,
@@ -159,10 +192,12 @@ class IntegrityListingYear(NamedTuple):
         return str(self.year)
 
 
-class IntegrityAllListings(NamedTuple):
-    years: Mapping[int, IntegrityListingYear]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityAllListings(BaseIntegrity):
+    def __init__(self, years: Mapping[int, IntegrityListingYear],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityAllListings, self).__init__(manifest, checksum)
+        self.years = years
 
     @classmethod
     def make_manifest(cls, years: Mapping[int, IntegrityListingYear]) \
@@ -181,13 +216,18 @@ class IntegrityAllListings(NamedTuple):
         return 'listings'
 
 
-class IntegrityVersion(NamedTuple):
-    identifier: VersionedIdentifier
-    metadata: IntegrityEntry
-    render: IntegrityEntry
-    source: IntegrityEntry
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityVersion(BaseIntegrity):
+    def __init__(self, identifier: VersionedIdentifier,
+                 metadata: IntegrityEntry,
+                 render: IntegrityEntry,
+                 source: IntegrityEntry,
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityVersion, self).__init__(manifest, checksum)
+        self.identifier = identifier
+        self.metadata = metadata
+        self.render = render
+        self.source = source
 
     @classmethod
     def make_manifest(cls, metadata: IntegrityEntry, render: IntegrityEntry,
@@ -218,11 +258,14 @@ class IntegrityVersion(NamedTuple):
         return bool(self.checksum == get_checksum(self.manifest))
 
 
-class IntegrityEPrint(NamedTuple):
-    identifier: Identifier
-    versions: Sequence[IntegrityVersion]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityEPrint(BaseIntegrity):
+    def __init__(self, identifier: VersionedIdentifier,
+                 versions: Sequence[IntegrityVersion],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityEPrint, self).__init__(manifest, checksum)
+        self.identifier = identifier
+        self.versions = versions
 
     @classmethod
     def make_manifest(cls, versions: Sequence[IntegrityVersion]) -> Manifest:
@@ -235,27 +278,31 @@ class IntegrityEPrint(NamedTuple):
         return bool(self.checksum == get_checksum(self.manifest))
 
 
-EPrintMap = Mapping[Identifier, IntegrityEPrint]
-
-
-class IntegrityDay(NamedTuple):
-    date: datetime.date
-    eprints: EPrintMap
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityDay(BaseIntegrity):
+    def __init__(self, date: datetime.date,
+                 eprints: Mapping[Identifier, IntegrityEPrint],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityDay, self).__init__(manifest, checksum)
+        self.date = date
+        self.eprints = eprints
 
     @classmethod
-    def make_manifest(cls, eprints: EPrintMap) -> Manifest:
+    def make_manifest(cls, eprints: Mapping[Identifier, IntegrityEPrint]) \
+            -> Manifest:
         return Manifest(entries=[{'key': i, 'checksum': eprints[i].checksum}
                                  for i in eprints])
 
 
-class IntegrityMonth(NamedTuple):
-    year: int
-    month: int
-    days: Mapping[datetime.date, IntegrityDay]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityMonth(BaseIntegrity):
+    def __init__(self, year: int, month: int,
+                 days: Mapping[datetime.date, IntegrityDay],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityMonth, self).__init__(manifest, checksum)
+        self.year = year
+        self.month = month
+        self.days = days
 
     @classmethod
     def make_manifest(cls, days: Mapping[datetime.date, IntegrityDay]) \
@@ -265,11 +312,14 @@ class IntegrityMonth(NamedTuple):
                                  for day in days])
 
 
-class IntegrityYear(NamedTuple):
-    year: int
-    months: Mapping[Tuple[int, int], IntegrityMonth]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityYear(BaseIntegrity):
+    def __init__(self, year: int,
+                 months: Mapping[Tuple[int, int], IntegrityMonth],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityYear, self).__init__(manifest, checksum)
+        self.year = year
+        self.months = months
 
     @classmethod
     def make_manifest(cls, months: Mapping[Tuple[int, int], IntegrityMonth]) \
@@ -279,10 +329,12 @@ class IntegrityYear(NamedTuple):
                                  for year, month in months])
 
 
-class IntegrityAllEPrints(NamedTuple):
-    months: Sequence[IntegrityYear]
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityAllEPrints(BaseIntegrity):
+    def __init__(self, years: Sequence[IntegrityYear],
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityAllEPrints, self).__init__(manifest, checksum)
+        self.years = years
 
     @classmethod
     def make_manifest(cls, months: Mapping[Tuple[int, int], IntegrityMonth]) \
@@ -296,11 +348,14 @@ class IntegrityAllEPrints(NamedTuple):
         return 'eprints'
 
 
-class IntegrityAll(NamedTuple):
-    eprints: IntegrityAllEPrints
-    listings: IntegrityAllListings
-    manifest: Optional[Manifest] = None
-    checksum: Optional[str] = None
+class IntegrityAll(BaseIntegrity):
+    def __init__(self, eprints: IntegrityAllEPrints,
+                 listings: IntegrityAllListings,
+                 manifest: Optional[Manifest] = None,
+                 checksum: Optional[str] = None) -> None:
+        super(IntegrityAll, self).__init__(manifest, checksum)
+        self.eprints = eprints
+        self.listings = listings
 
     @classmethod
     def make_manifest(cls, eprints: IntegrityAllEPrints,
