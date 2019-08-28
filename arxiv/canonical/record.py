@@ -42,7 +42,10 @@ class RecordEntry(NamedTuple):
 
     @property
     def name(self) -> str:
-        return os.path.splitext(os.path.split(self.key)[1])[0]
+        fname = os.path.split(self.key)[1]
+        if 'listing' in fname:
+            return 'listing'
+        return os.path.splitext(fname)[0]
 
 
 class RecordEntryMembers(GenericMonoDict[str, RecordEntry]):
@@ -194,7 +197,7 @@ class RecordVersion(RecordBase[VersionedIdentifier, str, RecordEntry]):
 class RecordListing(RecordBase[datetime.date, str, RecordEntry]):
     @classmethod
     def make_key(cls, date: datetime.date) -> str:
-        return f'{cls.make_prefix(date)}/listing.json'
+        return date.strftime(f'{cls.make_prefix(date)}/%Y-%m-%d-listing.json')
 
     @classmethod
     def make_manifest_key(cls, date: datetime.date) -> str:
@@ -240,7 +243,7 @@ class RecordListingYear(RecordBase[Year, YearMonth, RecordListingMonth]):
         return f'announcement/{year}.manifest.json'
 
 
-class RecordAllListings(RecordBase[str, Year, RecordListingYear]):
+class RecordListings(RecordBase[str, Year, RecordListingYear]):
 
     @classmethod
     def make_manifest_key(cls, _: str) -> str:
@@ -330,7 +333,7 @@ class RecordYear(RecordBase[Year, YearMonth, RecordMonth]):
         return f'e-prints/{year}.manifest.json'
 
 
-class RecordAllEPrints(RecordBase[str, Year, RecordYear]):
+class RecordEPrints(RecordBase[str, Year, RecordYear]):
     @classmethod
     def make_manifest_key(cls, _: str) -> str:
         """
@@ -344,17 +347,29 @@ class RecordAllEPrints(RecordBase[str, Year, RecordYear]):
         return f'e-prints.manifest.json'
 
 
-class RecordAll(RecordBase[None,
-                           str,
-                           Union[RecordAllEPrints, RecordAllListings]]):
+class Record(RecordBase[str,
+                        str,
+                        Union[RecordEPrints, RecordListings]]):
+    @classmethod
+    def make_manifest_key(cls, _: str) -> str:
+        """
+        Make a key for global manifest.
+
+        Returns
+        -------
+        str
+
+        """
+        return f'global.manifest.json'
+
     @property
-    def eprints(self) -> RecordAllEPrints:
+    def eprints(self) -> RecordEPrints:
         assert 'eprints' in self.members
-        assert isinstance(self.members['eprints'], RecordAllEPrints)
+        assert isinstance(self.members['eprints'], RecordEPrints)
         return self.members['eprints']
 
     @property
-    def listings(self) -> RecordAllListings:
+    def listings(self) -> RecordListings:
         assert 'listings' in self.members
-        assert isinstance(self.members['listings'], RecordAllListings)
+        assert isinstance(self.members['listings'], RecordListings)
         return self.members['listings']

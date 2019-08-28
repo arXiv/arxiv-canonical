@@ -19,3 +19,9 @@ domain_classes = [
     if type(obj) is type and tuple in obj.__bases__ and hasattr(obj, '_fields')
 ]
 """All of the core domain classes in this package."""
+
+
+class Canon:
+    def __init__(self, eprints: AllEPrints, listings: AllListings) -> None:
+        self.eprints = eprints
+        self.listings = listings

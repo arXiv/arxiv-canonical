@@ -53,7 +53,7 @@ transmitted as URL-safe base64-encoded strings.
 The same hierarchy is used for listing files, where the terminal bitstream
 is the binary serialized manifest.
 
-A global integrity collection, :class:`.IntegrityAll` draws together the
+A global integrity collection, :class:`.Integrity` draws together the
 e-print and listing hierarchies into a final, composite level.
 """
 
@@ -68,7 +68,7 @@ from ..domain import VersionedIdentifier, Identifier
 from ..record import RecordBase, RecordEntry, \
     RecordListing, RecordListingMonth, RecordListingYear, RecordVersion, \
     RecordVersion, RecordEPrint, RecordDay, RecordMonth, RecordYear, \
-    RecordAllListings, RecordAllEPrints, RecordAll
+    RecordListings, RecordEPrints, Record
 from ..util import GenericMonoDict
 from .manifest import Manifest, ManifestEntry
 from .checksum import calculate_checksum
@@ -82,10 +82,10 @@ YearAndMonth = Tuple[int, int]
 # These TypeVars are used as placeholders in the generic IntegrityBase class,
 # below. To learn more about TypeVars and Generics, see
 # https://mypy.readthedocs.io/en/latest/generics.html
-Name = TypeVar('Name')
-Record = TypeVar('Record', bound=Union[RecordBase, RecordEntry])
-MemberName = TypeVar('MemberName')
-Member = TypeVar('Member', bound=Optional['IntegrityBase'])
+_Name = TypeVar('_Name')
+_Record = TypeVar('_Record', bound=Union[RecordBase, RecordEntry])
+_MemberName = TypeVar('_MemberName')
+_Member = TypeVar('_Member', bound=Optional['IntegrityBase'])
 
 
 class IntegrityEntryMembers(GenericMonoDict[str, 'IntegrityEntry']):
@@ -101,7 +101,7 @@ class IntegrityEntryMembers(GenericMonoDict[str, 'IntegrityEntry']):
         return value
 
 
-class IntegrityBase(Generic[Name, Record, MemberName, Member]):
+class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     """
     Generic base class for all integrity collections.
 
@@ -109,9 +109,9 @@ class IntegrityBase(Generic[Name, Record, MemberName, Member]):
     the name, record, member name, and member types to vary from subclass
     to subclass.
     """
-    def __init__(self, name: Name,
-                 record: Optional[Record] = None,
-                 members: Optional[Mapping[MemberName, Member]] = None,
+    def __init__(self, name: _Name,
+                 record: Optional[_Record] = None,
+                 members: Optional[Mapping[_MemberName, _Member]] = None,
                  manifest: Optional[Manifest] = None,
                  checksum: Optional[str] = None) -> None:
         self._manifest = manifest
@@ -121,14 +121,14 @@ class IntegrityBase(Generic[Name, Record, MemberName, Member]):
         self.name = name
 
     @classmethod
-    def make_manifest(cls, members: Mapping[MemberName, Member]) -> Manifest:
+    def make_manifest(cls, members: Mapping[_MemberName, _Member]) -> Manifest:
         """Make a :class:`.Manifest` for this integrity collection."""
         return Manifest(entries=[
             cls.make_manifest_entry(members[name]) for name in members
         ])
 
     @classmethod
-    def make_manifest_entry(cls, member: Member) -> ManifestEntry:
+    def make_manifest_entry(cls, member: _Member) -> ManifestEntry:
         return ManifestEntry(key=member.manifest_name,
                              checksum=member.checksum)
 
@@ -155,22 +155,22 @@ class IntegrityBase(Generic[Name, Record, MemberName, Member]):
         return str(self.name)
 
     @property
-    def members(self) -> Mapping[MemberName, Member]:
+    def members(self) -> Mapping[_MemberName, _Member]:
         """The members of this collection."""
         assert self._members is not None
         return self._members
 
     @property
-    def record(self) -> Record:
+    def record(self) -> _Record:
         """The record associated with this collection."""
         assert self._record is not None
         return self._record
 
-    def extend_manifest(self, member: Member) -> None:
+    def extend_manifest(self, member: _Member) -> None:
         self.manifest['entries'].append(self.make_manifest_entry(member))
         self.update_checksum(calculate_checksum(self.manifest))
 
-    def iter_members(self) -> Iterable[Member]:
+    def iter_members(self) -> Iterable[_Member]:
         return [self.members[name] for name in self.members]
 
     def update_checksum(self, checksum: str) -> None:
@@ -278,7 +278,7 @@ class IntegrityListingYear(IntegrityBase[Year,
 
 
 class IntegrityListings(IntegrityBase[str,
-                                      RecordAllListings,
+                                      RecordListings,
                                       Year,
                                       IntegrityListingYear]):
     """Integrity collection of all listings."""
@@ -384,7 +384,7 @@ class IntegrityYear(IntegrityBase[Year,
 
 
 class IntegrityEPrints(IntegrityBase[str,
-                                     RecordAllEPrints,
+                                     RecordEPrints,
                                      Year,
                                      IntegrityYear]):
     """Integrity collection for all e-prints in the canonical record."""
@@ -407,8 +407,8 @@ class TopLevelMembers(
         return value
 
 
-class IntegrityAll(IntegrityBase[None,
-                                 Record,
-                                 str,
-                                 Union[IntegrityEPrints, IntegrityListings]]):
+class Integrity(IntegrityBase[None,
+                              Record,
+                              str,
+                              Union[IntegrityEPrints, IntegrityListings]]):
     """Global integrity collection."""
