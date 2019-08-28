@@ -1,10 +1,14 @@
 """Provides domain concepts and logic for the listing."""
 
 import datetime
-from typing import NamedTuple, MutableSequence, Mapping, Tuple, Sequence
+from typing import NamedTuple, MutableSequence, Mapping, Tuple, Optional
 
 from .eprint import EPrint, Identifier
 from .event import Event
+
+Year = int
+Month = int
+YearMonth = Tuple[Year, Month]
 
 
 class Listing(NamedTuple):
@@ -16,20 +20,19 @@ class Listing(NamedTuple):
     """Events in this listing."""
 
 
-class ListingRange(NamedTuple):
-    """A collection of listings over a period of time."""
-
-    start_date: datetime.date
-    end_date: datetime.date
-    listings: Sequence[Listing]
-
-
 class ListingMonth(NamedTuple):
     """A collection of listings over a month."""
 
-    year: int
-    month: int
+    name: YearMonth
     listings: Mapping[datetime.date, Listing]
+
+    @property
+    def year(self) -> Year:
+        return self.name[0]
+
+    @property
+    def month(self) -> Month:
+        return self.name[1]
 
 
 class ListingYear(NamedTuple):
@@ -42,4 +45,5 @@ class ListingYear(NamedTuple):
 class AllListings(NamedTuple):
     """All listings."""
 
+    name: Optional[str]
     years: Mapping[int, ListingYear]

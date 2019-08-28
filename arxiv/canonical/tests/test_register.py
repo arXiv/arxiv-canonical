@@ -13,13 +13,14 @@ from ..register import methods, RegisterListing
 from ..register.base import RegisterAllListings
 
 
-class TestStoreRegisterListing(TestCase):
+class TestAddEvents(TestCase):
     @mock_s3
-    def test_store_listing(self):
+    def test_add_events_from_scratch(self):
+        """Listing files do not yet exist."""
         s = store.CanonicalStore('foobucket')
         s.inititalize()
 
-        r = RegisterAllListings.load(s)
+        r = RegisterAllListings.load(s, 'listings')
         r.add_events(s, Event(arxiv_id=Identifier('2901.00345'),
                               event_date=datetime.datetime.now(),
                               event_type=EventType.NEW,

@@ -115,7 +115,7 @@ class CanonicalStore(ICanonicalStorage):
                                Key=key,
                                Body=body,
                                ContentLength=len(body),
-                               ContentMD5=integrity.checksum_raw(body),
+                               ContentMD5=integrity.checksum.checksum_raw(body),
                                ContentType='application/json')
 
     def load_manifest(self, key: str) -> Manifest:

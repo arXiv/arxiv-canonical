@@ -24,6 +24,7 @@ typing-extensions = "*"
 arxiv-base = "==0.15.8.post1"
 arxiv-auth = "*"
 arxiv-canonical = {path = "."}
+mypy = "==0.720"
 
 [requires]
 python_version = "3.6"

@@ -1,36 +1,38 @@
-from typing import NamedTuple, Any, Generic, TypeVar, NamedTupleMeta, GenericMeta, Type, Dict, Iterable, Tuple
+from typing import NamedTuple, Any, Generic, TypeVar, NamedTupleMeta, GenericMeta, Type, Dict, Iterable, Tuple, ClassVar
 from operator import attrgetter
 from typing_extensions import Protocol
 
-class BaseDomain:
-    def __init__(self, bat: int) -> None:
-        self.bat = bat
+
+T = TypeVar('T')
+Self = TypeVar('Self', bound='Foo')
+
+class Mixin:
+    def what(self) -> None:
+        print('!!')
 
 
-Domain = TypeVar('Domain', bound=BaseDomain)
-Record = TypeVar('Record')
-Integrity = TypeVar('Integrity')
+class Foo(Generic[T], Mixin):
+    a: T
+    b: ClassVar[Type[T]]
+
+    def __init__(self, a: T) -> None:
+        self.a = a
+
+    @classmethod
+    def oof(cls: Type[Self], a: T) -> Self:
+        return cls(a)
 
 
-class GenericRegister(Generic[Domain]):
-    def __init__(self, domain: Domain) -> None:
-        self.domain = domain
+class Bar(Foo[int]):
+    b = int
+
+    @classmethod
+    def baz(cls) -> None:
+        # reveal_type(cls.a)
+        pass
 
 
-class FooDomain(BaseDomain):
-    pass
 
-class FooRegister(GenericRegister[FooDomain]):
-    pass
-
-
-foo = FooRegister(FooDomain(3))
-
-reveal_type(foo.domain)
-
-
-def get_it(reg: GenericRegister[Domain]) -> Domain:
-    return reg.domain
-
-
-reveal_type(get_it(foo))
+# reveal_type(Bar.b)
+f = Bar.b(1)
+reveal_type(f)

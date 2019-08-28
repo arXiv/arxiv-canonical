@@ -7,7 +7,7 @@ from typing import NamedTuple, Tuple, MutableMapping, List, Optional, Dict, \
 
 from .eprint import EPrint
 from .event import Event, EventType
-from .block import Month
+from .block import EPrintMonth
 from .listing import Listing
 from .identifier import Identifier
 from .util import now
@@ -19,7 +19,7 @@ _Month = int
 class CanonicalRecord(NamedTuple):
     """The arXiv canonical record."""
 
-    blocks: MutableMapping[Tuple[_Year, _Month], Month]
+    blocks: MutableMapping[Tuple[_Year, _Month], EPrintMonth]
     """
     Blocks are monthly storage units.
 
@@ -118,7 +118,7 @@ class CanonicalRecord(NamedTuple):
         block = self._get_block_for_id(arxiv_id)
         return block.load_eprint(arxiv_id, version)
 
-    def _get_block_for_id(self, arxiv_id: Identifier) -> Month:
+    def _get_block_for_id(self, arxiv_id: Identifier) -> EPrintMonth:
         return self.blocks[(arxiv_id.year, arxiv_id.month)]
 
     def _make_event(self, eprint: EPrint, event_type: EventType,

@@ -13,8 +13,11 @@ from .listing import Listing
 from .util import now
 from .version import Version
 
+Year = int
+Month = int
+YearMonth = Tuple[Year, Month]
 
-class Day(NamedTuple):
+class EPrintDay(NamedTuple):
     date: datetime.date
     eprints: Mapping[Identifier, EPrint]
 
@@ -68,13 +71,19 @@ class Day(NamedTuple):
     #         raise ValueError(f'Wrong block: {eprint.versioned_identifier}')
 
 
-class Month(NamedTuple):
+class EPrintMonth(NamedTuple):
     """Contains the e-prints announced in a particular calendar month."""
 
-    year: int
-    month: int
-    days: Mapping[datetime.date, Day]
+    name: YearMonth
+    days: Mapping[datetime.date, EPrintDay]
 
+    @property
+    def year(self) -> Year:
+        return self.name[0]
+
+    @property
+    def month(self) -> Month:
+        return self.name[1]
     # @property
     # def is_open(self) -> bool:
     #     """Determine whether this block can accept new e-prints."""
@@ -103,12 +112,13 @@ class Month(NamedTuple):
     #         raise ValueError(f'Wrong block: {eprint.versioned_identifier}')
 
 
-class Year(NamedTuple):
+class EPrintYear(NamedTuple):
     """Contains the e-prints announced in a particular calendar year."""
 
-    year: int
-    months: Mapping[Tuple[int, int], Month]
+    year: Year
+    months: Mapping[Tuple[int, int], EPrintMonth]
 
 
 class AllEPrints(NamedTuple):
-    years: Mapping[int, Year]
+    name: str
+    years: Mapping[int, EPrintYear]

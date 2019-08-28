@@ -1,7 +1,7 @@
 """Core data structures and concepts."""
 
 from arxiv.taxonomy import Category
-from .block import AllEPrints, Year, Month, Day
+from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
 from .content import ContentType
 from .eprint import EPrint
 from .event import Event, EventType

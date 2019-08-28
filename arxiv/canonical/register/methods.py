@@ -9,21 +9,20 @@ from typing import Tuple, List, Optional, TypeVar, Callable, Dict, \
 from backports.datetime_fromisoformat import MonkeyPatch
 
 from .base import ICanonicalStorage, RegisterVersion, RegisterListing, \
-    RegisterEPrint, IManifestable, RegisterMonth, RegisterDay, \
+    RegisterEPrint, RegisterMonth, RegisterDay, \
     RegisterListingMonth, get_domain, get_integrity, get_record, \
     Domain, Record, Integrity, Manifest
 
-from .util import LazyMap, LazyMapView, LazySequence, LazySequenceView
+from .util import LazyMap, LazyMapView, LazyMap, LazyMapView
 
 from ..domain import Identifier, VersionedIdentifier, Version, Listing, \
-    EPrint, Month, Day, ListingMonth
+    EPrint, EPrintMonth, EPrintDay, ListingMonth
 from ..serialize.record import VersionSerializer, ListingSerializer, \
-    MetadataSerializer, RecordVersion, RecordListing, \
-    RecordEPrint, \
-    RecordDay, RecordMonth, RecordListingRange
+    MetadataSerializer
+from ..record import RecordVersion, RecordListing, \
+    RecordEPrint, RecordDay, RecordMonth
 from ..integrity import IntegrityVersion, IntegrityListing, IntegrityEPrint, \
-    ValidationError, IntegrityDay, IntegrityMonth, \
-        IntegrityListingRange, IntegrityListingMonth
+    ValidationError, IntegrityDay, IntegrityMonth, IntegrityListingMonth
 
 MonkeyPatch.patch_fromisoformat()
 
@@ -67,20 +66,20 @@ def load_eprint(storage: ICanonicalStorage, identifier: Identifier,
                 checksum: Optional[str] = None) -> RegisterEPrint:
     keys = [VersionedIdentifier(f'{identifier}{key}') for key
             in storage.list_subkeys(EPrintSerializer.make_key(identifier))]
-    versions = LazySequence(keys, partial(load_version, storage))
+    versions = LazyMap(keys, partial(load_version, storage))
 
     return RegisterEPrint(
         domain=EPrint(
             identifier=identifier,
-            versions=LazySequenceView(versions, get_domain)
+            versions=LazyMapView(versions, get_domain)
         ),
         record=RecordEPrint(
             identifier=identifier,
-            versions=LazySequenceView(versions, get_record)
+            versions=LazyMapView(versions, get_record)
         ),
         integrity=IntegrityEPrint(
             identifier=identifier,
-            versions=LazySequenceView(versions, get_integrity),
+            versions=LazyMapView(versions, get_integrity),
             checksum=checksum
         )
     )
@@ -93,7 +92,7 @@ def load_daily_block(storage: ICanonicalStorage, date: datetime.date,
     mapping: MutableMapping[datetime.date, RegisterDay]
     mapping = LazyMap(keys, partial(load_eprint, storage))
     return RegisterDay(
-        domain=Day(
+        domain=EPrintDay(
             date=date,
             eprints=LazyMapView(mapping, get_domain)
         ),
@@ -118,7 +117,7 @@ def load_monthly_block(storage: ICanonicalStorage, year: int, month: int,
     mapping: MutableMapping[datetime.date, RegisterDay]
     mapping = LazyMap(keys, partial(load_daily_block, storage))
     return RegisterMonth(
-        domain=Month(
+        domain=EPrintMonth(
             year=year,
             month=month,
             days=LazyMapView(mapping, get_domain)
@@ -144,22 +143,22 @@ def load_listing_range(storage: ICanonicalStorage, start_date: datetime.date,
 
     keys = [start_date + datetime.timedelta(days=i)
             for i in range((end_date - start_date).days + 1)]
-    listings = LazySequence(keys, partial(load_listing, storage))
+    listings = LazyMap(keys, partial(load_listing, storage))
     return RegisterListingRange(
         domain=ListingRange(
             start_date=start_date,
             end_date=end_date,
-            listings=LazySequenceView(listings, get_domain)
+            listings=LazyMapView(listings, get_domain)
         ),
         record=RecordListingRange(
             start_date=start_date,
             end_date=end_date,
-            listings=LazySequenceView(listings, get_record)
+            listings=LazyMapView(listings, get_record)
         ),
         integrity=IntegrityListingRange(
             start_date=start_date,
             end_date=end_date,
-            listings=LazySequenceView(listings, get_integrity),
+            listings=LazyMapView(listings, get_integrity),
             manifest=None,
             checksum=checksum
         )

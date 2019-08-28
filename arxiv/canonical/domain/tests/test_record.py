@@ -5,7 +5,7 @@ from datetime import date
 
 from arxiv.taxonomy import Category
 from ..eprint import EPrint
-from ..block import Month
+from ..block import EPrintMonth
 from ..identifier import VersionedIdentifier, Identifier
 from ..record import CanonicalRecord
 from ..listing import Listing
@@ -19,12 +19,12 @@ class TestCurrentBlock(TestCase):
         """There are several blocks on the record."""
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): Month(year - 1, month, {}),
-            (year, month): Month(year, month, {}),
-            (year, month + 1): Month(year, month + 1, {}),
+            (year - 1, month): EPrintMonth(year - 1, month, {}),
+            (year, month): EPrintMonth(year, month, {}),
+            (year, month + 1): EPrintMonth(year, month + 1, {}),
         }
         record = CanonicalRecord(blocks, {})
-        self.assertIsInstance(record.current_block, Month)
+        self.assertIsInstance(record.current_block, EPrintMonth)
         self.assertEqual(record.current_block.year, year)
         self.assertEqual(record.current_block.month, month)
         self.assertTrue(record.current_block.is_open)
@@ -56,9 +56,9 @@ class TestAnnounceNew(TestCase):
 
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): Month(year - 1, month, {}),
-            (year, month): Month(year, month, {}),
-            (year, month + 1): Month(year, month + 1, {}),
+            (year - 1, month): EPrintMonth(year - 1, month, {}),
+            (year, month): EPrintMonth(year, month, {}),
+            (year, month + 1): EPrintMonth(year, month + 1, {}),
         }
         today_listing = Listing(date.today(), [], mock.MagicMock())
         listings = {(date.today()): today_listing}
@@ -100,9 +100,9 @@ class TestAnnounceNew(TestCase):
 
         year, month = date.today().year, date.today().month
         blocks = {
-            (year - 1, month): Month(year - 1, month, {}),
-            (year, month): Month(year, month, {}),
-            (year, month + 1): Month(year, month + 1, {}),
+            (year - 1, month): EPrintMonth(year - 1, month, {}),
+            (year, month): EPrintMonth(year, month, {}),
+            (year, month + 1): EPrintMonth(year, month + 1, {}),
         }
         listings = {(date.today()): Listing(date.today(), [])}
         record = CanonicalRecord(blocks, listings)
