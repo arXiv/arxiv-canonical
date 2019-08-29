@@ -46,6 +46,9 @@ class LazyMap(collections.abc.MutableMapping):
     def __iter__(self) -> Iterator[Any]:
         return iter(self._keys)
 
+    def __contains__(self, key: Any) -> bool:
+        return bool(key in self._keys)
+
     def __delitem__(self, key: Any) -> None:
         raise NotImplementedError('Deletion is not allowed')
 

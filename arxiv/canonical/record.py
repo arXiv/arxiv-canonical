@@ -17,7 +17,7 @@ from typing import NamedTuple, List, IO, Iterator, Tuple, Optional, Dict, \
     Callable, Iterable, MutableMapping, Mapping, Generic, TypeVar, Union
 
 from .domain import Version, Listing, Identifier, VersionedIdentifier, \
-    ContentType
+    ContentType, CanonicalFile
 from .util import GenericMonoDict
 
 Year = int
@@ -27,6 +27,8 @@ YearMonth = Tuple[Year, Month]
 
 class RecordEntry(NamedTuple):
     """A single bitstream in the record."""
+
+    domain: CanonicalFile
 
     key: str
     """Full key (path) at which the entry is stored."""
@@ -88,7 +90,7 @@ class RecordMetadata(RecordEntry):
         str
 
         """
-        return f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/{ident}'
+        return f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/{ident.arxiv_id}/v{ident.version}'
 
 
 # These TypeVars are used as placeholders in the generic RecordBase class,
@@ -153,6 +155,10 @@ class RecordVersion(RecordBase[VersionedIdentifier, str, RecordEntry]):
         return f'{cls.make_prefix(identifier)}/{filename}'
 
     @classmethod
+    def make_manifest_key(cls, ident: VersionedIdentifier) -> str:
+        return f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/{ident.arxiv_id}/{ident}.manifest.json'
+
+    @classmethod
     def make_prefix(cls, ident: VersionedIdentifier) -> str:
         """
         Make a key prefix for an e-print record.
@@ -169,7 +175,7 @@ class RecordVersion(RecordBase[VersionedIdentifier, str, RecordEntry]):
         str
 
         """
-        return f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/{ident}'
+        return f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/{ident.arxiv_id}/v{ident.version}'
 
     @property
     def identifier(self) -> VersionedIdentifier:

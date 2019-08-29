@@ -19,6 +19,18 @@ class Listing(NamedTuple):
     events: MutableSequence[Event]
     """Events in this listing."""
 
+    @property
+    def start_datetime(self) -> datetime.datetime:
+        if not self.events:
+            return datetime.datetime.now()
+        return self.events[0].event_date
+
+    @property
+    def end_datetime(self) -> datetime.datetime:
+        if not self.events:
+            return datetime.datetime.now()
+        return self.events[-1].event_date
+
 
 class ListingMonth(NamedTuple):
     """A collection of listings over a month."""

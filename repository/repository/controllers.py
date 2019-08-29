@@ -11,11 +11,11 @@ from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import NotFound
 
 from .services.record import CanonicalStore, DoesNotExist
-from arxiv.canonical.domain import File
+from arxiv.canonical.domain import CanonicalFile
 
 
 Response = Tuple[Dict[str, Any], HTTPStatus, Dict[str, str]]
-FileResponse = Tuple[Union[Dict[str, Any], File], HTTPStatus, Dict[str, str]]
+FileResponse = Tuple[Union[Dict[str, Any], CanonicalFile], HTTPStatus, Dict[str, str]]
 
 def service_status(params: MultiDict) -> Response:
     """

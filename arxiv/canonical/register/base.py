@@ -5,19 +5,19 @@ from itertools import groupby
 from operator import attrgetter
 from typing import (Dict, Tuple, Iterator, List, KeysView, NamedTuple,
                     Generic, TypeVar, MutableMapping, Optional, Iterable,
-                    Callable, Any, Type, Union)
+                    Callable, Any, Type, Union, overload)
 
-from typing_extensions import Protocol
+from typing_extensions import Literal, Protocol
 
 from ..domain import EPrint, EPrintDay, EPrintMonth, Listing, ListingMonth, \
-    CanonicalRecord, VersionedIdentifier, Identifier, Version, File, \
+    CanonicalRecord, VersionedIdentifier, Identifier, Version, CanonicalFile, \
     AllEPrints, ListingYear, AllListings, EPrintYear, Event, Canon
 from ..integrity import IntegrityEntry, IntegrityVersion, IntegrityEPrint, \
     IntegrityListing, ManifestEntry, Manifest, IntegrityMonth, \
     Integrity, IntegrityDay, IntegrityListingMonth, \
     IntegrityListingYear, IntegrityListings, IntegrityYear, \
     IntegrityEPrints, IntegrityBase, calculate_checksum, IntegrityEntryMembers
-from ..serialize.record import ListingSerializer
+from ..serialize.record import ListingSerializer, VersionSerializer
 
 from ..record import RecordEntry, RecordVersion, RecordEPrint, RecordBase, \
     RecordListing, RecordMonth, RecordDay, RecordYear, RecordEntryMembers, \
@@ -29,6 +29,10 @@ from .util import LazyMap, LazyMapView
 Year = int
 Month = int
 YearMonth = Tuple[Year, Month]
+
+
+class ConsistencyError(Exception):
+    ...
 
 
 class NoSuchResource(Exception):
@@ -98,6 +102,12 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
         self._members = members
 
     @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> _MemberName:
+        """Get the name of a member that contains an eprint version."""
+        raise NotImplementedError('Must be implemented by a child class, if'
+                                  ' supported')
+
+    @classmethod
     def _get_member_name_for_event(cls, event: Event) -> _MemberName:
         """Get the name of a member that contains an event."""
         raise NotImplementedError('Must be implemented by a child class, if'
@@ -119,12 +129,12 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
             manifest = Manifest(entries=[])
 
         members = cls._get_members(storage, manifest)
-        domain = cls.domain_type(name, LazyMapView(members, get_domain))
-        record = cls.record_type(name, LazyMapView(members, get_record))
+        domain = cls.domain_type(name, LazyMapView(members, _get_domain))
+        record = cls.record_type(name, LazyMapView(members, _get_record))
         integrity = cls.integrity_type(
             name,
             record=record,
-            members=LazyMapView(members, get_integrity),
+            members=LazyMapView(members, _get_integrity),
             manifest=manifest,
             checksum=checksum
         )
@@ -140,13 +150,30 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
     def members(self) -> Optional[MutableMapping[_MemberName, _Member]]:
         return self._members
 
+    def add_versions(self, storage: ICanonicalStorage,
+                     *versions: Version) -> None:
+        self.save_members(
+            storage,
+            self._add_versions(storage, versions,
+                               self._get_member_name_for_version)
+        )
+        assert self.integrity.manifest is not None
+        self.integrity.update_checksum()
+
     def add_events(self, storage: ICanonicalStorage, *events: Event) -> None:
         # Save all of the members that received events, and update our
         # manifest.
-        self.save_members(storage, self._add_events(storage, events,
-                          self._get_member_name_for_event))
+        self.save_members(
+            storage,
+            self._add_events(storage, events,
+                             self._get_member_name_for_event)
+        )
         assert self.integrity.manifest is not None
-        self.update_checksum(calculate_checksum(self.integrity.manifest))
+        self.integrity.update_checksum()
+
+    def iter_members(self, storage: ICanonicalStorage) -> Iterable[_Member]:
+        assert self.members is not None
+        return (self.members[name] for name in self.members)
 
     def save(self, storage: ICanonicalStorage) -> str:
         """Store this register collection."""
@@ -174,137 +201,214 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
                     "checksum": member.integrity.checksum
                 })
 
-    def update_checksum(self, checksum: str) -> None:
-        self.integrity.update_checksum(checksum)
-
     def _add_events(self, storage: ICanonicalStorage, events: Iterable[Event],
-                    key_fnc: Callable[[Event], Any]) -> Iterable[_Member]:
+                    fkey: Callable[[Event], Any]) -> Iterable[_Member]:
         assert self.members is not None
         altered = set()
-        for key, m_events in groupby(sorted(events, key=key_fnc), key=key_fnc):
+        for key, m_events in groupby(sorted(events, key=fkey), key=fkey):
             member = self.members[key]
             member.add_events(storage, *m_events)
             altered.add(member)
         return iter(altered)
 
+    def _add_versions(self, storage: ICanonicalStorage,
+                      versions: Iterable[Version],
+                      fkey: Callable[[Version], Any]) -> Iterable[_Member]:
+        assert self.members is not None
+        altered = set()
+        for key, m_versions in groupby(sorted(versions, key=fkey), key=fkey):
+            member = self.members[key]
+            member.add_versions(storage, *m_versions)
+            altered.add(member)
+        return iter(altered)
 
-def get_domain(register: Base[_Name,
-                                   _Domain,
-                                   _Record,
-                                   _Integrity,
-                                   _MemberName,
-                                   _Member]) -> _Domain:
+
+def _get_domain(register: Base[_Name,
+                               _Domain,
+                               _Record,
+                               _Integrity,
+                               _MemberName,
+                               _Member]) -> _Domain:
     return register.domain
 
 
-def get_record(register: Base[_Name,
-                                   _Domain,
-                                   _Record,
-                                   _Integrity,
-                                   _MemberName,
-                                   _Member]) -> _Record:
+def _get_record(register: Base[_Name,
+                               _Domain,
+                               _Record,
+                               _Integrity,
+                               _MemberName,
+                               _Member]) -> _Record:
     return register.record
 
 
-def get_integrity(register: Base[_Name,
-                                      _Domain,
-                                      _Record,
-                                      _Integrity,
-                                      _MemberName,
-                                      _Member]) -> _Integrity:
+def _get_integrity(register: Base[_Name,
+                                  _Domain,
+                                  _Record,
+                                  _Integrity,
+                                  _MemberName,
+                                  _Member]) -> _Integrity:
     return register.integrity
 
 
-class RegisterFile(Base[str,
-                             File,
-                             RecordEntry,
-                             IntegrityEntry,
-                             None,
-                             None]):
-    domain_type = File
+class RegisterFile(Base[str, CanonicalFile, RecordEntry, IntegrityEntry, None, None]):
+    domain_type = CanonicalFile
     record_type = RecordEntry
     integrity_type = IntegrityEntry
     member_type = type(None)
 
+    def save(self, storage: ICanonicalStorage) -> str:
+        """
+        Save this file.
+
+        Overrides the base method since this is a terminal record, not a
+        collection.
+        """
+        storage.store_entry(self.integrity)
+        self.integrity.update_checksum()
+        return self.integrity.checksum
+
 
 class RegisterVersion(Base[VersionedIdentifier,
-                                Version,
-                                RecordVersion,
-                                IntegrityVersion,
-                                str,
-                                RegisterFile]):
+                           Version,
+                           RecordVersion,
+                           IntegrityVersion,
+                           str,
+                           RegisterFile]):
     domain_type = Version
     record_type = RecordVersion
     integrity_type = IntegrityVersion
     member_type = RegisterFile
 
+    @classmethod
+    def create(cls, storage: ICanonicalStorage, version: Version) \
+            -> 'RegisterVersion':
+        record = VersionSerializer.serialize(version)
+        integrity = IntegrityVersion.from_record(record)
+        members = {}
+        for integrity_member in integrity.iter_members():
+            member = RegisterFile(integrity_member.name,
+                                  domain=integrity_member.record.domain,
+                                  record=integrity_member.record,
+                                  integrity=integrity_member)
+            member.save(storage)
+            members[member.name] = member
+        return cls(record.name, domain=version, record=record,
+                   integrity=integrity, members=members)
+
 
 class RegisterEPrint(Base[Identifier,
-                               EPrint,
-                               RecordEPrint,
-                               IntegrityEPrint,
-                               VersionedIdentifier,
-                               RegisterVersion]):
+                          EPrint,
+                          RecordEPrint,
+                          IntegrityEPrint,
+                          VersionedIdentifier,
+                          RegisterVersion]):
     domain_type = EPrint
     record_type = RecordEPrint
     integrity_type = IntegrityEPrint
     member_type = RegisterVersion
 
+    @classmethod
+    def _get_member_name_for_version(cls, version: Version) \
+            -> VersionedIdentifier:
+        return version.versioned_identifier
+
+    def _add_versions(self, storage: ICanonicalStorage,
+                      versions: Iterable[Version],
+                      fkey: Callable[[Version], Any]) \
+            -> Iterable[RegisterVersion]:
+        assert self.members is not None
+        altered = set()
+        for version in versions:
+            key = fkey(version)
+            if key in self.members:
+                raise ConsistencyError('Version already exists')
+            member = self.member_type.create(storage, version)
+            self.members[key] = member
+            altered.add(member)
+        return iter(altered)
+
+    def add_versions(self, storage: ICanonicalStorage,
+                     *versions: Version) -> None:
+        self.save_members(
+            storage,
+            self._add_versions(storage, versions,
+                               self._get_member_name_for_version)
+        )
+        assert self.integrity.manifest is not None
+        self.integrity.update_checksum()
+
 
 class RegisterDay(Base[datetime.date,
-                            EPrintDay,
-                            RecordDay,
-                            IntegrityDay,
-                            Identifier,
-                            RegisterEPrint]):
+                       EPrintDay,
+                       RecordDay,
+                       IntegrityDay,
+                       Identifier,
+                       RegisterEPrint]):
     domain_type = EPrintDay
     record_type = RecordDay
     integrity_type = IntegrityDay
     member_type = RegisterEPrint
 
+    @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> Identifier:
+        return version.identifier
+
 
 class RegisterMonth(Base[YearMonth,
-                              EPrintMonth,
-                              RecordMonth,
-                              IntegrityMonth,
-                              datetime.date,
-                              RegisterDay]):
+                         EPrintMonth,
+                         RecordMonth,
+                         IntegrityMonth,
+                         datetime.date,
+                         RegisterDay]):
     domain_type = EPrintMonth
     record_type = RecordMonth
     integrity_type = IntegrityMonth
     member_type = RegisterDay
 
+    @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> datetime.date:
+        return version.announced_date_first
+
 
 class RegisterYear(Base[Year,
-                             EPrintYear,
-                             RecordYear,
-                             IntegrityYear,
-                             YearMonth,
-                             RegisterMonth]):
+                        EPrintYear,
+                        RecordYear,
+                        IntegrityYear,
+                        YearMonth,
+                        RegisterMonth]):
     domain_type = EPrintYear
     record_type = RecordYear
     integrity_type = IntegrityYear
     member_type = RegisterMonth
 
+    @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> YearMonth:
+        return (version.identifier.year,
+                version.identifier.month)
+
 
 class RegisterEPrints(Base[str,
-                                AllEPrints,
-                                RecordEPrints,
-                                IntegrityEPrints,
-                                int,
-                                RegisterYear]):
+                           AllEPrints,
+                           RecordEPrints,
+                           IntegrityEPrints,
+                           Year,
+                           RegisterYear]):
     domain_type = AllEPrints
     record_type = RecordEPrints
     integrity_type = IntegrityEPrints
     member_type = RegisterYear
 
+    @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> Year:
+        return version.identifier.year
+
 
 class RegisterListing(Base[datetime.date,
-                                Listing,
-                                RecordListing,
-                                IntegrityListing,
-                                None,
-                                None]):
+                           Listing,
+                           RecordListing,
+                           IntegrityListing,
+                           None,
+                           None]):
     domain_type = Listing
     record_type = RecordListing
     integrity_type = IntegrityListing
@@ -360,7 +464,7 @@ class RegisterListing(Base[datetime.date,
         collection.
         """
         storage.store_entry(self.integrity.listing)
-        self.update_checksum(calculate_checksum(self.integrity.manifest))
+        self.integrity.update_checksum()
         return self.integrity.checksum
 
     def add_events(self, _: ICanonicalStorage, *events: Event) -> None:
@@ -378,11 +482,11 @@ class RegisterListing(Base[datetime.date,
 
 
 class RegisterListingMonth(Base[YearMonth,
-                                     ListingMonth,
-                                     RecordListingMonth,
-                                     IntegrityListingMonth,
-                                     datetime.date,
-                                     RegisterListing]):
+                                ListingMonth,
+                                RecordListingMonth,
+                                IntegrityListingMonth,
+                                datetime.date,
+                                RegisterListing]):
 
     domain_type = ListingMonth
     record_type = RecordListingMonth
@@ -401,11 +505,11 @@ class RegisterListingMonth(Base[YearMonth,
 
 
 class RegisterListingYear(Base[Year,
-                                    ListingYear,
-                                    RecordListingYear,
-                                    IntegrityListingYear,
-                                    YearMonth,
-                                    RegisterListingMonth]):
+                               ListingYear,
+                               RecordListingYear,
+                               IntegrityListingYear,
+                               YearMonth,
+                               RegisterListingMonth]):
     domain_type = ListingYear
     record_type = RecordListingYear
     integrity_type = IntegrityListingYear
@@ -417,11 +521,11 @@ class RegisterListingYear(Base[Year,
 
 
 class RegisterListings(Base[str,
-                                 AllListings,
-                                 RecordListings,
-                                 IntegrityListings,
-                                 int,
-                                 RegisterListingYear]):
+                            AllListings,
+                            RecordListings,
+                            IntegrityListings,
+                            Year,
+                            RegisterListingYear]):
     domain_type = AllListings
     record_type = RecordListings
     integrity_type = IntegrityListings
@@ -431,13 +535,14 @@ class RegisterListings(Base[str,
     def _get_member_name_for_event(cls, event: Event) -> Year:
         return event.event_date.year
 
-from typing import overload
-from typing_extensions import Literal
+
+
 
 listings_key = Literal['listings']
 eprints_key = Literal['eprints']
 TopLevelNames = Union[listings_key, eprints_key]
 TopLevelMembers = Union[RegisterListings, RegisterEPrints]
+
 
 class TopLevelMapping(collections.abc.MutableMapping):
     def __init__(self, listings: RegisterListings,
@@ -449,8 +554,8 @@ class TopLevelMapping(collections.abc.MutableMapping):
     @overload
     def __getitem__(self, obj: listings_key) -> RegisterListings: ...
     @overload
-    def __getitem__(self, obj: eprints_key) -> RegisterEPrints: ...
-    def __getitem__(self, obj: Any) -> Any:
+    def __getitem__(self, obj: eprints_key) -> RegisterEPrints: ...  # pylint: disable=function-redefined
+    def __getitem__(self, obj: Any) -> Any:  # pylint: disable=function-redefined
         if obj == 'eprints':
             return self.eprints
         if obj == 'listings':
@@ -467,7 +572,7 @@ class TopLevelMapping(collections.abc.MutableMapping):
             self.listings = value
         raise ValueError('Not supported')
 
-    def __iter__(self) -> Iterable[Any]:
+    def __iter__(self) -> Iterator[Any]:
         return iter([self.eprints, self.listings])
 
     def __len__(self) -> int:
@@ -490,7 +595,11 @@ class Register(Base[str,
         return 'listings'
 
     @classmethod
+    def _get_member_name_for_version(cls, version: Version) -> TopLevelNames:
+        return 'eprints'
+
+    @classmethod
     def _get_members(cls, storage: ICanonicalStorage, manifest: Manifest) \
             -> TopLevelMapping:
         return TopLevelMapping(RegisterListings.load(storage, 'listings'),
-                               RegisterListings.load(storage, 'eprints'))
+                               RegisterEPrints.load(storage, 'eprints'))

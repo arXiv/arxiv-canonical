@@ -11,7 +11,7 @@ from arxiv.taxonomy import Category
 from .identifier import Identifier, VersionedIdentifier
 from .event import Event
 from .person import Person
-from .file import File
+from .file import CanonicalFile
 from .license import License
 
 
@@ -52,11 +52,13 @@ class VersionReference(NamedTuple):
 class Version(NamedTuple):
     """Canonical record for an arXiv e-print version."""
 
-    identifier: Optional[Identifier]
-    version: Optional[int]
-    announced_date: Optional[date]
-    announced_date_first: Optional[date]
+    identifier: Identifier
+    version: int
+    announced_date: date
+    announced_date_first: date
     submitted_date: datetime
+    updated_date: datetime
+    """The last time the record for this version was written."""
     metadata: Metadata
 
     submitter: Optional[Person] = None
@@ -67,22 +69,22 @@ class Version(NamedTuple):
     reason_for_withdrawal: Optional[str] = None
     is_legacy: bool = False
 
-    render: Optional[File] = None
+    render: Optional[CanonicalFile] = None
     """
     Human-readable representation of the e-print.
 
     Usually a PDF generated from the source, but may also be a user-provided
     PDF, HTML document, or other product.
     """
-    source: Optional[File] = None
+    source: Optional[CanonicalFile] = None
 
     source_type: Optional[str] = None    # TODO: make this an enum?
     """Internal code for the source type."""
 
     previous_versions: List[VersionReference] = []
 
-    def with_files(self, source: Optional[File] = None,
-                   render: Optional[File] = None) -> 'Version':
+    def with_files(self, source: Optional[CanonicalFile] = None,
+                   render: Optional[CanonicalFile] = None) -> 'Version':
         return self._replace(source=source, render=render)
 
     def as_announced(self) -> 'Version':
@@ -94,13 +96,13 @@ class Version(NamedTuple):
 
     @property
     def versioned_identifier(self) -> VersionedIdentifier:
-        if not self.arxiv_id or not self.version:
+        if not self.identifier or not self.version:
             raise ValueError('arXiv ID or version not set')
-        return VersionedIdentifier(f'{self.arxiv_id}v{self.version}')
+        return VersionedIdentifier(f'{self.identifier}v{self.version}')
 
     @property
     def size_kilobytes(self) -> int:
         assert self.source is not None
-        return self.source.size_kilobytes
+        return int(round(self.source.size_bytes / 1_028))
 
 

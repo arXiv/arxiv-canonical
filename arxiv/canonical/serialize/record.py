@@ -9,7 +9,7 @@ from io import BytesIO
 from json import dumps, load
 from typing import Tuple, IO
 
-from ..domain import Version, ContentType, Listing
+from ..domain import Version, ContentType, Listing, CanonicalFile
 from ..record import RecordEntry, RecordVersion, RecordMetadata, \
     RecordEntryMembers, RecordListing
 from .decoder import CanonicalDecoder
@@ -27,7 +27,15 @@ class MetadataSerializer:
     @classmethod
     def serialize(cls, version: Version) -> RecordEntry:
         content, size_bytes = cls._encode(version)
+        content_type = ContentType.json
         return RecordEntry(
+            domain=CanonicalFile(
+                created=version.updated_date,
+                modified=version.updated_date,
+                size_bytes=size_bytes,
+                content_type=content_type,
+                content=content
+            ),
             key=RecordMetadata.make_key(version.versioned_identifier),
             content=content,
             content_type=ContentType.json,
@@ -70,6 +78,7 @@ class VersionSerializer:
             members=RecordEntryMembers(
                 metadata=MetadataSerializer.serialize(version),
                 source=RecordEntry(
+                    domain=version.source,
                     key=RecordVersion.make_key(version.versioned_identifier,  # pylint: disable=no-member
                                                version.source.filename),
                     content=version.source.content,
@@ -77,8 +86,9 @@ class VersionSerializer:
                     size_bytes=version.source.size_bytes
                 ),
                 render=RecordEntry(
+                    domain=version.render,
                     key=RecordVersion.make_key(version.versioned_identifier,  # pylint: disable=no-member
-                                            version.render.filename),
+                                               version.render.filename),
                     content=version.render.content,
                     content_type=version.render.content_type,
                     size_bytes=version.render.size_bytes
@@ -101,10 +111,18 @@ class ListingSerializer:
     def serialize(cls, listing: Listing) -> RecordListing:
         """Serialize a :class:`.Listing`."""
         content, size_bytes = cls._encode(listing)
+        content_type = ContentType.json
         return RecordListing(
             listing.date,
             members=RecordEntryMembers(
                 listing=RecordEntry(
+                    domain=CanonicalFile(
+                        created=listing.start_datetime,
+                        modified=listing.end_datetime,
+                        size_bytes=size_bytes,
+                        content_type=content_type,
+                        content=content
+                    ),
                     key=RecordListing.make_key(listing.date),
                     content=content,
                     content_type=ContentType.json,

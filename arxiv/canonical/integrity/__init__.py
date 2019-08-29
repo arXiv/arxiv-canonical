@@ -141,7 +141,7 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     @property
     def is_valid(self) -> bool:
         """Indicates whether or not this collection has a valid checksum."""
-        return bool(self.checksum == calculate_checksum(self.manifest))
+        return bool(self.checksum == self.calculate_checksum())
 
     @property
     def manifest(self) -> Manifest:
@@ -166,16 +166,19 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         assert self._record is not None
         return self._record
 
+    def calculate_checksum(self) -> str:
+        return calculate_checksum(self.manifest)
+
     def extend_manifest(self, member: _Member) -> None:
         self.manifest['entries'].append(self.make_manifest_entry(member))
-        self.update_checksum(calculate_checksum(self.manifest))
+        self.update_checksum()
 
     def iter_members(self) -> Iterable[_Member]:
         return [self.members[name] for name in self.members]
 
-    def update_checksum(self, checksum: str) -> None:
+    def update_checksum(self) -> None:
         """Set the checksum for this record."""
-        self._checksum = checksum
+        self._checksum = self.calculate_checksum()
 
 
 class IntegrityEntry(IntegrityBase[str, RecordEntry, None, None]):
@@ -197,10 +200,8 @@ class IntegrityEntry(IntegrityBase[str, RecordEntry, None, None]):
 
     # This is redefined since the entry has no manifest; the record entry is
     # used instead.
-    @property
-    def is_valid(self) -> bool:
-        """Indicates whether or not this collection has a valid checksum."""
-        return bool(self.checksum == calculate_checksum(self.record))
+    def calculate_checksum(self) -> str:
+        return calculate_checksum(self.record)
 
 
 # This may seem a little odd, but want to leave the possibility of multiple
@@ -354,6 +355,11 @@ class IntegrityMonth(IntegrityBase[YearAndMonth,
     Specifically, this includes all versions of e-prints the first version of
     which was announced in this month.
     """
+
+    @property
+    def manifest_name(self) -> str:
+        """The name to use for this record in a parent manifest."""
+        return f'{self.year}-{str(self.month).zfill(2)}'
 
     @property
     def month(self) -> Month:

@@ -52,7 +52,7 @@ class CanonicalEncoder(json.JSONEncoder):
         """Fallback unpack method for any domain object."""
         return {key: self.unpack(val) for key, val in obj._asdict().items()}
 
-    def unpack_file(self, obj: domain.File) -> Dict:
+    def unpack_canonical_file(self, obj: domain.CanonicalFile) -> Dict:
         """Unpack a :class:`.domain.File`."""
         return {key: self.unpack(val) for key, val in obj._asdict().items()
                 if key != 'content'}

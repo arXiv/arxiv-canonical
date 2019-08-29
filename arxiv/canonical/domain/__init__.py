@@ -5,13 +5,13 @@ from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
 from .content import ContentType
 from .eprint import EPrint
 from .event import Event, EventType
-from .file import File
+from .file import CanonicalFile
 from .identifier import Identifier, VersionedIdentifier
 from .license import License
 from .listing import Listing, ListingMonth, ListingYear, AllListings
 from .person import Person
 from .record import CanonicalRecord
-from .version import Version, VersionReference
+from .version import Version, VersionReference, Metadata
 
 
 domain_classes = [
