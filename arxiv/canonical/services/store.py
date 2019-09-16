@@ -6,26 +6,42 @@ Provides a :class:`.CanonicalStore` that stores resources in S3, using
 """
 
 import io
+import logging
+import os
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from binascii import hexlify, unhexlify
 from datetime import datetime, date
 from functools import partial
 from hashlib import md5
 from json import dumps, load
-from typing import Optional, Dict, Any, IO, List
+from typing import Optional, Dict, Any, IO, List, Callable, Tuple, Type, \
+    TypeVar, Union
 
 import boto3
 import botocore
+from backports.datetime_fromisoformat import MonkeyPatch
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from pytz import UTC
 
-from .. import integrity
-from ..domain import ContentType
-from ..register import ICanonicalStorage
-from ..serialize import record
-from ..integrity import ManifestEntry, Manifest
+from .. import integrity as I
+from .. import record as R
+from .. import domain as D
+from ..register import ICanonicalStorage, IStorableEntry
+from ..serialize.decoder import CanonicalDecoder
+from ..serialize.encoder import CanonicalEncoder
 from .readable import MemoizedReadable
+
+
+MonkeyPatch.patch_fromisoformat()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(10)
+
+_I = TypeVar('_I', I.IntegrityEntry, I.IntegrityMetadata, I.IntegrityListing,
+             covariant=True)
+
+Checksum = str
 
 
 class DoesNotExist(Exception):
@@ -76,6 +92,9 @@ class CanonicalStore(ICanonicalStorage):
         """
         return self._read_only
 
+    def can_resolve(self, uri: D.URI) -> bool:
+        return isinstance(uri, D.Key) or uri.is_canonical
+
     def inititalize(self) -> None:
         self.client.create_bucket(Bucket=self._bucket)
 
@@ -84,43 +103,62 @@ class CanonicalStore(ICanonicalStorage):
         """Determine whether or not we can read from/write to the store."""
         raise NotImplementedError('Implement me!')
 
-    def load_entry(self, key: str) -> integrity.IntegrityEntry:
+    def _load_key(self, key: str) -> bytes:
         response = self.client.get_object(Bucket=self._bucket, Key=key)
-        return integrity.IntegrityEntry(
-            record=record.RecordEntry(
-                key=key,
+        body: IO[bytes] = response['Body']
+        return body.read()
+
+    def load_deferred(self, key: D.URI) -> IO[bytes]:
+        load_deferred: Callable[[], bytes] = partial(self._load_key, key)
+        return MemoizedReadable(load_deferred)
+
+    def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, Checksum]:
+        assert isinstance(key, D.Key)
+        logger.debug('Load entry at %s', key)
+        response = self.client.get_object(Bucket=self._bucket, Key=key)
+        stream = R.RecordStream(
+            domain=D.CanonicalFile(
+                created=datetime.fromisoformat(response['Metadata']['created']),  # type: ignore ; pylint: disable=no-member
+                modified=response['LastModified'],
+                filename=key.filename,
+                size_bytes=response['ContentLength'],
+                content_type=D.ContentType.from_mimetype(response['ContentType']),
                 content=MemoizedReadable(response['Body'].read),
-                content_type=ContentType.from_mimetype(response['ContentType']),
-                size_bytes=response['ContentLength']
             ),
-            checksum=_hex_to_b64(response['ETag'][1:-1])
+            content=MemoizedReadable(response['Body'].read),
+            content_type=D.ContentType.from_mimetype(response['ContentType']),
+            size_bytes=response['ContentLength']
         )
+        return stream, _hex_to_b64(response['ETag'][1:-1])
 
     def list_subkeys(self, key: str) -> List[str]:
         response = self.client.list_objects_v2(Bucket=self._bucket, Prefix=key)
         subs = [obj['Key'].split(key, 1)[1] for obj in response['Contents']]
         return [sub.split('/', 1)[0] if '/' in sub else sub for sub in subs]
 
-    def store_entry(self, ri: integrity.IntegrityEntry) -> None:
+    def store_entry(self, ri: IStorableEntry) -> None:
+        assert ri.record.stream.content is not None
+        metadata = {'created': ri.record.stream.created.isoformat()}
         self.client.put_object(Bucket=self._bucket,
                                Key=ri.record.key,
-                               Body=ri.record.content.read(),
-                               ContentLength=ri.record.size_bytes,
+                               Body=ri.record.stream.content.read(),
+                               ContentLength=ri.record.stream.size_bytes,
                                ContentMD5=_b64_to_hex(ri.checksum),
-                               ContentType=ri.record.content_type.mime_type)
+                               ContentType=ri.record.stream.content_type.mime_type,
+                               Metadata=metadata)
 
-    def store_manifest(self, key: str, manifest: Manifest) -> None:
-        body = dumps(manifest).encode('utf-8')
+    def store_manifest(self, key: str, manifest: I.Manifest) -> None:
+        body = dumps(manifest, cls=I.ManifestEncoder).encode('utf-8')
         self.client.put_object(Bucket=self._bucket,
                                Key=key,
                                Body=body,
                                ContentLength=len(body),
-                               ContentMD5=integrity.checksum.checksum_raw(body),
+                               ContentMD5=I.checksum.checksum_raw(body),
                                ContentType='application/json')
 
-    def load_manifest(self, key: str) -> Manifest:
+    def load_manifest(self, key: str) -> I.Manifest:
         response = self.client.get_object(Bucket=self._bucket, Key=key)
-        manifest: Manifest = load(response['Body'])
+        manifest: I.Manifest = load(response['Body'], cls=I.ManifestDecoder)
         return manifest
 
     def _handle_client_error(self, exc: ClientError) -> None:
@@ -144,10 +182,10 @@ class CanonicalStore(ICanonicalStorage):
         return boto3.client('s3', **params)
 
 
-def _b64_to_hex(checksum: str) -> str:
+def _b64_to_hex(checksum: Checksum) -> str:
     return hexlify(urlsafe_b64decode(checksum.encode('utf-8'))).decode('utf-8')
 
 
-def _hex_to_b64(etag: str) -> str:
+def _hex_to_b64(etag: str) -> Checksum:
     """Convert an hexdigest of an MD5 to a URL-safe base64-encoded digest."""
     return urlsafe_b64encode(unhexlify(etag)).decode('utf-8')

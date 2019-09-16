@@ -1,27 +1,57 @@
 """Core data structures and concepts."""
 
 from arxiv.taxonomy import Category
+from .base import CanonicalBase, CanonicalBaseCollection, Callback
 from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
 from .content import ContentType
 from .eprint import EPrint
-from .event import Event, EventType
-from .file import CanonicalFile
+from .file import CanonicalFile, URI, Key
 from .identifier import Identifier, VersionedIdentifier
 from .license import License
-from .listing import Listing, ListingMonth, ListingYear, AllListings
+from .listing import Listing, ListingDay, ListingMonth, ListingYear, \
+    AllListings, ListingIdentifier
 from .person import Person
-from .record import CanonicalRecord
-from .version import Version, VersionReference, Metadata
+from .version import Version, VersionReference, Metadata, Event, EventType, \
+    EventSummary, EventIdentifier
+
+domain_classes = (
+    AllEPrints,
+    AllListings,
+    CanonicalFile,
+    Category,
+    CanonicalBase,
+    CanonicalBaseCollection,
+    ContentType,
+    EPrint,
+    EPrintDay,
+    EPrintMonth,
+    EPrintYear,
+    Event,
+    EventIdentifier,
+    EventSummary,
+    EventType,
+    Identifier,
+    Key,
+    License,
+    Listing,
+    ListingDay,
+    ListingIdentifier,
+    ListingYear,
+    ListingMonth,
+    Metadata,
+    Person,
+    URI,
+    Version,
+    VersionedIdentifier,
+    VersionReference,
+)
 
 
-domain_classes = [
-    obj for obj in locals().values()
-    if type(obj) is type and tuple in obj.__bases__ and hasattr(obj, '_fields')
-]
+__all__ = [cls.__name__ for cls in domain_classes]
 """All of the core domain classes in this package."""
 
 
-class Canon:
+class Canon(CanonicalBase):
     def __init__(self, eprints: AllEPrints, listings: AllListings) -> None:
         self.eprints = eprints
         self.listings = listings

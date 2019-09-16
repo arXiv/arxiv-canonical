@@ -1,38 +1,24 @@
-from typing import NamedTuple, Any, Generic, TypeVar, NamedTupleMeta, GenericMeta, Type, Dict, Iterable, Tuple, ClassVar
-from operator import attrgetter
-from typing_extensions import Protocol
-
+from typing import Generic, TypeVar
 
 T = TypeVar('T')
-Self = TypeVar('Self', bound='Foo')
+U = TypeVar('U')
+V = TypeVar('V')
 
-class Mixin:
-    def what(self) -> None:
-        print('!!')
-
-
-class Foo(Generic[T], Mixin):
-    a: T
-    b: ClassVar[Type[T]]
-
-    def __init__(self, a: T) -> None:
-        self.a = a
-
-    @classmethod
-    def oof(cls: Type[Self], a: T) -> Self:
-        return cls(a)
+class Foo(Generic[T, U]):
+    def __init__(self, baz: T, asdf: U) -> None:
+        self.baz = baz
+        self.asdf = asdf
 
 
-class Bar(Foo[int]):
-    b = int
-
-    @classmethod
-    def baz(cls) -> None:
-        # reveal_type(cls.a)
-        pass
+class Bar(Foo[V, int]):
+    ...
 
 
+class Bat(Bar[str]):
+    ...
 
-# reveal_type(Bar.b)
-f = Bar.b(1)
-reveal_type(f)
+
+x = Bat('foo', 1)
+reveal_type(x)
+reveal_type(x.baz)
+reveal_type(x.asdf)

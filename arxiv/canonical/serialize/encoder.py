@@ -1,10 +1,12 @@
 """Provides a :class:`.CanonicalEncoder` for domain objects."""
 
-import re
 import json
-from typing import Any, Union, List, Dict, Type
+import re
+
 from datetime import datetime, date
 from enum import Enum
+from typing import Any, Union, List, Dict, Type
+from uuid import UUID
 
 from backports.datetime_fromisoformat import MonkeyPatch
 
@@ -26,10 +28,10 @@ class CanonicalEncoder(json.JSONEncoder):
     def unpack(self, obj: Any) -> Any:
         """Recursively search for domain objects, and unpack them to dicts."""
         if isinstance(obj, dict):
-            return {key: self.unpack(value) for key, value in obj.items()}
+            return {self.unpack(key): self.unpack(value) for key, value in obj.items()}
         elif isinstance(obj, list):
             return [self.unpack(value) for value in obj]
-        elif type(obj) in domain.domain_classes:
+        elif isinstance(obj, domain.CanonicalBase):
             type_snake = _camel_to_snake(type(obj).__name__)
             unpack_obj = getattr(self, f'unpack_{type_snake}',
                                  self.unpack_default)
@@ -50,9 +52,14 @@ class CanonicalEncoder(json.JSONEncoder):
 
     def unpack_default(self, obj: Any) -> Dict:
         """Fallback unpack method for any domain object."""
-        return {key: self.unpack(val) for key, val in obj._asdict().items()}
+        return {key: self.unpack(getattr(obj, key))
+                for key in obj.__annotations__.keys()}
 
     def unpack_canonical_file(self, obj: domain.CanonicalFile) -> Dict:
         """Unpack a :class:`.domain.File`."""
-        return {key: self.unpack(val) for key, val in obj._asdict().items()
-                if key != 'content'}
+        return {key: self.unpack(getattr(obj, key))
+                for key in obj.__annotations__.keys() if key != 'content'}
+
+    def unpack_uuid(self, obj: UUID) -> Dict:
+        return {'hex': obj.hex}
+

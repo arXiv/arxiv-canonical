@@ -4,12 +4,12 @@ from hashlib import md5
 from operator import itemgetter
 from typing import List, IO, Union, cast
 
-from ..record import RecordEntry
+from ..record import RecordStream
 from .manifest import Manifest
 from .exceptions import ChecksumError
 
 
-def calculate_checksum(obj: Union[bytes, IO[bytes], Manifest, RecordEntry]) \
+def calculate_checksum(obj: Union[bytes, IO[bytes], Manifest, RecordStream]) \
         -> str:
     if isinstance(obj, bytes):
         return checksum_raw(obj)
@@ -17,7 +17,7 @@ def calculate_checksum(obj: Union[bytes, IO[bytes], Manifest, RecordEntry]) \
         return checksum_manifest(cast(Manifest, obj))
     if isinstance(obj, io.IOBase):
         return checksum_io(obj)
-    if isinstance(obj, RecordEntry):
+    if isinstance(obj, RecordStream):
         assert obj.content is not None
         return checksum_io(obj.content)
     raise TypeError(f'Cannot generate a checksum from a {type(obj)}')

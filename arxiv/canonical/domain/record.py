@@ -6,7 +6,7 @@ from typing import NamedTuple, Tuple, MutableMapping, List, Optional, Dict, \
     Iterator
 
 from .eprint import EPrint
-from .event import Event, EventType
+from .version import Event, EventType
 from .block import EPrintMonth
 from .listing import Listing
 from .identifier import Identifier

@@ -6,8 +6,9 @@ from typing import NamedTuple, List, Mapping, Optional, Dict, Iterator, Tuple
 
 from typing_extensions import Protocol
 
+from .base import CanonicalBase
 from .eprint import EPrint
-from .event import Event
+from .version import Event
 from .identifier import Identifier, VersionedIdentifier
 from .listing import Listing
 from .util import now
@@ -17,9 +18,13 @@ Year = int
 Month = int
 YearMonth = Tuple[Year, Month]
 
-class EPrintDay(NamedTuple):
-    date: datetime.date
-    eprints: Mapping[Identifier, EPrint]
+
+class EPrintDay(CanonicalBase):
+    def __init__(self, date: datetime.date,
+                 eprints: Mapping[Identifier, EPrint]) -> None:
+        self.date = date
+        self.eprints = eprints
+
 
     # @property
     # def is_open(self) -> bool:
@@ -71,11 +76,13 @@ class EPrintDay(NamedTuple):
     #         raise ValueError(f'Wrong block: {eprint.versioned_identifier}')
 
 
-class EPrintMonth(NamedTuple):
+class EPrintMonth(CanonicalBase):
     """Contains the e-prints announced in a particular calendar month."""
 
-    name: YearMonth
-    days: Mapping[datetime.date, EPrintDay]
+    def __init__(self, name: YearMonth,
+                 days: Mapping[datetime.date, EPrintDay]) -> None:
+        self.name = name
+        self.days = days
 
     @property
     def year(self) -> Year:
@@ -112,13 +119,18 @@ class EPrintMonth(NamedTuple):
     #         raise ValueError(f'Wrong block: {eprint.versioned_identifier}')
 
 
-class EPrintYear(NamedTuple):
+class EPrintYear(CanonicalBase):
     """Contains the e-prints announced in a particular calendar year."""
 
-    year: Year
-    months: Mapping[Tuple[int, int], EPrintMonth]
+    def __init__(self, year: Year,
+                 months: Mapping[Tuple[int, int], EPrintMonth]) -> None:
+        self.year = year
+        self.months = months
 
 
-class AllEPrints(NamedTuple):
-    name: str
-    years: Mapping[int, EPrintYear]
+class AllEPrints(CanonicalBase):
+
+    def __init__(self, name: str,
+                 years: Mapping[int, EPrintYear]) -> None:
+        self.name = name
+        self.years = years

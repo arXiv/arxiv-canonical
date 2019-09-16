@@ -1,23 +1,28 @@
 from datetime import date
-from typing import Optional, NamedTuple, Sequence
+from typing import Optional, NamedTuple, Mapping
 
-from .event import Event
-from .identifier import Identifier
+from .base import CanonicalBase
+from .identifier import Identifier, VersionedIdentifier
 from .version import Version
 
 
-class EPrint(NamedTuple):
-    identifier: Optional[Identifier]
-    versions: Sequence[Version]
+class EPrint(CanonicalBase):
+    def __init__(self, identifier: Optional[Identifier],
+                 versions: Mapping[VersionedIdentifier, Version]) -> None:
+        self.identifier = identifier
+        self.versions = versions
 
     @property
     def announced_date(self) -> Optional[date]:
-        return self.versions[0].announced_date
+        idents = [v for v in self.versions]
+        return self.versions[idents[0]].announced_date
 
     @property
     def is_withdrawn(self) -> bool:
-        return self.versions[-1].is_withdrawn
+        idents = [v for v in self.versions]
+        return self.versions[idents[-1]].is_withdrawn
 
     @property
     def size_kilobytes(self) -> int:
-        return self.versions[-1].size_kilobytes
+        idents = [v for v in self.versions]
+        return self.versions[idents[-1]].size_kilobytes

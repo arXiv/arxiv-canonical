@@ -60,17 +60,21 @@ e-print and listing hierarchies into a final, composite level.
 from datetime import date
 from operator import attrgetter, itemgetter
 from typing import IO, NamedTuple, List, Dict, Sequence, Optional, Tuple, \
-    Mapping, Generic, TypeVar, Union, Iterable
+    Mapping, Generic, TypeVar, Union, Iterable, Type
 
 from mypy_extensions import TypedDict
+from typing_extensions import Literal
 
-from ..domain import VersionedIdentifier, Identifier
-from ..record import RecordBase, RecordEntry, \
-    RecordListing, RecordListingMonth, RecordListingYear, RecordVersion, \
-    RecordVersion, RecordEPrint, RecordDay, RecordMonth, RecordYear, \
-    RecordListings, RecordEPrints, Record
+from ..domain import VersionedIdentifier, Identifier, ListingIdentifier, \
+    Listing, Version, CanonicalBaseCollection, EventType
+# from ..record import RecordBase, RecordStream, RecordListingDay, \
+#     RecordListing, RecordListingMonth, RecordListingYear, RecordVersion, \
+#     RecordVersion, RecordEPrint, RecordDay, RecordMonth, RecordYear, \
+#     RecordListings, RecordEPrints, Record, RecordMetadata, RecordEntry
+from .. import record as R
 from ..util import GenericMonoDict
-from .manifest import Manifest, ManifestEntry
+from .manifest import Manifest, ManifestEntry, ManifestDecoder, \
+    ManifestEncoder, make_empty_manifest
 from .checksum import calculate_checksum
 from .exceptions import ValidationError, ChecksumError
 
@@ -83,9 +87,10 @@ YearAndMonth = Tuple[int, int]
 # below. To learn more about TypeVars and Generics, see
 # https://mypy.readthedocs.io/en/latest/generics.html
 _Name = TypeVar('_Name')
-_Record = TypeVar('_Record', bound=Union[RecordBase, RecordEntry])
+_Record = TypeVar('_Record', bound=Union[R.RecordBase, R.RecordEntry])
 _MemberName = TypeVar('_MemberName')
 _Member = TypeVar('_Member', bound=Optional['IntegrityBase'])
+_Self = TypeVar('_Self', bound='IntegrityBase')
 
 
 class IntegrityEntryMembers(GenericMonoDict[str, 'IntegrityEntry']):
@@ -109,6 +114,7 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     the name, record, member name, and member types to vary from subclass
     to subclass.
     """
+
     def __init__(self, name: _Name,
                  record: Optional[_Record] = None,
                  members: Optional[Mapping[_MemberName, _Member]] = None,
@@ -121,16 +127,33 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         self.name = name
 
     @classmethod
+    def from_record(cls: Type[_Self], record: _Record,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True) -> _Self:
+        raise NotImplementedError("To be implemented by child class")
+
+    @classmethod
     def make_manifest(cls, members: Mapping[_MemberName, _Member]) -> Manifest:
         """Make a :class:`.Manifest` for this integrity collection."""
-        return Manifest(entries=[
-            cls.make_manifest_entry(members[name]) for name in members
-        ])
+        entries = [cls.make_manifest_entry(members[n]) for n in members]
+        number_of_events_by_type = {
+            etype: sum([e['number_of_events_by_type'][etype] for e in entries])
+            for etype in EventType
+        }
+        return Manifest(
+            entries=entries,
+            number_of_events=sum([e['number_of_events'] for e in entries]),
+            number_of_events_by_type=number_of_events_by_type,
+            number_of_versions=sum([e['number_of_versions'] for e in entries]),
+        )
 
     @classmethod
     def make_manifest_entry(cls, member: _Member) -> ManifestEntry:
         return ManifestEntry(key=member.manifest_name,
-                             checksum=member.checksum)
+                             checksum=member.checksum,
+                             number_of_events=member.manifest['number_of_events'],
+                             number_of_events_by_type=member.manifest['number_of_events_by_type'],
+                             number_of_versions=member.manifest['number_of_versions'])
 
     @property
     def checksum(self) -> str:
@@ -161,6 +184,14 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         return self._members
 
     @property
+    def number_of_events(self) -> int:
+        return self.record.domain.number_of_events
+
+    @property
+    def number_of_versions(self) -> int:
+        return self.record.domain.number_of_versions
+
+    @property
     def record(self) -> _Record:
         """The record associated with this collection."""
         assert self._record is not None
@@ -170,7 +201,13 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         return calculate_checksum(self.manifest)
 
     def extend_manifest(self, member: _Member) -> None:
-        self.manifest['entries'].append(self.make_manifest_entry(member))
+        entry = self.make_manifest_entry(member)
+        self.manifest['entries'].append(entry)
+        self.manifest['number_of_versions'] += entry['number_of_versions']
+        self.manifest['number_of_events'] += entry['number_of_events']
+        for key in self.manifest['number_of_events_by_type']:
+             self.manifest['number_of_events_by_type'][key] += entry['number_of_events_by_type'][key]
+        # print(self, type(self), self.manifest)
         self.update_checksum()
 
     def iter_members(self) -> Iterable[_Member]:
@@ -180,74 +217,129 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         """Set the checksum for this record."""
         self._checksum = self.calculate_checksum()
 
+    def update_or_extend_manifest(self, member: _Member, checksum: str) \
+            -> None:
+        """Update the checksum on a manifest entry, or add a new entry."""
+        found = False
+        for entry in self.manifest['entries']:
+            # Update existing manifest entry.
+            if entry['key'] == member.integrity.manifest_name:
+                entry['checksum'] = checksum
+                found = True
+                break
+        if not found:   # New manifest entry.
+            self.extend_manifest(member.integrity)
 
-class IntegrityEntry(IntegrityBase[str, RecordEntry, None, None]):
-    """Integrity entry for a single bitstream in the record."""
 
-    @property
-    def manifest_entry(self) -> ManifestEntry:
-        """Generate a manifest entry for this :class:`.IntegrityEntry`."""
-        return {'key': self.record.key,
-                'checksum': self.checksum,
-                'size_bytes': self.record.size_bytes,
-                'mime_type': self.record.content_type.mime_type}
+class IntegrityEntryBase(IntegrityBase[str, _Record, None, None]):
+    record_type: Type[_Record]
+
+
+class IntegrityEntry(IntegrityEntryBase[R.RecordEntry]):
+    """Integrity concept for a single entry in the record."""
+
+    record_type = R.RecordEntry
 
     @classmethod
-    def from_record(cls, record: RecordEntry) -> 'IntegrityEntry':
+    def from_record(cls: Type[_Self], record: R.RecordEntry,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True) -> _Self:
         """Generate an :class:`.IntegrityEntry` from a :class:`.RecordEntry."""
-        return cls(name=record.key, record=record,
-                   checksum=calculate_checksum(record))
+        if calculate_new_checksum:
+            checksum = calculate_checksum(record.stream)
+        return cls(name=record.key, record=record, checksum=checksum)
 
     # This is redefined since the entry has no manifest; the record entry is
     # used instead.
     def calculate_checksum(self) -> str:
-        return calculate_checksum(self.record)
+        return calculate_checksum(self.record.stream)
 
 
-# This may seem a little odd, but want to leave the possibility of multiple
-# listing files per day.
-class IntegrityListing(IntegrityBase[date,
-                                     RecordListing,
-                                     str,
-                                     IntegrityEntry]):
-    """
-    Integrity collection of listings for a single day.
+class IntegrityMetadata(IntegrityEntryBase[R.RecordMetadata]):
+    """Integrity entry for a metadata bitstream in the record."""
 
-    Currently supports only one listing file per day, but can be extended in
-    the future by modifying :func:`IntegrityListing.from_record`.
-    """
+    record_type = R.RecordMetadata
 
     @classmethod
-    def from_record(cls, record: RecordListing) -> 'IntegrityListing':
-        """
-        Generate an :class:`.IntegrityListing` from a :class:`.RecordListing`.
+    def from_record(cls: Type[_Self], record: R.RecordMetadata,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True) -> _Self:
+        if calculate_new_checksum:
+            checksum = calculate_checksum(record.stream)
+        return cls(name=record.key, record=record, checksum=checksum)
 
-        Currently supports only one listing file per day, but can be extended
-        in the future by accepting multiple :class:`.RecordListing` elements
-        here.
-        """
-        members = {
-            record.listing.name: IntegrityEntry.from_record(record.listing)
-        }
-        manifest = cls.make_manifest(members)
-        return cls(record.name, members=members, manifest=manifest,
-                   checksum=calculate_checksum(manifest))
+    # This is redefined since the entry has no manifest; the record entry is
+    # used instead.
+    def calculate_checksum(self) -> str:
+        return calculate_checksum(self.record.stream)
 
-    @property
-    def listing(self) -> IntegrityEntry:
-        assert 'listing' in self.members
-        return self.members['listing']
+
+class IntegrityListing(IntegrityEntryBase[R.RecordListing]):
+
+    record_type = R.RecordListing
+
+    @classmethod
+    def from_record(cls: Type[_Self], record: R.RecordListing,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True) -> _Self:
+        """Generate an :class:`.IntegrityListing` from a :class:`.RecordListing."""
+        if calculate_new_checksum:
+            checksum = calculate_checksum(record.stream)
+        return cls(name=record.key, record=record, checksum=checksum)
+
+    # This is redefined since the entry has no manifest; the record entry is
+    # used instead.
+    def calculate_checksum(self) -> str:
+        return calculate_checksum(self.record.stream)
+
+
+
+class IntegrityListingDay(IntegrityBase[date,
+                                        R.RecordListingDay,
+                                        ListingIdentifier,
+                                        IntegrityListing]):
+    """Integrity collection of listings for a single day."""
+
+    @classmethod
+    def make_manifest_entry(cls, member: IntegrityListing) -> ManifestEntry:
+        assert isinstance(member.record.domain, Listing)
+        return ManifestEntry(key=member.manifest_name,
+                             checksum=member.checksum,
+                             size_bytes=member.record.stream.size_bytes,
+                             mime_type=member.record.stream.content_type.mime_type,
+                             number_of_versions=0,
+                             number_of_events=len(member.record.domain.events),
+                             number_of_events_by_type=member.record.domain.number_of_events_by_type)
 
     @property
     def manifest_name(self) -> str:
         """The name to use for this record in a parent manifest."""
         return self.name.isoformat()
 
+    @classmethod
+    def from_record(cls: Type[_Self], record: R.RecordListingDay,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True) -> _Self:
+        """
+        Generate an :class:`.IntegrityListing` from a :class:`.RecordListing`.
+        """
+        members = {name: IntegrityListing.from_record(record.members[name])
+                   for name in record.members}
+        # members = {
+        #     record.listing.name: IntegrityEntry.from_record(record.listing)
+        # }
+        manifest = cls.make_manifest(members)
+        if calculate_new_checksum:
+            checksum = calculate_checksum(manifest)
+        assert not isinstance(checksum, bool)
+        return cls(record.name, members=members, manifest=manifest,
+                   checksum=checksum)
+
 
 class IntegrityListingMonth(IntegrityBase[YearAndMonth,
-                                          RecordListingMonth,
+                                          R.RecordListingMonth,
                                           date,
-                                          IntegrityListing]):
+                                          IntegrityListingDay]):
     """Integrity collection of listings for a single month."""
 
     @property
@@ -267,7 +359,7 @@ class IntegrityListingMonth(IntegrityBase[YearAndMonth,
 
 
 class IntegrityListingYear(IntegrityBase[Year,
-                                         RecordListingYear,
+                                         R.RecordListingYear,
                                          YearAndMonth,
                                          IntegrityListingMonth]):
     """Integrity collection of listings for a single year."""
@@ -279,34 +371,93 @@ class IntegrityListingYear(IntegrityBase[Year,
 
 
 class IntegrityListings(IntegrityBase[str,
-                                      RecordListings,
+                                      R.RecordListings,
                                       Year,
                                       IntegrityListingYear]):
     """Integrity collection of all listings."""
 
 
+def _checksum_from_manifest(manifest: Manifest, key: str) -> Optional[str]:
+    for entry in manifest['entries']:
+        if entry['key'] == key:
+            return entry['checksum']
+    raise KeyError(f'Not found: {key}')
+
+
 class IntegrityVersion(IntegrityBase[VersionedIdentifier,
-                                     RecordVersion,
+                                     R.RecordVersion,
                                      str,
                                      IntegrityEntry]):
     """Integrity collection for an e-print version."""
 
     @classmethod
-    def from_record(cls, version: RecordVersion) -> 'IntegrityVersion':
-        """Get an :class:`.IntegrityVersion` from a :class:`.RecordVersion`."""
-        metadata = IntegrityEntry.from_record(version.metadata)
-        render = IntegrityEntry.from_record(version.render)
-        source = IntegrityEntry.from_record(version.source)
+    def from_record(cls: Type[_Self], version: R.RecordVersion,
+                    checksum: Optional[str] = None,
+                    calculate_new_checksum: bool = True,
+                    manifest: Optional[Manifest] = None) -> _Self:
+        """
+        Get an :class:`.IntegrityVersion` from a :class:`.RecordVersion`.
+
+        Parameters
+        ----------
+        version : :class:`.RecordVersion`
+            The record for which this integrity object is to be generated.
+        checksum : str or None
+        manifest : dict
+            If provided, checksum values for member files will be retrieved
+            from this manifest. Otherwise they will be calculated from the
+            file content.
+        calculate_new_checksum : bool
+            If ``True``, a new checksum will be calculated from the manifest.
+
+        Returns
+        -------
+        :class:`.IntegrityVersion`
+
+        """
+        calculate_new_checksum_for_members = bool(manifest is None)
+
+        render_checksum = _checksum_from_manifest(manifest, R.RecordVersion.make_key(version.identifier, version.render.domain.filename)) if manifest else None
+        source_checksum = _checksum_from_manifest(manifest, R.RecordVersion.make_key(version.identifier, version.source.domain.filename)) if manifest else None
+
         members = IntegrityEntryMembers(
-            metadata=metadata,
-            render=render,
-            source=source
+            metadata=IntegrityEntry.from_record(version.metadata),
+            render=IntegrityEntry.from_record(
+                version.render,
+                checksum=render_checksum,
+                calculate_new_checksum=calculate_new_checksum_for_members
+            ),
+            source=IntegrityEntry.from_record(
+                version.source,
+                checksum=source_checksum,
+                calculate_new_checksum=calculate_new_checksum_for_members
+            )
         )
+
         manifest = cls.make_manifest(members)
-        return cls(version.identifier,
-                   members=members,
-                   manifest=manifest,
-                   checksum=calculate_checksum(manifest))
+        if calculate_new_checksum:
+            checksum = calculate_checksum(manifest)
+        return cls(version.identifier, record=version, members=members,
+                   manifest=manifest, checksum=checksum)
+
+    @classmethod
+    def make_manifest(cls, members: Mapping[str, IntegrityEntry]) -> Manifest:
+        """Make a :class:`.Manifest` for this integrity collection."""
+        return Manifest(
+            entries=[cls.make_manifest_entry(members[n]) for n in members],
+            number_of_events=0,
+            number_of_events_by_type={},
+            number_of_versions=1
+        )
+
+    @classmethod
+    def make_manifest_entry(cls, member: IntegrityEntry) -> ManifestEntry:
+        return ManifestEntry(
+            key=member.manifest_name,
+            checksum=member.checksum,
+            size_bytes=member.record.stream.size_bytes,
+            mime_type=member.record.stream.content_type.mime_type
+        )
 
     @property
     def metadata(self) -> IntegrityEntry:
@@ -322,14 +473,22 @@ class IntegrityVersion(IntegrityBase[VersionedIdentifier,
 
 
 class IntegrityEPrint(IntegrityBase[Identifier,
-                                    RecordEPrint,
+                                    R.RecordEPrint,
                                     VersionedIdentifier,
                                     IntegrityVersion]):
     """Integrity collection for an :class:`.EPrint`."""
 
+    @classmethod
+    def make_manifest_entry(cls, member: IntegrityVersion) -> ManifestEntry:
+        return ManifestEntry(key=member.manifest_name,
+                             checksum=member.checksum,
+                             number_of_versions=1,
+                             number_of_events=0,
+                             number_of_events_by_type={})
+
 
 class IntegrityDay(IntegrityBase[date,
-                                 RecordDay,
+                                 R.RecordDay,
                                  Identifier,
                                  IntegrityEPrint]):
     """
@@ -346,7 +505,7 @@ class IntegrityDay(IntegrityBase[date,
 
 
 class IntegrityMonth(IntegrityBase[YearAndMonth,
-                                   RecordMonth,
+                                   R.RecordMonth,
                                    date,
                                    IntegrityDay]):
     """
@@ -373,7 +532,7 @@ class IntegrityMonth(IntegrityBase[YearAndMonth,
 
 
 class IntegrityYear(IntegrityBase[Year,
-                                  RecordYear,
+                                  R.RecordYear,
                                   YearAndMonth,
                                   IntegrityMonth]):
     """
@@ -390,7 +549,7 @@ class IntegrityYear(IntegrityBase[Year,
 
 
 class IntegrityEPrints(IntegrityBase[str,
-                                     RecordEPrints,
+                                     R.RecordEPrints,
                                      Year,
                                      IntegrityYear]):
     """Integrity collection for all e-prints in the canonical record."""
@@ -414,7 +573,9 @@ class TopLevelMembers(
 
 
 class Integrity(IntegrityBase[None,
-                              Record,
+                              R.Record,
                               str,
                               Union[IntegrityEPrints, IntegrityListings]]):
     """Global integrity collection."""
+
+

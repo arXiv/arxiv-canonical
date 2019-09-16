@@ -1,9 +1,11 @@
 """Provides a :class:`.CanonicalDecoder` for domain objects."""
 
 import json
-from typing import Any, Union, List, Dict, GenericMeta, TypingMeta
 from datetime import datetime, date
 from enum import Enum
+from typing import Any, Union, List, Dict, GenericMeta
+from typing import TypingMeta  # type: ignore ; it's really there...
+from uuid import UUID
 
 from backports.datetime_fromisoformat import MonkeyPatch
 
@@ -27,14 +29,14 @@ class CanonicalDecoder(json.JSONDecoder):
         if type(value) is not str:
             return value
         try:
-            return date.fromisoformat(value)   # type: ignore
+            return date.fromisoformat(value)  # type: ignore ; pylint: disable=no-member
         except ValueError:
             try:
-                return datetime.fromisoformat(value)  # type: ignore
+                return datetime.fromisoformat(value)  # type: ignore ; pylint: disable=no-member
             except ValueError:
                 return value
 
-    def object_hook(self, obj: dict, **extra: Any) -> Any:
+    def object_hook(self, obj: dict, **extra: Any) -> Any:  # pylint: disable=method-hidden
         """Decode domain objects in this package."""
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -45,18 +47,23 @@ class CanonicalDecoder(json.JSONDecoder):
 
             # Look for and instantiate the domain class that corresponds to the
             # stated type of the data.
-            obj_type = obj.pop('@type')
+            obj_type = obj.pop('@type', None)
+            if obj_type is None:
+                return obj
             for domain_class in domain.domain_classes:
                 if domain_class.__name__ == obj_type:
                     # Look for easy wins on casting field data to the correct
                     # type. The main use-case is for enums.
-                    for field, ftype in domain_class._field_types.items():
+                    for field, ftype in domain_class.__annotations__.items():  # pylint: disable=protected-access
+                        # These are things like Union, List, etc that don't
+                        # have a concrete type. Too hard to take this on.
                         if isinstance(ftype, GenericMeta) \
                                 or isinstance(type(ftype), TypingMeta):
-                            # These are things like Union, List, etc that don't
-                            # have a concrete type. Too hard to take this on.
                             continue
-                        if field in obj and not isinstance(obj[field], ftype):
+                        # Otherwise, this is a concrete type. We can try
+                        # to cast here.
+                        if field in obj \
+                                and not isinstance(obj[field], ftype):
                             obj[field] = ftype(obj[field])
                     return domain_class(**obj)
         return obj
