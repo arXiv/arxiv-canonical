@@ -10,9 +10,7 @@
       "type": "string"
     },
     "version": {
-      "description": "The version number for this e-print.",
-      "minimum": 1,
-      "type": "integer"
+      "$ref": "./Version.json"
     },
     "legacy": {
       "description": "Legacy records were carried forward from arXiv Classic.",

@@ -25,7 +25,6 @@ class RecordListing(RecordEntry[D.Listing]):
                     modified=listing.end_datetime,
                     size_bytes=size_bytes,
                     content_type=D.ContentType.json,
-                    # content=content,
                     filename=key.filename,
                     ref=key
                 ),

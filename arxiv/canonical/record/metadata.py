@@ -68,7 +68,8 @@ class RecordMetadata(RecordEntry[D.Version]):
     def to_domain(self, stream: RecordStream,
                   callbacks: Iterable[D.Callback] = ()) -> D.Version:
         assert stream.content is not None
-        version = D.Version.from_dict(load(stream.content), callbacks=callbacks)
+        version = D.Version.from_dict(load(stream.content),
+                                      callbacks=callbacks)
         if stream.content.seekable:
             stream.content.seek(0)
         return version  # RecordVersion.post_to_domain(version, load_content)

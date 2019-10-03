@@ -227,7 +227,7 @@ class Version(CanonicalBase):
             proxy=data.get('proxy'),
             is_announced=data['is_announced'],
             is_withdrawn=data['is_withdrawn'],
-            reason_for_withdrawal=data.get('is_announced'),
+            reason_for_withdrawal=data.get('reason_for_withdrawal'),
             is_legacy=data['is_legacy'],
             render=CanonicalFile.from_dict(data['render'], callbacks=callbacks),
             source=CanonicalFile.from_dict(data['source'], callbacks=callbacks),

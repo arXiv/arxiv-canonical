@@ -13,7 +13,7 @@
     "events": {
       "type": "array",
       "items": {
-        "$ref": "./ListingEvent.json"
+        "$ref": "./Event.json"
       }
     }
   }
