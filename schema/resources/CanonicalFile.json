@@ -1,0 +1,29 @@
+{
+  "title": "CanonicalFile",
+  "type": "object",
+  "properties": {
+    "creaged": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "modified": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "size_bytes": {
+      "type": "number"
+    },
+    "content_type": {
+      "$ref": "./ContentType.json"
+    },
+    "filename": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    },
+    "ref": {
+      "type": "string"
+    }
+  }
+}

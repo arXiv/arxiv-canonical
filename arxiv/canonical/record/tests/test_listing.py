@@ -96,4 +96,4 @@ class TestRecordListing(TestCase):
                          'Correctly identified as a JSON resource')
         raw = json.load(record.stream.content)
         # TODO: update schema so that this can pass!
-        # jsonschema.validate(raw, self.schema, resolver=self.resolver)
+        jsonschema.validate(raw, self.schema, resolver=self.resolver)

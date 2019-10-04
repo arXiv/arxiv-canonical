@@ -1,9 +1,15 @@
+
 import io
+import json
+import os
 import tempfile
 from datetime import datetime
+from pprint import pprint
 from pytz import UTC
 from typing import IO
 from unittest import TestCase, mock
+
+import jsonschema
 
 from ..core import RecordEntry
 from ..metadata import RecordMetadata
@@ -18,8 +24,18 @@ def fake_dereferencer(uri: D.URI) -> IO[bytes]:
 class TestRecordVersion(TestCase):
     """RecordVersion provides keys and serialization for Versions."""
 
+    SCHEMA_PATH = os.path.abspath('schema/resources/Version.json')
+
     def setUp(self):
         """We have a Version..."""
+        with open(self.SCHEMA_PATH) as f:
+            self.schema = json.load(f)
+
+        self.resolver = jsonschema.RefResolver(
+            'file://%s/' % os.path.abspath(os.path.dirname(self.SCHEMA_PATH)),
+            None
+        )
+
         self.identifier = D.VersionedIdentifier('2901.00345v1')
         created = datetime(2029, 1, 29, 20, 4, 23, tzinfo=UTC)
         self.version = D.Version(
@@ -93,6 +109,10 @@ class TestRecordVersion(TestCase):
                          b'fake content for file:///fake/path.tar.gz',
                          'Source resource is dereferenced correctly')
 
+    def test_schema(self):
+        record = RecordVersion.from_domain(self.version, fake_dereferencer)
+        raw = json.load(record.metadata.stream.content)
+        jsonschema.validate(raw, self.schema, resolver=self.resolver)
 
     def test_to_domain(self):
         """Re-casting to domain should preserve state."""

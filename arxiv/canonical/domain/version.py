@@ -67,7 +67,7 @@ class Metadata(CanonicalBase):
     @classmethod
     @with_callbacks
     def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'VersionReference':
+                  callbacks: Iterable[Callback] = ()) -> 'Metadata':
         return cls(
             primary_classification=Category(data['primary_classification']),
             secondary_classification=[
@@ -216,10 +216,10 @@ class Version(CanonicalBase):
                   callbacks: Iterable[Callback] = ()) -> 'Version':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
-            announced_date=datetime.fromisoformat(data['announced_date']).date(),  # pylint: disable=no-member
-            announced_date_first=datetime.fromisoformat(data['announced_date_first']).date(),  # pylint: disable=no-member
-            submitted_date=datetime.fromisoformat(data['submitted_date']),  # pylint: disable=no-member
-            updated_date=datetime.fromisoformat(data['updated_date']),  # pylint: disable=no-member
+            announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore ; pylint: disable=no-member
+            announced_date_first=datetime.fromisoformat(data['announced_date_first']).date(),  # type: ignore ; pylint: disable=no-member
+            submitted_date=datetime.fromisoformat(data['submitted_date']),  # type: ignore ; pylint: disable=no-member
+            updated_date=datetime.fromisoformat(data['updated_date']),  # type: ignore ; pylint: disable=no-member
             metadata=Metadata.from_dict(data['metadata'], callbacks=callbacks),
             events=[EventSummary.from_dict(e, callbacks=callbacks) for e in data['events']],
             previous_versions=[VersionReference.from_dict(v, callbacks=callbacks) for v in data['previous_versions']],
@@ -306,19 +306,39 @@ class EventType(Enum):
     MIGRATE_METADATA = 'migrate_metadata'
 
 
-class Event(CanonicalBase):
-    """An announcement-related event."""
-
+class _EventBase(CanonicalBase):
     identifier: VersionedIdentifier
     event_date: datetime
     event_type: EventType
     categories: List[Category]
 
+    description: str
+    is_legacy: bool
+    event_agent: Optional[str]
+
+    def __init__(self, identifier: VersionedIdentifier,
+                 event_date: datetime,
+                 event_type: EventType,
+                 categories: Optional[List[Category]] = None,
+                 description: str = '',
+                 is_legacy: bool = False,
+                 event_agent: Optional[str] = None) -> None:
+        self.identifier = identifier
+        self.event_date = event_date
+        self.event_type = event_type
+        if categories is None:
+            categories = []
+        self.categories = categories
+        self.description = description
+        self.is_legacy = is_legacy
+        self.event_agent = event_agent
+
+
+class Event(_EventBase):
+    """An announcement-related event."""
+
     version: Version
     """The current state of the version (i.e. after the event)."""
-    description: str
-    legacy: bool
-    event_agent: Optional[str]
 
     def __init__(self, identifier: VersionedIdentifier,
                  event_date: datetime,
@@ -326,18 +346,15 @@ class Event(CanonicalBase):
                  version: Version,
                  categories: Optional[List[Category]] = None,
                  description: str = '',
-                 legacy: bool = False,
+                 is_legacy: bool = False,
                  event_agent: Optional[str] = None) -> None:
-        self.identifier = identifier
-        self.event_date = event_date
-        self.event_type = event_type
+
         self.version = version
-        if categories is None:
-            categories = []
-        self.categories = categories
-        self.description = description
-        self.legacy = legacy
-        self.event_agent = event_agent
+        super(Event, self).__init__(identifier, event_date, event_type,
+                                    categories=categories,
+                                    description=description,
+                                    is_legacy=is_legacy,
+                                    event_agent=event_agent)
 
     @classmethod
     @with_callbacks
@@ -350,7 +367,7 @@ class Event(CanonicalBase):
             categories=[Category(cat) for cat in data['categories']],
             version=Version.from_dict(data['version'], callbacks=callbacks),
             description=data['description'],
-            legacy=data['legacy'],
+            is_legacy=data['is_legacy'],
             event_agent=data.get('event_agent')
         )
 
@@ -365,11 +382,11 @@ class Event(CanonicalBase):
                                           self.shard)
 
     # 2019-09-02: There is not currently a driver for sharding listings, but it
-    # is easier to add support for it now then to retrofit later. We can
-    # readily imagine, for example, wanting to shard by event type or by
-    # primary category. If there is more than one possible return value for
-    # this function (as a function of the event data), then multiple listing
-    # files will be created accordingly.
+    # is easier to add support for it now then to retrofit later (YAGNI be
+    # darned). We can readily imagine, for example, wanting to shard by event
+    # type or by primary category. If there is more than one possible return
+    # value for this function (as a function of the event data), then multiple
+    # listing files will be created accordingly.
     @property
     def shard(self) -> str:
         """The shard name for this event."""
@@ -379,12 +396,12 @@ class Event(CanonicalBase):
     def summary(self) -> 'EventSummary':
         return EventSummary(
             identifier=self.identifier,
-            event_id=self.event_id,
             event_date=self.event_date,
             event_type=self.event_type,
+            event_id=self.event_id,
             categories=self.categories,
             description=self.description,
-            legacy=self.legacy,
+            is_legacy=self.is_legacy,
             event_agent=self.event_agent
         )
 
@@ -397,13 +414,13 @@ class Event(CanonicalBase):
             'categories': [str(cat) for cat in self.categories],
             'version': self.version.to_dict(callbacks=callbacks),
             'description': self.description,
-            'legacy': self.legacy,
+            'is_legacy': self.is_legacy,
             'event_agent': self.event_agent,
             'event_id': self.event_id
         }
 
 
-class EventSummary(CanonicalBase):
+class EventSummary(_EventBase):
     """
     A lightweight description of an event.
 
@@ -411,31 +428,22 @@ class EventSummary(CanonicalBase):
     state of the e-print version.
     """
 
-    identifier: VersionedIdentifier
     event_id: EventIdentifier
-    event_date: datetime
-    event_type: EventType
-    categories: List[Category]
-    description: str
-    legacy: bool
-    event_agent: Optional[str]
 
     def __init__(self, identifier: VersionedIdentifier,
-                 event_id: EventIdentifier,
                  event_date: datetime,
                  event_type: EventType,
-                 categories: List[Category],
+                 event_id: EventIdentifier,
+                 categories: Optional[List[Category]] = None,
                  description: str = '',
-                 legacy: bool = False,
+                 is_legacy: bool = False,
                  event_agent: Optional[str] = None) -> None:
-        self.identifier = identifier
         self.event_id = event_id
-        self.event_date = event_date
-        self.event_type = event_type
-        self.categories = categories
-        self.description = description
-        self.legacy = legacy
-        self.event_agent = event_agent
+        super(EventSummary, self).__init__(identifier, event_date, event_type,
+                                           categories=categories,
+                                           description=description,
+                                           is_legacy=is_legacy,
+                                           event_agent=event_agent)
 
     @classmethod
     @with_callbacks
@@ -443,12 +451,12 @@ class EventSummary(CanonicalBase):
                   callbacks: Iterable[Callback] = ()) -> 'EventSummary':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
-            event_id=EventIdentifier(data['event_id']),
             event_date=datetime.fromisoformat(data['event_date']),  # type: ignore ; pylint: disable=no-member
             event_type=EventType(data['event_type']),
+            event_id=EventIdentifier(data['event_id']),
             categories=[Category(cat) for cat in data['categories']],
             description=data['description'],
-            legacy=data['legacy'],
+            is_legacy=data['is_legacy'],
             event_agent=data.get('event_agent')
         )
 
@@ -460,7 +468,7 @@ class EventSummary(CanonicalBase):
             'event_type': self.event_type.value,
             'categories': [str(cat) for cat in self.categories],
             'description': self.description,
-            'legacy': self.legacy,
+            'is_legacy': self.is_legacy,
             'event_agent': self.event_agent,
             'event_id': self.event_id
         }

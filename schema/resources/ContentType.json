@@ -1,0 +1,9 @@
+{
+  "type": "string",
+  "enum": [
+    "pdf",
+    "targz",
+    "json",
+    "abs"
+  ]
+}
