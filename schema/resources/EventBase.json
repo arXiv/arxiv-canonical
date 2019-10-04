@@ -1,6 +1,13 @@
 {
   "title": "EventBase",
   "type": "object",
+  "required": [
+    "identifier",
+    "event_date",
+    "event_type",
+    "event_id",
+    "is_legacy"
+  ],
   "properties": {
     "@type": {
       "type": "string"
@@ -40,6 +47,5 @@
       ],
       "description": "Username or service name."
     }
-  },
-  "required": ["event_date", "event_type", "event_agent"]
+  }
 }

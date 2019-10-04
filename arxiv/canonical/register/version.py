@@ -34,7 +34,6 @@ class RegisterVersion(Base[D.VersionedIdentifier,
                                       integrity=i_member)
             elif isinstance(i_member.record, R.RecordMetadata):
                 assert isinstance(i_member.record.domain, D.Version)
-                print(i_member)
                 assert isinstance(i_member, I.IntegrityMetadata)
                 member = RegisterMetadata(i_member.name,
                                           domain=i_member.record.domain,

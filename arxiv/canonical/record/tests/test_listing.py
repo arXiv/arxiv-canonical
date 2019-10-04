@@ -94,6 +94,14 @@ class TestRecordListing(TestCase):
         self.assertEqual(record.key, record.stream.domain.ref)
         self.assertEqual(record.stream.content_type, D.ContentType.json,
                          'Correctly identified as a JSON resource')
+
+    def test_schema(self):
+        """Serialized record is schema compliant."""
+        record = RecordListing.from_domain(self.listing)
         raw = json.load(record.stream.content)
-        # TODO: update schema so that this can pass!
         jsonschema.validate(raw, self.schema, resolver=self.resolver)
+
+    def test_to_domain(self):
+        """Re-casting to domain should preserve state."""
+        record = RecordListing.from_domain(self.listing)
+        self.assertEqual(RecordListing.to_domain(record.stream), self.listing)

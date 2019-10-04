@@ -68,7 +68,8 @@ class CanonicalFile(CanonicalBase):
     content_type: ContentType
     filename: Optional[str]
     ref: URI
-    # content: Optional[Union[IO[bytes], URI]]
+
+    exclude_from_comparison = {'ref'}
 
     def __init__(self, created: datetime,
                  modified: datetime,

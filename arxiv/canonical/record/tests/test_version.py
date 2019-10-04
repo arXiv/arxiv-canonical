@@ -110,6 +110,7 @@ class TestRecordVersion(TestCase):
                          'Source resource is dereferenced correctly')
 
     def test_schema(self):
+        """Serialized record is schema compliant."""
         record = RecordVersion.from_domain(self.version, fake_dereferencer)
         raw = json.load(record.metadata.stream.content)
         jsonschema.validate(raw, self.schema, resolver=self.resolver)
@@ -117,7 +118,7 @@ class TestRecordVersion(TestCase):
     def test_to_domain(self):
         """Re-casting to domain should preserve state."""
         record = RecordVersion.from_domain(self.version, fake_dereferencer)
-        cast_version = record.to_domain()
+        cast_version = record.instance_to_domain()
         for key in self.version.__dict__.keys():
             self.assertEqual(getattr(cast_version, key),
                              getattr(self.version, key),

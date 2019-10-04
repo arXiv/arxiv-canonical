@@ -35,6 +35,7 @@ def checksum_io(content: IO[bytes]) -> str:
         content.seek(0)     # Make sure that we are at the start of the stream.
     hash_md5 = md5()
     for chunk in iter(lambda: content.read(4096), b""):
+
         hash_md5.update(chunk)
     if content.seekable:
         content.seek(0)     # Be a good neighbor for subsequent users.

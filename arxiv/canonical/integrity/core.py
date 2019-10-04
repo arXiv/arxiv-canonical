@@ -59,6 +59,9 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     to subclass.
     """
 
+    member_type: Type[_Member]
+    """The type of members contained by an instance of a register class."""
+
     def __init__(self, name: _Name,
                  record: Optional[_Record] = None,
                  members: Optional[Mapping[_MemberName, _Member]] = None,
@@ -74,14 +77,24 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     def from_record(cls: Type[_Self], record: _Record,
                     checksum: Optional[str] = None,
                     calculate_new_checksum: bool = True) -> _Self:
-        raise NotImplementedError("To be implemented by child class")
+        members = {
+            key: cls.member_type.from_record(member_record,
+                                             calculate_new_checksum=True)
+            for key, member_record in record.members.items()
+        }
+        manifest = cls.make_manifest(members)
+        if calculate_new_checksum:
+            checksum = calculate_checksum(manifest)
+        return cls(record.name, record=record, members=members,
+                   manifest=manifest, checksum=checksum)
 
     @classmethod
     def make_manifest(cls, members: Mapping[_MemberName, _Member]) -> Manifest:
         """Make a :class:`.Manifest` for this integrity collection."""
         entries = [cls.make_manifest_entry(members[n]) for n in members]
         number_of_events_by_type = {
-            etype: sum([e['number_of_events_by_type'][etype] for e in entries])
+            etype: sum([e['number_of_events_by_type'].get(etype, 0)
+                        for e in entries])
             for etype in EventType
         }
         return Manifest(

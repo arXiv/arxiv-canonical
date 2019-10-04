@@ -49,6 +49,41 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         if version.announced_date_first is None:
             raise ValueError('First announcement date not set')
 
+        # Dereference the source and render bitstreams, wherever they happen
+        # to live.
+        source_content = dereferencer(version.source.ref)
+        render_content = dereferencer(version.render.ref)
+
+        # From now on we refer to the source and render bitstreams with
+        # canonical URIs.
+        render_key = RecordVersion.make_key(version.identifier,
+                                            version.render.filename)
+        source_key = RecordVersion.make_key(version.identifier,
+                                            version.source.filename)
+        version.source.ref = source_key
+        version.render.ref = render_key
+        source = RecordFile(
+            key=source_key,
+            stream=RecordStream(
+                domain=version.source,
+                content=source_content,
+                content_type=version.source.content_type,
+                size_bytes=version.source.size_bytes,
+            ),
+            domain=version.source
+        )
+
+        render = RecordFile(
+            key=render_key,
+            stream=RecordStream(
+                domain=version.render,
+                content=render_content,
+                content_type=version.render.content_type,
+                size_bytes=version.render.size_bytes,
+            ),
+            domain=version.render
+        )
+
         if metadata is None:
             metadata = RecordMetadata.from_domain(version, callbacks=callbacks)
 
@@ -56,28 +91,8 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             version.identifier,
             members=RecordEntryMembers(
                 metadata=metadata,
-                source=RecordFile(
-                    key=RecordVersion.make_key(version.identifier,
-                                               version.source.filename),
-                    stream=RecordStream(
-                        domain=version.source,
-                        content=dereferencer(version.source.ref),
-                        content_type=version.source.content_type,
-                        size_bytes=version.source.size_bytes,
-                    ),
-                    domain=version.source
-                ),
-                render=RecordFile(
-                    key=RecordVersion.make_key(version.identifier,
-                                               version.render.filename),
-                    stream=RecordStream(
-                        domain=version.render,
-                        content=dereferencer(version.render.ref),
-                        content_type=version.render.content_type,
-                        size_bytes=version.render.size_bytes,
-                    ),
-                    domain=version.render
-                )
+                source=source,
+                render=render
             ),
             domain=version
         )
@@ -138,7 +153,8 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         assert 'source' in self.members
         return self.members['source']
 
-    def to_domain(self, callbacks: Iterable[D.Callback] = ()) -> D.Version:
+    def instance_to_domain(self, callbacks: Iterable[D.Callback] = ()) \
+            -> D.Version:
         """Deserialize an :class:`.RecordVersion` to an :class:`.Version`."""
         version = self.metadata.to_domain(self.metadata.stream,
                                           callbacks=callbacks)

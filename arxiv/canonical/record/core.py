@@ -119,3 +119,4 @@ class RecordBase(Generic[Name, MemberName, Member, Domain]):
     def make_manifest_key(cls, name: Name) -> D.Key:  # pylint: disable=unused-argument
         """Generate a full key that can be used to store a manifest."""
         ...  # pylint: disable=pointless-statement ; this is a stub.
+

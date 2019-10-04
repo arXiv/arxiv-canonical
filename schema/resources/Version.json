@@ -2,6 +2,20 @@
   "title": "Version",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "identifier",
+    "announced_date",
+    "announced_date_first",
+    "submitted_date",
+    "updated_date",
+    "metadata",
+    "is_announced",
+    "is_withdrawn",
+    "events",
+    "is_legacy",
+    "render",
+    "source"
+  ],
   "properties": {
     "@type": {
       "type": "string"

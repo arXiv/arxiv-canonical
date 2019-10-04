@@ -65,7 +65,7 @@ class RecordMetadata(RecordEntry[D.Version]):
         return BytesIO(content), len(content)
 
     @classmethod
-    def to_domain(self, stream: RecordStream,
+    def to_domain(cls, stream: RecordStream,
                   callbacks: Iterable[D.Callback] = ()) -> D.Version:
         assert stream.content is not None
         version = D.Version.from_dict(load(stream.content),

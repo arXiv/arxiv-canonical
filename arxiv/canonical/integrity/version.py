@@ -53,9 +53,23 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
 
         """
         calculate_new_checksum_for_members = bool(manifest is None)
-
-        render_checksum = checksum_from_manifest(manifest, R.RecordVersion.make_key(version.identifier, version.render.domain.filename)) if manifest else None
-        source_checksum = checksum_from_manifest(manifest, R.RecordVersion.make_key(version.identifier, version.source.domain.filename)) if manifest else None
+        render_checksum: Optional[str] = None
+        source_checksum: Optional[str] = None
+        if manifest:
+            render_checksum = checksum_from_manifest(
+                manifest,
+                R.RecordVersion.make_key(
+                    version.identifier,
+                    version.render.domain.filename
+                )
+            )
+            source_checksum = checksum_from_manifest(
+                manifest,
+                R.RecordVersion.make_key(
+                    version.identifier,
+                    version.source.domain.filename
+                )
+            )
 
         members = IntegrityVersionMembers(
             metadata=IntegrityMetadata.from_record(version.metadata),
@@ -114,6 +128,8 @@ class IntegrityEPrint(IntegrityBase[D.Identifier,
                                     D.VersionedIdentifier,
                                     IntegrityVersion]):
     """Integrity collection for an :class:`.EPrint`."""
+
+    member_type = IntegrityVersion
 
     @classmethod
     def make_manifest_entry(cls, member: IntegrityVersion) -> ManifestEntry:

@@ -28,17 +28,22 @@ class LazyMapView(collections.abc.MutableMapping):
 
 
 class LazyMap(collections.abc.MutableMapping):
-    def __init__(self, keys: List[Any], load: Callable[[Any], Any]) -> None:
+    def __init__(self, keys: List[Any], load: Callable[[Any], Any],
+                 strict: bool = False) -> None:
         self._keys = keys
         self._load = load
         self._data: Dict[Any, Any] = {}
+        self._strict = strict
 
     def __getitem__(self, key: Any) -> Any:
-        # if key not in self._keys:
-        #     raise KeyError(f'No such key: {key}')
-        if key not in self._data:
-            self._data[key] = self._load(key)
-        return self._data[key]
+        if self._strict and key not in self._keys:
+            raise KeyError(f'No such key: {key}')
+        try:
+            if key not in self._data:
+                self._data[key] = self._load(key)
+            return self._data[key]
+        except Exception as e:
+            raise KeyError(f'{key} not found or not supported') from e
 
     def __len__(self) -> int:
         return len(self._keys)

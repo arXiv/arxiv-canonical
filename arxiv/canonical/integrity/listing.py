@@ -17,7 +17,7 @@ class IntegrityListing(IntegrityEntryBase[R.RecordListing]):
     def from_record(cls: Type[_Self], record: R.RecordListing,
                     checksum: Optional[str] = None,
                     calculate_new_checksum: bool = True) -> _Self:
-        """Generate an :class:`.IntegrityListing` from a :class:`.RecordListing."""
+        """Make an :class:`.IntegrityListing` from a :class:`.RecordListing."""
         if calculate_new_checksum:
             checksum = calculate_checksum(record.stream)
         return cls(name=record.key, record=record, checksum=checksum)

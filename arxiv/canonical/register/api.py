@@ -6,8 +6,8 @@ See :class:`.RegisterAPI`.
 
 import datetime
 from collections import abc
-from typing import (Any, Optional, Iterable, Iterator, Union, Sequence, Tuple,
-                    overload)
+from typing import (Any, Optional, IO, Iterable, Iterator, Union, Sequence,
+                    Tuple, overload)
 
 from typing_extensions import Protocol, Literal
 
@@ -16,6 +16,7 @@ from .core import (D, R, I, ICanonicalStorage, ICanonicalSource, Base,
                    Year, Month, YearMonth, IStorableEntry)
 from .eprint import (RegisterEPrint, RegisterDay, RegisterMonth, RegisterYear,
                      RegisterEPrints)
+from .exceptions import NoSuchResource, ConsistencyError
 from .listing import (RegisterListing, RegisterListingDay,
                       RegisterListingMonth, RegisterListingYear,
                       RegisterListings)
@@ -74,36 +75,12 @@ class RegisterAPI(IRegisterAPI):
         self._register.add_events(self._storage, self._sources, *events)
         self._register.save(self._storage)
 
-    def load_version(self, identifier: D.VersionedIdentifier) -> D.Version:
-        """Load an e-print :class:`.Version` from the record."""
-        if not isinstance(identifier, D.VersionedIdentifier):
-            identifier = D.VersionedIdentifier(identifier)
-        ver = RegisterVersion.load(self._storage, self._sources, identifier)
-        return ver.domain
-
     def load_eprint(self, identifier: D.Identifier) -> D.EPrint:
         """Load an :class:`.EPrint` from the record."""
         eprint = RegisterEPrint.load(self._storage, self._sources, identifier)
+        if len(eprint.domain.versions) == 0:
+            raise NoSuchResource(f'No versions exist for {identifier}')
         return eprint.domain
-
-    def load_history(self, identifier: _ID) -> Iterable[D.EventSummary]:
-        """Load the event history of an :class:`.EPrint`."""
-        if not isinstance(identifier, (D.VersionedIdentifier, D.Identifier)):
-            try:
-                identifier = D.VersionedIdentifier(identifier)
-            except ValueError:
-                identifier = D.Identifier(identifier)
-
-        if isinstance(identifier, D.Identifier):
-            epr = RegisterEPrint.load(self._storage, self._sources, identifier)
-            return (summary
-                    for version in epr.domain.versions
-                    for summary in epr.domain.versions[version].events)
-        if isinstance(identifier, D.VersionedIdentifier):
-            return (summary
-                    for summary in self.load_version(identifier).events)
-        raise ValueError(f'Cannot load event history for {identifier};'
-                         ' invalid type')
 
     def load_event(self, identifier: str) -> D.Event:
         """Load an :class:`.Event` by identifier."""
@@ -148,12 +125,46 @@ class RegisterAPI(IRegisterAPI):
             return self._load_events_year(selector)
         raise ValueError(f'Cannot load events for {selector}; invalid type')
 
+    def load_history(self, identifier: _ID) -> Iterable[D.EventSummary]:
+        """Load the event history of an :class:`.EPrint`."""
+        if isinstance(identifier, D.Identifier):
+            epr = RegisterEPrint.load(self._storage, self._sources, identifier)
+            if len(epr.domain.versions) == 0:
+                raise NoSuchResource(f'No versions exist for {identifier}')
+
+            return (summary
+                    for version in epr.domain.versions
+                    for summary in epr.domain.versions[version].events)
+        if isinstance(identifier, D.VersionedIdentifier):
+            return (summary
+                    for summary in self.load_version(identifier).events)
+        raise ValueError(f'Cannot load event history for {identifier};'
+                         ' invalid type')
+
     def load_listing(self, date: datetime.date,
                      shard: str = D.Event.get_default_shard()) -> D.Listing:  # pylint: disable=no-member
         """Load a :class:`.Listing` for a particulate date."""
         identifier = D.ListingIdentifier.from_parts(date, shard)
         lst = RegisterListing.load(self._storage, self._sources, identifier)
         return lst.domain
+
+    def load_render(self, identifier: D.VersionedIdentifier) \
+            -> Tuple[D.CanonicalFile, IO[bytes]]:
+        version = self._load_version(identifier)
+        if version.record.render.stream.content is None:
+            raise NoSuchResource(f'Cannot load render for {identifier}')
+        return version.domain.render, version.record.render.stream.content
+
+    def load_source(self, identifier: D.VersionedIdentifier) \
+            -> Tuple[D.CanonicalFile, IO[bytes]]:
+        version = self._load_version(identifier)
+        if version.record.source.stream.content is None:
+            raise NoSuchResource(f'Cannot load source for {identifier}')
+        return version.domain.source, version.record.source.stream.content
+
+    def load_version(self, identifier: D.VersionedIdentifier) -> D.Version:
+        """Load an e-print :class:`.Version` from the record."""
+        return self._load_version(identifier).domain
 
     def _load_events_date(self, selector: datetime.date) \
             -> Tuple[Iterable[D.Event], int]:
@@ -186,6 +197,14 @@ class RegisterAPI(IRegisterAPI):
              for event in listing.record.domain.events),
             listing_year.number_of_events
         )
+
+    def _load_version(self, identifier: D.VersionedIdentifier) \
+            -> RegisterVersion:
+        try:
+            return RegisterVersion.load(self._storage, self._sources,
+                                        identifier)
+        except Exception as e:  # TODO: make this more specific.
+            raise NoSuchResource(f'No such version: {identifier}') from e
 
 
 listings_key = Literal['listings']
