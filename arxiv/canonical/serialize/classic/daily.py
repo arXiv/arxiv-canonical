@@ -34,7 +34,7 @@ serialized in the daily listing files.
 
 """
 
-from typing import Tuple, List, Mapping, Iterable
+from typing import Tuple, List, Mapping, Iterable, NamedTuple
 from collections import defaultdict
 from datetime import date, datetime
 import string
@@ -43,7 +43,7 @@ from itertools import chain, groupby
 
 import warnings
 
-from ...domain import Event, Identifier, EventType
+from ...domain import Event, Identifier, VersionedIdentifier, EventType
 
 Entry = Tuple[str, str]
 """An ``arxiv_id, category`` tuple."""
@@ -97,6 +97,16 @@ of some kind, e.g. ``9912003.4solv-int`` -> ``solv-int/9912003`` and
 ``solv-int/9912004``, but this is in a replacement section and there is only
 one version of ``solv-int/9912004``.
 """
+
+
+class EventData(NamedTuple):
+    """Data about events that can be extracted from the daily log."""
+
+    arxiv_id: str
+    event_datetime: datetime
+    event_type: EventType
+    version: int
+    categories: List[str]
 
 
 class DailyLogParser:
@@ -167,16 +177,13 @@ class LineParser:
     """Shared behavior among newstyle and oldstyle line parsing."""
 
     def _to_events(self, e_date: date, e_type: EventType,
-                   entries: Iterable[Entry],
-                   version: int = -1) -> Iterable[Event]:
+                   entries: Iterable[EventData],
+                   version: int = -1) -> Iterable[Tuple]:
         event_datetime = datetime(e_date.year, e_date.month, e_date.day)
         for paper_id, entries in groupby(entries, key=lambda o: o[0]):
-            yield Event(arxiv_id=Identifier(paper_id),
-                        event_date=event_datetime,
-                        event_type=e_type, version=version,
-                        categories=[category for _, category in entries])
+            yield EventData(paper_id, event_datetime, e_type, version, [category for _, category in entries])
 
-    def parse(self, e_date: date, archive: str, data: str) -> Iterable[Event]:
+    def parse(self, e_date: date, archive: str, data: str) -> Iterable[EventData]:
         """Parse data from a daily log file line."""
         new, cross, replace = data.split('|')
         return chain(self._to_events(e_date, EventType.NEW,

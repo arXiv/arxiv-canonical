@@ -52,9 +52,12 @@ class Identifier(str):
 
 class VersionedIdentifier(str):
     def __init__(self, value: str) -> None:
-        id_part, version_part = self.split('v', 1)
-        self.arxiv_id = Identifier(id_part)
-        self.version = int(version_part)
+        try:
+            id_part, version_part = self.split('v', 1)
+            self.arxiv_id = Identifier(id_part)
+            self.version = int(version_part)
+        except ValueError as e:
+            raise ValueError(f'Not a valid version identifier: {value}') from e
 
     @classmethod
     def from_parts(cls, arxiv_id: Identifier, version: int) \
