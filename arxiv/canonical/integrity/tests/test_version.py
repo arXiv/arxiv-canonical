@@ -65,8 +65,8 @@ class TestIntegrityVersion(TestCase):
         expected_entries = [
             {'key':
                 'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.json',
-             'checksum': 'FA_zwSyQFHGBhhoKkuA-eA==',
-             'size_bytes': 1117,
+             'checksum': 'xLOiGxEmoytrXeB7Nw3lHw==',
+             'size_bytes': 1187,
              'mime_type': 'application/json'},
             {'key': 'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.pdf',
              'checksum': '7OdqCRhN09_flc5fVUZ1Tg==',
@@ -78,6 +78,7 @@ class TestIntegrityVersion(TestCase):
              'size_bytes': 4304,
              'mime_type': 'application/gzip'}
         ]
+
         self.assertListEqual(integrity.manifest['entries'], expected_entries,
                              'Manifest contains the expected keys, checksums,'
                              ' sizes, and mime types.')
@@ -87,7 +88,7 @@ class TestIntegrityVersion(TestCase):
     def test_checksum(self):
         """A checksum is calculated for the whole Version."""
         integrity = IntegrityVersion.from_record(self.record)
-        self.assertEqual(integrity.checksum, 'LnhhxW9OSavnkUHTAwB1tQ==',
+        self.assertEqual(integrity.checksum, 'Nodg72IZ_8yIBJ9p6Y5DcQ==',
                          'Generates the expected checksum for the Version')
 
 
@@ -145,7 +146,7 @@ class TestIntegrityEPrint(TestCase):
     def test_checksum(self):
         """A checksum is calculated for the whole EPrint."""
         integrity = IntegrityEPrint.from_record(self.record)
-        self.assertEqual(integrity.checksum, 'Nao4hla8qRGKOEfcBwNvCA==',
+        self.assertEqual(integrity.checksum, 'mWuHpIkY8mvFST0dmlgk4w==',
                          'Generates the expected checksum for the EPrint')
 
     def test_manifest(self):
@@ -153,7 +154,7 @@ class TestIntegrityEPrint(TestCase):
         integrity = IntegrityEPrint.from_record(self.record)
         expected_entries = [
             {'key': '2901.00345v1',
-             'checksum': 'LnhhxW9OSavnkUHTAwB1tQ==',
+             'checksum': 'Nodg72IZ_8yIBJ9p6Y5DcQ==',
              'number_of_versions': 1,
              'number_of_events': 0,
              'number_of_events_by_type': {}}
