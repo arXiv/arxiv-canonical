@@ -32,17 +32,13 @@ class Reader(RegisterRole, ABC):
         'load_eprint',
         'load_history',
         'load_event',
-        'load_events'
+        'load_events',
+        'load_source',
+        'load_render'
     ]
 
 
-class Writer(RegisterRole, ABC):
-    register_supported = [
+class Writer(Reader, ABC):
+    register_supported = Reader.register_supported + [
         'add_events',
-        'load_listing',
-        'load_version',
-        'load_eprint',
-        'load_history',
-        'load_event',
-        'load_events'
     ]

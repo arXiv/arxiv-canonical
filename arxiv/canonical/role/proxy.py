@@ -1,26 +1,29 @@
-from typing import Any, List
+from typing import Any, Generic, List, Type, TypeVar
 
 from ..events import IEventStream
 from ..register import IRegisterAPI
 
 
-class RegisterAPIProxy(IRegisterAPI):
-    def __init__(self, register: IRegisterAPI, supported: List[str]) -> None:
-        self._register = register
+_Inner = TypeVar('_Inner')
+
+
+class _BaseProxy(Generic[_Inner]):
+    def __init__(self, inner: _Inner, supported: List[str]) -> None:
+        self._inner = inner
         self._supported = supported
 
     def __getattribute__(self, key: str) -> Any:
-        if not key.startswith('_') and key in self._supported:
-            return getattr(self._register, key)
+        if not key.startswith('_'):
+            if key in self._supported:
+                return getattr(self._inner, key)
+            elif hasattr(self._inner, key):
+                raise AttributeError(f'{key} is not supported by this proxy')
         return object.__getattribute__(self, key)
 
 
-class EventStreamProxy(IEventStream):
-    def __init__(self, stream: IEventStream, supported: List[str]) -> None:
-        self._stream = stream
-        self._supported = supported
+class RegisterAPIProxy(_BaseProxy[IRegisterAPI]):
+    pass
 
-    def __getattribute__(self, key: str) -> Any:
-        if not key.startswith('_') and key in self._supported:
-            return getattr(self._stream, key)
-        return object.__getattribute__(self, key)
+
+class EventStreamProxy(_BaseProxy[IEventStream]):
+    pass
