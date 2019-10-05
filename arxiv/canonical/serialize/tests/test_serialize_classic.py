@@ -7,8 +7,8 @@ from pprint import pprint
 
 import jsonschema
 
-from .. import serialize
-from ..serialize import classic
+from ... import serialize
+from .. import classic
 
 DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 ABS_ROOT = os.path.join(DATA, 'orig')
@@ -29,8 +29,8 @@ class TestClassicDeserialize(TestCase):
         self.resolver = jsonschema.RefResolver(resolver_path, None)
 
     def test_parse(self):
-        """Parse and reserialize a variety of classic abs records."""
-        with open(os.path.join(self.SCHEMA_PATH, 'EPrintMetadata.json')) as f:
+        """Can parse and reserialize classic abs records."""
+        with open(os.path.join(self.SCHEMA_PATH, 'Abs.json')) as f:
             schema = json.load(f)
 
         for abs in ALL_ABS:
@@ -39,5 +39,6 @@ class TestClassicDeserialize(TestCase):
                     json.loads(serialize.dumps(classic.abs.parse(abs))),
                     schema,
                     resolver=self.resolver
-                )
+                ),
+                f"Abs file {abs} is parsed successfully"
             )

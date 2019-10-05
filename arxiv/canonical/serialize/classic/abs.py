@@ -2,11 +2,11 @@
 
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, NamedTuple
 from functools import wraps
 from dateutil import parser
 from pytz import timezone
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.tz import tzutc, gettz
 
 from ... import domain
@@ -62,7 +62,38 @@ ASSUMED_LICENSE = domain.License(
 )
 
 
-def parse(path: str) -> domain.EPrint:
+class AbsRef(NamedTuple):
+    identifier: domain.VersionedIdentifier
+    submitted_date: date
+    announced_month: str
+    source_type: str
+    size_kilobytes: int
+
+
+class AbsData(NamedTuple):
+    identifier: domain.VersionedIdentifier
+    submitter: Optional[domain.Person]
+    submitted_date: date
+    announced_month: str
+    license: domain.License
+    primary_classification: domain.Category
+    title: str
+    abstract: str
+    authors: str
+    source_type: str
+    size_kilobytes: int
+    secondary_classification: List[domain.Category]
+    journal_ref: Optional[str]
+    report_num: Optional[str]
+    doi: Optional[str]
+    msc_class: Optional[str]
+    acm_class: Optional[str]
+    proxy: Optional[str]
+    comments: str
+    previous_versions: List[AbsRef]
+
+
+def parse(path: str) -> AbsData:
     with open(path, mode='r', encoding='latin-1') as f:
         raw = f.read()
 
@@ -123,13 +154,11 @@ def parse(path: str) -> domain.EPrint:
     else:
         license = ASSUMED_LICENSE
 
-    return domain.EPrint(
-        arxiv_id=domain.Identifier(arxiv_id),
-        version=versions[-1].version,
-        legacy=True,
+    return AbsData(
+        identifier=versions[-1].identifier,
         submitter=domain.Person(full_name=name) if name else None,
         submitted_date=versions[-1].submitted_date,
-        announced_date=None,
+        announced_month=versions[-1].announced_month,
         license=license,
         primary_classification=primary_classification,
         title=fields['title'],
@@ -146,7 +175,6 @@ def parse(path: str) -> domain.EPrint:
         proxy=fields.get('proxy'),
         comments=fields.get('comments', ''),
         previous_versions=versions[:-1],
-        history=[]
     )
 
 
@@ -182,10 +210,9 @@ def _parse_announced(arxiv_id: str) -> str:
     return f'{year}-{mm}'
 
 
-def _parse_versions(arxiv_id: str, version_entry_list: List) \
-        -> List[domain.VersionReference]:
+def _parse_versions(arxiv_id: str, version_entry_list: List) -> List[AbsRef]:
     """Parse the version entries from the arXiv .abs file."""
-    version_entries: List[domain.VersionReference] = list()
+    version_entries: List[AbsRef] = list()
     for parsed_version_entry in version_entry_list:
         date_match = RE_DATE_COMPONENTS.match(parsed_version_entry)
         if not date_match:
@@ -198,12 +225,17 @@ def _parse_versions(arxiv_id: str, version_entry_list: List) \
 
         source_type = date_match.group('source_type')
         size_kilobytes = int(date_match.group('size_kilobytes'))
+        V = len(version_entries) + 1
+        identifier = \
+            domain.VersionedIdentifier(f'{domain.Identifier(arxiv_id)}v{V}')
         version_entries.append(
-            domain.VersionReference(arxiv_id=arxiv_id,
-                                    version=len(version_entries) + 1,
-                                    submitted_date=submitted_date,
-                                    announced_date=_parse_announced(arxiv_id),
-                                    source_type=source_type,
-                                    size_kilobytes=size_kilobytes))
+            AbsRef(
+                identifier=identifier,
+                submitted_date=submitted_date,
+                announced_month=_parse_announced(arxiv_id),
+                source_type=source_type,
+                size_kilobytes=size_kilobytes
+            )
+        )
 
     return version_entries

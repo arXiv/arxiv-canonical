@@ -128,7 +128,7 @@ class DailyLogParser:
         event_date = date(year=year, month=month, day=day)
         return event_date
 
-    def parse(self, path: str) -> Iterable[Event]:
+    def parse(self, path: str) -> Iterable[EventData]:
         """
         Parse the daily log file.
 
@@ -146,7 +146,7 @@ class DailyLogParser:
         return chain.from_iterable((self.parse_line(line)
                                     for line in open(path, 'r', -1)))
 
-    def parse_line(self, raw: str) -> Iterable[Event]:
+    def parse_line(self, raw: str) -> Iterable[EventData]:
         """
         Parse a single line from the daily log file.
 
@@ -177,13 +177,15 @@ class LineParser:
     """Shared behavior among newstyle and oldstyle line parsing."""
 
     def _to_events(self, e_date: date, e_type: EventType,
-                   entries: Iterable[EventData],
-                   version: int = -1) -> Iterable[Tuple]:
+                   entries: Iterable[Entry],
+                   version: int = -1) -> Iterable[EventData]:
         event_datetime = datetime(e_date.year, e_date.month, e_date.day)
         for paper_id, entries in groupby(entries, key=lambda o: o[0]):
-            yield EventData(paper_id, event_datetime, e_type, version, [category for _, category in entries])
+            yield EventData(paper_id, event_datetime, e_type, version,
+                            [category for _, category in entries])
 
-    def parse(self, e_date: date, archive: str, data: str) -> Iterable[EventData]:
+    def parse(self, e_date: date, archive: str, data: str) \
+            -> Iterable[EventData]:
         """Parse data from a daily log file line."""
         new, cross, replace = data.split('|')
         return chain(self._to_events(e_date, EventType.NEW,
