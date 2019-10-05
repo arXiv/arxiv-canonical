@@ -7,8 +7,8 @@ from pprint import pprint
 
 import jsonschema
 
-from ... import serialize
-from .. import classic
+from .... import serialize
+from ... import classic
 
 DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 ABS_ROOT = os.path.join(DATA, 'orig')
