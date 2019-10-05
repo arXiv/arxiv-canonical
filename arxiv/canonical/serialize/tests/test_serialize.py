@@ -6,7 +6,7 @@ import os
 
 import jsonschema
 
-from .. import domain, serialize
+from ... import domain, serialize
 
 
 class TestSerializeDeserialize(TestCase):
