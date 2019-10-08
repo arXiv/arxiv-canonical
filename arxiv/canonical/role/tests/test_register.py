@@ -11,9 +11,7 @@ from ..register import Reader, Writer
 from ..role import Primary, Repository
 
 
-class TestPrimary(TestCase):
-    """Primary has access to the read and write API for the register."""
-
+class RegisterTestCase(TestCase):
     def setUp(self):
         self.mock_source = mock.MagicMock(spec=ICanonicalSource)
         self.mock_source.can_resolve.return_value = True
@@ -72,12 +70,14 @@ class TestPrimary(TestCase):
         self.timestamp = created
         self.event_date = self.timestamp.date()
 
+
+class TestPrimary(RegisterTestCase):
+    """Primary has access to the read and write API for the register."""
+
     def test_add_load_event(self):
-        """Primary can add + load an event; repository can load but not add."""
+        """Primary can add + load an event."""
         self.primary.register.add_events(self.event)
 
-        with self.assertRaises(AttributeError):
-            self.repository.register.add_events(self.event)
         event_id = self.event.event_id
         self.assertEqual(self.primary.register.load_event(event_id),
                          self.event,
@@ -92,20 +92,9 @@ class TestPrimary(TestCase):
         self.assertEqual(N, 0, 'There are no events')
         self.assertEqual(len(list(events)), N, 'There are truly no events')
 
-        events, N = self.repository.register.load_events(self.event_date)
-        self.assertEqual(N, 0, 'There are no events')
-        self.assertEqual(len(list(events)), N, 'There are truly no events')
-
         self.primary.register.add_events(self.event)
 
         events, N = self.primary.register.load_events(self.event_date)
-        self.assertEqual(N, 1, 'There is now one event')
-        event_list = list(events)
-        self.assertEqual(len(event_list), N, 'There is truly 1 event')
-        self.assertEqual(event_list[0], self.event,
-                         'And that event is the one that we just added')
-
-        events, N = self.repository.register.load_events(self.event_date)
         self.assertEqual(N, 1, 'There is now one event')
         event_list = list(events)
         self.assertEqual(len(event_list), N, 'There is truly 1 event')
@@ -116,9 +105,6 @@ class TestPrimary(TestCase):
         self.assertEqual(N, 0, 'But there are no events from today')
         self.assertEqual(len(list(events)), N, 'Indeed, no events')
 
-        events, N = self.repository.register.load_events(datetime.now().date())
-        self.assertEqual(N, 0, 'But there are no events from today')
-        self.assertEqual(len(list(events)), N, 'Indeed, no events')
 
     def test_add_load_events_by_month(self):
         """Can add events and load them using month selector."""
@@ -236,4 +222,156 @@ class TestPrimary(TestCase):
         self.assertEqual(content.read(), b'foocontent', 'Loads source content')
 
 
+class TestRepository(RegisterTestCase):
+    """Repository is a read-only role."""
+
+    def test_cannot_add_events(self):
+        """Repository cannot add events."""
+        with self.assertRaises(AttributeError):
+            self.repository.register.add_events(self.event)
+
+    def test_load_events_by_date(self):
+        """Can load events using date selector."""
+        events, N = self.repository.register.load_events(self.event_date)
+        self.assertEqual(N, 0, 'There are no events')
+        self.assertEqual(len(list(events)), N, 'There are truly no events')
+
+        self.primary.register.add_events(self.event)
+
+        events, N = self.repository.register.load_events(self.event_date)
+        self.assertEqual(N, 1, 'There is now one event')
+        event_list = list(events)
+        self.assertEqual(len(event_list), N, 'There is truly 1 event')
+        self.assertEqual(event_list[0], self.event,
+                         'And that event is the one that we just added')
+
+        events, N = self.repository.register.load_events(datetime.now().date())
+        self.assertEqual(N, 0, 'But there are no events from today')
+        self.assertEqual(len(list(events)), N, 'Indeed, no events')
+
+    def test_add_load_events_by_month(self):
+        """Can add events and load them using month selector."""
+        selector = (self.event_date.year, self.event_date.month)
+        events, N = self.repository.register.load_events(selector)
+        self.assertEqual(N, 0, 'There are no events')
+        self.assertEqual(len(list(events)), N, 'There are truly no events')
+
+        self.primary.register.add_events(self.event)
+
+        events, N = self.repository.register.load_events(selector)
+        self.assertEqual(N, 1, 'There is now one event')
+        event_list = list(events)
+        self.assertEqual(len(event_list), N, 'There is truly 1 event')
+        self.assertEqual(event_list[0], self.event,
+                         'And that event is the one that we just added')
+
+        selector = (datetime.now().year, datetime.now().month)
+        events, N = self.repository.register.load_events(selector)
+        self.assertEqual(N, 0, 'But there are no events from this month')
+        self.assertEqual(len(list(events)), N, 'Indeed, no events')
+
+    def test_add_load_events_by_year(self):
+        """Can load events using year selector."""
+        events, N = self.repository.register.load_events(self.event_date.year)
+        self.assertEqual(N, 0, 'There are no events')
+        self.assertEqual(len(list(events)), N, 'There are truly no events')
+
+        self.primary.register.add_events(self.event)
+
+        events, N = self.repository.register.load_events(self.event_date.year)
+        self.assertEqual(N, 1, 'There is now one event')
+        event_list = list(events)
+        self.assertEqual(len(event_list), N, 'There is truly 1 event')
+        self.assertEqual(event_list[0], self.event,
+                         'And that event is the one that we just added')
+
+        events, N = self.repository.register.load_events(datetime.now().year)
+        self.assertEqual(N, 0, 'But there are no events from this year')
+        self.assertEqual(len(list(events)), N, 'Indeed, no events')
+
+    def test_can_load_listing(self):
+        """Can load listings."""
+        listing = self.repository.register.load_listing(self.event_date)
+        self.assertEqual(len(listing.events), 0, 'Listing has no events')
+
+        self.primary.register.add_events(self.event)
+
+        listing = self.repository.register.load_listing(self.event_date)
+        self.assertEqual(len(listing.events), 1,
+                         'But it has one after we add an event')
+        self.assertEqual(listing.events[0], self.event,
+                         'And it is the event that we added')
+
+    def test_can_load_version(self):
+        """Can load a Version that was created via an event."""
+        with self.assertRaises(Exception):
+            self.repository.register.load_version(self.event.identifier)
+
+        self.primary.register.add_events(self.event)
+
+        version = self.repository.register.load_version(self.event.identifier)
+        self.assertEqual(version, self.event.version,
+                         'Can load the Version that we just added')
+
+    def test_can_load_eprint(self):
+        """Can load an EPrint that was created via an event."""
+        with self.assertRaises(Exception):
+            self.repository.register.load_eprint(
+                self.event.identifier.arxiv_id
+            )
+
+        self.primary.register.add_events(self.event)
+
+        eprint = self.repository.register.load_eprint(
+            self.event.identifier.arxiv_id
+        )
+        self.assertEqual(eprint.versions[self.event.identifier],
+                         self.event.version,
+                         'Can load the Version that we just added')
+
+    def test_can_load_history(self):
+        """Can load the event history of a Version or EPrint."""
+        with self.assertRaises(NoSuchResource):
+            self.repository.register.load_history(
+                self.event.identifier.arxiv_id
+            )
+        with self.assertRaises(NoSuchResource):
+            self.repository.register.load_history(self.event.identifier)
+
+        self.primary.register.add_events(self.event)
+
+        summary = next(
+            self.repository.register.load_history(
+                self.event.identifier.arxiv_id
+            )
+        )
+        self.assertEqual(summary, self.event.summary,
+                         'History includes a summary of our event')
+
+        summary = next(
+            self.repository.register.load_history(self.event.identifier)
+        )
+        self.assertEqual(summary, self.event.summary,
+                         'History includes a summary of our event')
+
+    def test_can_load_render(self):
+        """Can load an EPrint that was created via an event."""
+        with self.assertRaises(NoSuchResource):
+            self.repository.register.load_render(self.event.identifier)
+
+        self.primary.register.add_events(self.event)
+
+        cf, content = self.repository.register.load_render(
+            self.event.identifier
+        )
+        self.assertEqual(cf, self.event.version.render,
+                         'Loads the render file')
+        self.assertEqual(content.read(), b'foocontent', 'Loads render content')
+
+        cf, content = self.repository.register.load_source(
+            self.event.identifier
+        )
+        self.assertEqual(cf, self.event.version.source,
+                         'Loads the source file')
+        self.assertEqual(content.read(), b'foocontent', 'Loads source content')
 

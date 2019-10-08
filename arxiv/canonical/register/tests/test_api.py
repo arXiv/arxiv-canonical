@@ -4,40 +4,9 @@ from pytz import UTC
 from typing import Callable, Tuple, Dict, List, IO
 from unittest import TestCase, mock
 
+from ...services.store import InMemoryStorage
 from ..api import (RegisterAPI, ICanonicalSource, ICanonicalStorage,
                    IStorableEntry, Manifest, NoSuchResource, D, R)
-
-
-class InMemoryStorage(ICanonicalStorage):
-    def __init__(self):
-        self._streams: Dict[D.URI, Tuple[R.RecordStream, str]] = {}
-        self._manifests: Dict[str, Manifest] = {}
-
-    def can_resolve(self, uri: D.URI) -> bool:
-        return bool(uri in self._streams)
-
-    def load_deferred(self, key: D.URI) -> IO[bytes]:
-        return self._streams[key][0].content
-
-    def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, str]:
-        assert isinstance(key, D.Key)
-        return self._streams[key]
-
-    def list_subkeys(self, key: str) -> List[str]:
-        return [k.split(key, 1)[1].split('/', 1)[0]
-                for k in self._streams.keys()
-                if k.startswith(key) and k != key]
-
-    def store_entry(self, ri: IStorableEntry) -> None:
-        assert ri.record.stream.content is not None
-        self._streams[ri.record.key] = (ri.record.stream, ri.checksum)
-        ri.record.stream.domain.ref = ri.record.key
-
-    def store_manifest(self, key: str, manifest: Manifest) -> None:
-        self._manifests[key] = manifest
-
-    def load_manifest(self, key: str) -> Manifest:
-        return self._manifests[key]
 
 
 class TestAPI(TestCase):

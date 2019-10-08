@@ -26,6 +26,7 @@ arxiv-auth = "*"
 arxiv-canonical = {path = "."}
 mypy = "==0.720"
 moto = "==1.3.13"
+retry = "*"
 
 [requires]
 python_version = "3.6"

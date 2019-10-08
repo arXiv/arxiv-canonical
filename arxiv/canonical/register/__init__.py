@@ -4,14 +4,17 @@ from .api import (RegisterAPI, IRegisterAPI, ICanonicalStorage,
                   RegisterEPrints, RegisterListing, RegisterListings,
                   RegisterListingDay, RegisterListingMonth,
                   RegisterListingYear, RegisterMetadata, RegisterMonth,
-                  RegisterVersion, RegisterYear)
+                  RegisterVersion, RegisterYear, NoSuchResource,
+                  ConsistencyError)
 
 __all__ = (
     'Base',
+    'ConsistencyError',
     'IRegisterAPI',
     'ICanonicalStorage',
     'ICanonicalSource',
     'IStorableEntry',
+    'NoSuchResource',
     'RegisterAPI',
     'RegisterDay',
     'RegisterEPrint',

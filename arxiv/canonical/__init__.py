@@ -136,3 +136,5 @@ Announcement listings
 """
 
 from . import serialize, domain
+from .register import NoSuchResource
+from .role import Primary, Repository, Replicant, Observer
