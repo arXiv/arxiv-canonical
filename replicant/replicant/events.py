@@ -5,6 +5,8 @@ from arxiv.integration.kinesis.consumer import BaseConsumer, process_stream
 
 
 class EventConsumer(BaseConsumer):
+    """Consumes announcement events, and updates the canonical record."""
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(EventConsumer, self).__init__(*args, **kwargs)
         self.on_event: Callable[[Event], None] = kwargs['on_event']
@@ -15,7 +17,6 @@ class EventConsumer(BaseConsumer):
 
 
 class EventStream(IEventStream):
-    """Consumes announcement events, and updates the canonical record."""
 
     def __init__(self, config: Mapping[str, Any]) -> None:
         self._config = config
