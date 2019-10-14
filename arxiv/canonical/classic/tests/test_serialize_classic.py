@@ -7,7 +7,7 @@ from pprint import pprint
 
 import jsonschema
 
-from .... import serialize
+from ... import serialize
 from ... import classic
 
 DATA = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')

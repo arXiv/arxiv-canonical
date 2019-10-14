@@ -9,7 +9,7 @@ from pytz import timezone
 from datetime import datetime, date
 from dateutil.tz import tzutc, gettz
 
-from ... import domain
+from .. import domain
 
 EASTERN = gettz('US/Eastern')
 

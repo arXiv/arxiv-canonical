@@ -34,7 +34,7 @@ serialized in the daily listing files.
 
 """
 
-from typing import Tuple, List, Mapping, Iterable, NamedTuple
+from typing import Tuple, List, Mapping, Iterable, NamedTuple, Optional
 from collections import defaultdict
 from datetime import date, datetime
 import string
@@ -43,7 +43,7 @@ from itertools import chain, groupby
 
 import warnings
 
-from ...domain import Event, Identifier, VersionedIdentifier, EventType
+from ..domain import Event, Identifier, VersionedIdentifier, EventType
 
 Entry = Tuple[str, str]
 """An ``arxiv_id, category`` tuple."""
@@ -128,7 +128,13 @@ class DailyLogParser:
         event_date = date(year=year, month=month, day=day)
         return event_date
 
-    def parse(self, path: str) -> Iterable[EventData]:
+    def _parse_date_only(self, raw: str) -> Optional[date]:
+        match = LINE.match(line)
+        if match is None:
+            return
+        return self._parse_date(match.group('event_date'))
+
+    def parse(self, path: str, for_date: Optional[date] = None) -> Iterable[EventData]:
         """
         Parse the daily log file.
 
@@ -140,11 +146,14 @@ class DailyLogParser:
         Returns
         -------
         iterable
-            Each item is an :class:`.Event` from the log file.
+            Each item is an :class:`.EventData` from the log file.
 
         """
-        return chain.from_iterable((self.parse_line(line)
-                                    for line in open(path, 'r', -1)))
+        return chain.from_iterable(
+            (self.parse_line(line) for line in open(path, 'r', -1)
+             if for_date is None
+             or for_date == self._parse_date_only(line))
+        )
 
     def parse_line(self, raw: str) -> Iterable[EventData]:
         """
@@ -158,7 +167,7 @@ class DailyLogParser:
         Returns
         -------
         iterable
-            Yields :class:`.Event` instances from the line.
+            Yields :class:`.EventData` instances from the line.
 
         """
         match = LINE.match(raw)

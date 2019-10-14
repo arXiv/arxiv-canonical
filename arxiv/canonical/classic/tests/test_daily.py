@@ -4,7 +4,7 @@ from unittest import TestCase
 import os
 
 from .. import daily
-from ....domain import Event, EventType
+from ...domain import Event, EventType
 
 sample_data = """
 980302|gr-qc|9802067-9802072|hep-th9712213 hep-th9802173 physics.class-ph9802047|9708027

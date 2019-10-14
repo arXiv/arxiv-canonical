@@ -10,7 +10,7 @@ from uuid import UUID
 
 from backports.datetime_fromisoformat import MonkeyPatch
 
-from . import classic
+from .. import classic
 from .. import domain
 
 
