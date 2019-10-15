@@ -45,7 +45,7 @@ import warnings
 
 from ..domain import Event, Identifier, VersionedIdentifier, EventType
 
-Entry = Tuple[str, str]
+Entry = Tuple[Identifier, str]
 """An ``arxiv_id, category`` tuple."""
 
 LINE = re.compile(r'^(?P<event_date>\d{6})\|(?P<archive>[a-z-]+)'
@@ -102,8 +102,8 @@ one version of ``solv-int/9912004``.
 class EventData(NamedTuple):
     """Data about events that can be extracted from the daily log."""
 
-    arxiv_id: str
-    event_datetime: datetime
+    arxiv_id: Identifier
+    event_date: date
     event_type: EventType
     version: int
     categories: List[str]
@@ -128,13 +128,14 @@ class DailyLogParser:
         event_date = date(year=year, month=month, day=day)
         return event_date
 
-    def _parse_date_only(self, raw: str) -> Optional[date]:
+    def _parse_date_only(self, line: str) -> Optional[date]:
         match = LINE.match(line)
         if match is None:
-            return
+            return None
         return self._parse_date(match.group('event_date'))
 
-    def parse(self, path: str, for_date: Optional[date] = None) -> Iterable[EventData]:
+    def parse(self, path: str, for_date: Optional[date] = None) \
+            -> Iterable[EventData]:
         """
         Parse the daily log file.
 
@@ -188,9 +189,9 @@ class LineParser:
     def _to_events(self, e_date: date, e_type: EventType,
                    entries: Iterable[Entry],
                    version: int = -1) -> Iterable[EventData]:
-        event_datetime = datetime(e_date.year, e_date.month, e_date.day)
+        event_date = date(e_date.year, e_date.month, e_date.day)
         for paper_id, entries in groupby(entries, key=lambda o: o[0]):
-            yield EventData(paper_id, event_datetime, e_type, version,
+            yield EventData(Identifier(paper_id), event_date, e_type, version,
                             [category for _, category in entries])
 
     def parse(self, e_date: date, archive: str, data: str) \
@@ -455,3 +456,26 @@ class NewStyleLineParser(LineParser):
             paper_id = '/'.join(squashed.groups())
         assert IDENTIFIER.match(paper_id) is not None
         return paper_id, abs_only, categories_list
+
+
+def parse(path: str, for_date: Optional[date] = None) -> Iterable[EventData]:
+    """
+    Parse the daily log file.
+
+    Parameters
+    ----------
+    path : str
+        Path to the daily log file.
+
+    Returns
+    -------
+    iterable
+        Each item is an :class:`.EventData` from the log file.
+
+    """
+    return DailyLogParser().parse(path, for_date=for_date)
+
+
+def scan(path: str, identifier: Identifier) -> Iterable[EventData]:
+    return (ed for ed in DailyLogParser().parse(path)
+            if ed.arxiv_id == identifier)

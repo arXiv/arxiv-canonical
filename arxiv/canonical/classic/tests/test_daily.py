@@ -1,7 +1,8 @@
 """Tests for :mod:`.serialize.classic.daily`."""
 
-from unittest import TestCase
 import os
+from datetime import date
+from unittest import TestCase
 
 from .. import daily
 from ...domain import Event, EventType
@@ -109,6 +110,18 @@ class TestParse(TestCase):
 
         events = [e for e in iterable]
         self.assertEqual(len(events), 1882, 'Reads 1,882 events from the log.')
+
+    def test_for_date(self):
+        """Parse only events for date 2019-04-12."""
+        parser = daily.DailyLogParser()
+        iterable = parser.parse(os.path.join(DATA, 'new.daily.log'),
+                                for_date=date(2019, 4, 12))
+
+        self.assertTrue(hasattr(iterable, '__iter__'))
+
+        events = [e for e in iterable]
+        self.assertEqual(len(events), 951, 'Reads 951 events from the log.')
+
 
 
 class TestWeirdEdgeCase(TestCase):

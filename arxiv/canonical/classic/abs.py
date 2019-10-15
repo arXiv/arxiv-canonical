@@ -2,14 +2,14 @@
 
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple, NamedTuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, NamedTuple
 from functools import wraps
 from dateutil import parser
 from pytz import timezone
 from datetime import datetime, date
 from dateutil.tz import tzutc, gettz
 
-from .. import domain
+from .. import domain as D
 
 EASTERN = gettz('US/Eastern')
 
@@ -57,64 +57,115 @@ RE_ARXIV_NEW_ID = re.compile(
     r'(v(?P<version>[1-9]\d*))?([#\/].*)?$'
 )
 
-ASSUMED_LICENSE = domain.License(
+ASSUMED_LICENSE = D.License(
     href='http://arxiv.org/licenses/nonexclusive-distrib/1.0/'
 )
 
 
 class AbsRef(NamedTuple):
-    identifier: domain.VersionedIdentifier
-    submitted_date: date
+    identifier: D.VersionedIdentifier
+    submitted_date: datetime
     announced_month: str
     source_type: str
     size_kilobytes: int
 
 
 class AbsData(NamedTuple):
-    identifier: domain.VersionedIdentifier
-    submitter: Optional[domain.Person]
-    submitted_date: date
+    identifier: D.VersionedIdentifier
+    submitter: Optional[D.Person]
+    submitted_date: datetime
     announced_month: str
-    license: domain.License
-    primary_classification: domain.Category
+    updated_date: datetime
+    license: D.License
+    primary_classification: D.Category
     title: str
     abstract: str
     authors: str
     source_type: str
     size_kilobytes: int
-    secondary_classification: List[domain.Category]
-    journal_ref: Optional[str]
-    report_num: Optional[str]
-    doi: Optional[str]
-    msc_class: Optional[str]
-    acm_class: Optional[str]
-    proxy: Optional[str]
-    comments: str
-    previous_versions: List[AbsRef]
+    submission_type: D.EventType
+    secondary_classification: List[D.Category]
+    journal_ref: Optional[str] = None
+    report_num: Optional[str] = None
+    doi: Optional[str] = None
+    msc_class: Optional[str] = None
+    acm_class: Optional[str] = None
+    proxy: Optional[str] = None
+    comments: str = ''
+    previous_versions: Optional[List[AbsRef]] = None
+
+
+# TODO: implement this!
+def get_path(base_path: str, identifier: D.VersionedIdentifier) -> str:
+    # Needs to handle both new-style and old-style identifiers.
+    # return os.path.join(base_path, )
+    return ""
+
+
+# TODO: implement this!
+def parse_versions(base_path: str, identifier: D.Identifier) \
+        -> Iterable[AbsData]:
+    # Needs to handle both new-style and old-style identifiers.
+    return [parse(get_path(base_path, v))
+            for v in list_versions(base_path, identifier)]
+
+
+def list_all(base_path: str, from_id: Optional[D.Identifier] = None,
+             to_id: Optional[D.Identifier] = None) -> Iterable[D.Identifier]:
+    """List all of the identifiers for which we have abs files."""
+    return []
+
+
+def list_versions(base_path: str, identifier: D.Identifier) \
+        -> Iterable[D.VersionedIdentifier]:
+    """List all of the versions for an identifier from abs files."""
+    return []
+
+
+def get_source_path(base_path: str, identifier: D.VersionedIdentifier) \
+        -> D.URI:
+    ...
+
+
+def get_render_path(base_path: str, identifier: D.VersionedIdentifier) \
+        -> D.URI:
+    # If a render exists (ps_cache), return a file:// uri; otherwise
+    # return an https:// uri.
+    ...
+
+
+def get_source(base_path: str, identifier: D.VersionedIdentifier) \
+        -> D.CanonicalFile:
+    ...
+
+def get_render(base_path: str, identifier: D.VersionedIdentifier) \
+        -> D.CanonicalFile:
+    ...
 
 
 def parse(path: str) -> AbsData:
     with open(path, mode='r', encoding='latin-1') as f:
         raw = f.read()
 
-    # TODO: clean up
-    modified = datetime.fromtimestamp(os.path.getmtime(path), tz=EASTERN)
-    modified = modified.astimezone(tz=tzutc())
+    # The best we can do to infer when the last update was made was to examine
+    # the modification time of the abs file itself.
+    mtime = os.path.getmtime(path)
+    modified = datetime.fromtimestamp(mtime, tz=EASTERN).astimezone(tz=tzutc())
 
-    # there are two main components to an .abs file that contain data,
-    # but the split must always return four components
+    # There are two main components to an .abs file that contain data,
+    # but the split must always return four components.
     components = RE_ABS_COMPONENTS.split(raw)
     if not len(components) == 4:
         raise IOError('Unexpected number of components parsed from .abs.')
 
-    # everything else is in the second main component
+    # Everything else is in the second main component.
     prehistory, misc_fields = re.split(r'\n\n', components[1])
 
     fields: Dict[str, Any] = _parse_metadata(key_value_block=misc_fields)
-    fields['abstract'] = components[2]  # abstract is the first main component
+    # Abstract is the first main component.
+    fields['abstract'] = components[2]
 
     id_match = RE_ARXIV_ID_FROM_PREHISTORY.match(prehistory)
-
     if not id_match:
         raise IOError('Could not extract arXiv ID from prehistory component.')
 
@@ -122,7 +173,7 @@ def parse(path: str) -> AbsData:
     prehistory = re.sub(r'^.*\n', '', prehistory)
     parsed_version_entries = re.split(r'\n', prehistory)
 
-    # submitter data
+    # Submitter data.
     from_match = RE_FROM_FIELD.match(parsed_version_entries.pop(0))
     if not from_match:
         raise IOError('Could not extract submitter data.')
@@ -131,7 +182,7 @@ def parse(path: str) -> AbsData:
     if name is not None:
         name = name.rstrip()
 
-    # get the version history for this particular version of the document
+    # Get the version history for this particular version of the document.
     if not len(parsed_version_entries) >= 1:
         raise IOError('At least one version entry expected.')
 
@@ -150,15 +201,23 @@ def parse(path: str) -> AbsData:
         primary_classification = match.group('archive')
 
     if 'license' in fields:
-        license = domain.License(fields['license'])
+        license = D.License(fields['license'])
     else:
         license = ASSUMED_LICENSE
 
+    if versions[-1].identifier.version == 1:
+        submission_type = D.EventType.NEW
+    elif versions[-1].size_kilobytes == 0:
+        submission_type = D.EventType.WITHDRAWN
+    else:
+        submission_type = D.EventType.REPLACED
+
     return AbsData(
         identifier=versions[-1].identifier,
-        submitter=domain.Person(full_name=name) if name else None,
+        submitter=D.Person(full_name=name) if name else None,
         submitted_date=versions[-1].submitted_date,
         announced_month=versions[-1].announced_month,
+        updated_date=modified,
         license=license,
         primary_classification=primary_classification,
         title=fields['title'],
@@ -166,6 +225,7 @@ def parse(path: str) -> AbsData:
         authors=fields['authors'],
         source_type=versions[-1].source_type,
         size_kilobytes=versions[-1].size_kilobytes,
+        submission_type=submission_type,
         secondary_classification=secondary_classification,
         journal_ref=fields.get('journal_ref'),
         report_num=fields.get('report_num'),
@@ -187,11 +247,9 @@ def _parse_metadata(key_value_block: str) -> Dict[str, str]:
     for field_line in field_lines:
         field_match = RE_FIELD_COMPONENTS.match(field_line)
         if field_match and field_match.group('field') in NAMED_FIELDS:
-            field_name = field_match.group(
-                'field').lower().replace('-', '_')
+            field_name = field_match.group('field').lower().replace('-', '_')
             field_name = re.sub(r'_no$', '_num', field_name)
-            fields_builder[field_name] = field_match.group(
-                'value').rstrip()
+            fields_builder[field_name] = field_match.group('value').rstrip()
         elif field_name != 'unknown':
             # we have a line with leading spaces
             fields_builder[field_name] += re.sub(r'^\s+', ' ', field_line)
@@ -227,7 +285,7 @@ def _parse_versions(arxiv_id: str, version_entry_list: List) -> List[AbsRef]:
         size_kilobytes = int(date_match.group('size_kilobytes'))
         V = len(version_entries) + 1
         identifier = \
-            domain.VersionedIdentifier(f'{domain.Identifier(arxiv_id)}v{V}')
+            D.VersionedIdentifier(f'{D.Identifier(arxiv_id)}v{V}')
         version_entries.append(
             AbsRef(
                 identifier=identifier,
