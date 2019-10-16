@@ -2,6 +2,7 @@
 import json
 import os
 from datetime import datetime
+from typing import Optional
 
 from backports.datetime_fromisoformat import MonkeyPatch
 from pytz import timezone
@@ -23,7 +24,6 @@ WRITE: Action = 'WRITE'
 ET = timezone('US/Eastern')
 
 
-
 class LogEntry:
     timestamp: datetime
     """The time of the log entry."""
@@ -31,8 +31,8 @@ class LogEntry:
     event_id: D.EventIdentifier
     """Identifier of the event being handled."""
 
-    key: D.Key
-    """Specific key being handled."""
+    # key: D.Key
+    # """Specific key being handled."""
 
     action: Action
     """Action being performed by the agent."""
@@ -45,13 +45,13 @@ class LogEntry:
 
     def __init__(self, timestamp: datetime,
                  event_id: D.EventIdentifier,
-                 key: D.Key,
+                #  key: D.Key,
                  action: Action,
                  state: Outcome,
                  message: str) -> None:
         self.timestamp = timestamp
         self.event_id = event_id
-        self.key = key
+        # self.key = key
         self.action = action
         self.state = state
         self.message = message
@@ -62,7 +62,7 @@ class LogEntry:
         return cls(
             timestamp=datetime.fromisoformat(data['timestamp']),  # type: ignore ; pylint: disable=no-member
             event_id=D.EventIdentifier(data['event_id']),
-            key=D.Key(data['key']),
+            # key=D.Key(data['key']),
             action=data['action'],
             state=data['state'],
             message=data.get('message', '')
@@ -72,7 +72,7 @@ class LogEntry:
         return json.dumps({
             'timestamp': self.timestamp.isoformat(),
             'event_id': self.event_id,
-            'key': self.key,
+            # 'key': self.key,
             'action': self.action,
             'state': self.state,
             'message': self.message
@@ -100,14 +100,14 @@ class Log:
 
     def write(self,
               event_id: D.EventIdentifier,
-              key: D.Key,
+            #   key: D.Key,
               action: Action,
               state: Outcome,
               message: str) -> LogEntry:
         """Write a log entry."""
         entry = LogEntry(datetime.now(ET),
                          event_id,
-                         key,
+                        #  key,
                          action,
                          state,
                          message)
@@ -117,19 +117,19 @@ class Log:
 
     def log_success(self,
                     event_id: D.EventIdentifier,
-                    key: D.Key,
+                    # key: D.Key,
                     action: Action,
                     message: str = '') -> LogEntry:
         """Log a successful action."""
-        return self.write(event_id, key, action, SUCCEEDED, message)
+        return self.write(event_id, action, SUCCEEDED, message)
 
     def log_failure(self,
                     event_id: D.EventIdentifier,
-                    key: D.Key,
+                    # key: D.Key,
                     action: Action,
                     message: str = '') -> LogEntry:
         """Log a failed action."""
-        return self.write(event_id, key, action, FAILED, message)
+        return self.write(event_id, action, FAILED, message)
 
     def read_last_entry(self) -> LogEntry:
         """Read the last entry in the log."""
@@ -137,4 +137,11 @@ class Log:
         self._reader.seek(0)
         return entry
 
-
+    def read_last_succeeded(self) -> Optional[LogEntry]:
+        """Read the last SUCCEEDED entry in the log."""
+        lines = self._reader.readlines()
+        for i in range(1, len(lines)):
+            entry = LogEntry.from_repr(lines[-i])
+            if entry.state == SUCCEEDED:
+                return entry
+        return None

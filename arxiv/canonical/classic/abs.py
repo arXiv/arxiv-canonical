@@ -110,6 +110,14 @@ def parse_versions(base_path: str, identifier: D.Identifier) \
             for v in list_versions(base_path, identifier)]
 
 
+def parse_latest(base_path: str, identifier: D.Identifier) -> AbsData:
+    return parse(get_path(base_path, list_versions(base_path, identifier)[-1]))
+
+
+def parse_first(base_path: str, identifier: D.Identifier) -> AbsData:
+    return parse(get_path(base_path, list_versions(base_path, identifier)[0]))
+
+
 def list_all(base_path: str, from_id: Optional[D.Identifier] = None,
              to_id: Optional[D.Identifier] = None) -> Iterable[D.Identifier]:
     """List all of the identifiers for which we have abs files."""
@@ -117,7 +125,7 @@ def list_all(base_path: str, from_id: Optional[D.Identifier] = None,
 
 
 def list_versions(base_path: str, identifier: D.Identifier) \
-        -> Iterable[D.VersionedIdentifier]:
+        -> List[D.VersionedIdentifier]:
     """List all of the versions for an identifier from abs files."""
     return []
 

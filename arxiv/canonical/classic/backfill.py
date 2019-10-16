@@ -21,77 +21,130 @@ submission date(s) as the announcement date(s).
 Read daily.log in order. Rely on the version number mapping to keep track of
 where we are with each e-print.
 """
+import os
 
 from collections import Counter
 from datetime import date, datetime
 from itertools import chain
-from typing import Iterable, List, Mapping, MutableMapping, Optional
+from typing import Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
 from pytz import timezone
 
 from ..domain import Event, Identifier, EventType, VersionedIdentifier, \
     Version, Metadata, EventSummary, Category
+from ..log import Log, WRITE
+from ..register import IRegisterAPI
 from . import abs, daily
+from .util import PersistentIndex, PersistentList
 
 ET = timezone('US/Eastern')
 
 
-def load_all_events(daily_path: str, abs_path: str) -> Iterable[Event]:
+def backfill_record(register: IRegisterAPI, daily_path: str, abs_path: str,
+                    state_path: str) -> Iterable[Event]:
+    first = PersistentIndex()
+    first.load(os.path.join(state_path, 'first.json'))
+    current = PersistentIndex()
+    current.load(os.path.join(state_path, 'current.json'))
+    log = Log(state_path)
 
-    event_data = daily.parse(daily_path)
+    resume_after = log.read_last_succeeded()
+    skip = True if resume_after else False
+    event: Optional[Event] = None
+    try:
+        for event in load_all(daily_path, abs_path, current, first):
+            if skip:
+                if resume_after and event.event_id == resume_after.event_id:
+                    skip = False    # Start on the next event.
+                continue
+            register.add_events(event)
+            log.log_success(event.event_id, WRITE)
+    except Exception as e:
+        if event:
+            log.log_failure(event.event_id, WRITE,
+                            message=f'Encountered error: {e}')
+        raise
+    finally:
+        first.save()
+        current.save()
+
+
+def load_today(daily_path: str, abs_path: str,
+               first: MutableMapping[Identifier, date]) -> Iterable[Event]:
+    """
+    Load the events that were generated today.
+
+    This is a unique case, in that we are able to directly infer the version
+    associated with each event based on the most recent abs file for each
+    e-print.
+    """
+
+    for datum in daily.parse(daily_path, for_date=datetime.now(ET).date()):
+        abs_datum = abs.parse_latest(abs_path, datum.arxiv_id)
+        yield _make_event(abs_path, abs_datum, datum, abs_datum.identifier,
+                          first)
+
+
+def load_all(daily_path: str, abs_path: str,
+             current: MutableMapping[Identifier, int],
+             first: MutableMapping[Identifier, date]) -> Iterable[Event]:
 
     # We can't infer whether an abs file was written prior to the daily.log
     # from the abs file alone. But if the e-print identifier comes prior to the
     # earlier identifier for a ``new`` event in the daily.log, then we can
     # be certain it is not covered in the daily.log.
-    first_entry = next(iter(event_data))
+    first_entry = next(iter(daily.parse(daily_path)))
     first_day = daily.parse(daily_path, for_date=first_entry.event_date)
     new_identifiers = sorted([Identifier(ed.arxiv_id) for ed in first_day
                               if ed.event_type is EventType.NEW])
     first_identifier = next(iter(new_identifiers))
 
-    current: MutableMapping[Identifier, int] = Counter()
-    first: MutableMapping[Identifier, date]
-
     # These are e-prints that were first announced prior to the beginning of
     # the daily.log file, i.e. we have no ``new`` event.
     ids_prior_to_first_event = abs.list_all(abs_path, to_id=first_identifier)
+
+    # Load all of the pre-daily events at once.
     predaily_events = sorted([
-        e
-        for ident in ids_prior_to_first_event
-        for e
-        in _load_predaily_events(daily_path, abs_path, ident, current, first)
+        e for ident in ids_prior_to_first_event
+        for e in _load_predaily(daily_path, abs_path, ident, current, first)
     ], key=lambda e: e.event_date)
-    return chain(
-        predaily_events,
-        (_load_daily_event(abs_path, event_datum, current, first)
-         for event_datum in daily.parse(daily_path))
+
+    # Lazily load the daily events.
+    daily_events = (
+        _load_daily_event(abs_path, event_datum, current, first)
+        for event_datum in daily.parse(daily_path)
     )
+    return chain(predaily_events, daily_events)
 
 
 def _load_daily_event(abs_path: str, event_datum: daily.EventData,
                       current: MutableMapping[Identifier, int],
                       first: MutableMapping[Identifier, date]) -> Event:
-    if event_datum.event_type == EventType.NEW:
-        identifier = VersionedIdentifier.from_parts(event_datum.arxiv_id, 1)
-    elif event_datum.event_type == EventType.CROSSLIST:
-        identifier = VersionedIdentifier.from_parts(
-            event_datum.arxiv_id,
-            current[event_datum.arxiv_id]
-        )
-    elif event_datum.event_type == EventType.REPLACED:
-        identifier = VersionedIdentifier.from_parts(
-            event_datum.arxiv_id,
-            current[event_datum.arxiv_id] + 1
-        )
-    else:
-        raise RuntimeError(f'Unxpected event type: {event_datum.event_type}')
+    identifier = _make_id(event_datum, current)
 
     abs_datum = abs.parse(abs.get_path(abs_path, identifier))
-    if abs_datum.identifier.version > 1:
+    assert abs_datum.identifier == identifier  # Loaded the correct abs file.
+
+    event = _make_event(abs_path, abs_datum, event_datum, identifier, first)
+
+    current[event.identifier.arxiv_id] = event.identifier.version
+    if event.identifier.version == 1:
+        first[event.identifier.arxiv_id] = event.event_date
+    return event
+
+
+def _make_event(abs_path: str, abs_datum: abs.AbsData,
+                event_datum: daily.EventData,
+                identifier: VersionedIdentifier,
+                first: MutableMapping[Identifier, date]) -> Event:
+
+    # Look up the date that the first version of this e-print was announced.
+    if identifier.version > 1:
         announced_date_first = first[event_datum.arxiv_id]
     else:
         announced_date_first = event_datum.event_date
+
+    primary, secondary = _make_categories(event_datum, abs_datum)
 
     version = Version(
         identifier=identifier,
@@ -100,8 +153,8 @@ def _load_daily_event(abs_path: str, event_datum: daily.EventData,
         submitted_date=abs_datum.submitted_date,
         updated_date=abs_datum.updated_date,
         metadata=Metadata(
-            primary_classification=event_datum.categories[0],
-            secondary_classification=event_datum.categories[1:],
+            primary_classification=primary,
+            secondary_classification=secondary,
             title=abs_datum.title,
             abstract=abs_datum.abstract,
             authors=abs_datum.authors,
@@ -125,20 +178,18 @@ def _load_daily_event(abs_path: str, event_datum: daily.EventData,
     )
     event = Event(
         identifier=abs_datum.identifier,
-        event_date=_datetime_from_date(event_datum.event_date),
+        event_date=_datetime_from_date(event_datum.event_date,
+                                       identifier.arxiv_id),
         event_type=event_datum.event_type,
         is_legacy=True,
-        version=version
+        version=version,
+        categories=event_datum.categories
     )
     version.events.append(event.summary)
-
-    current[event.identifier.arxiv_id] = event.identifier.version
-    if event.identifier.version == 1:
-        first[event.identifier.arxiv_id] = event.event_date
     return event
 
 
-def _load_predaily_events(daily_path: str, abs_path: str,
+def _load_predaily(daily_path: str, abs_path: str,
                           identifier: Identifier,
                           current: MutableMapping[Identifier, int],
                           first: MutableMapping[Identifier, date]) \
@@ -172,51 +223,86 @@ def _load_predaily_events(daily_path: str, abs_path: str,
     crosslists = [e for e in events_for_this_ident
                   if e.event_type == EventType.CROSSLIST]
 
-    if N_versions > 1:
-        # If there are more replacement events than we have abs beyond the
-        # first version, we're in trouble.
-        assert len(replacements) < len(abs_for_this_ident)
+    # If there are more replacement events than we have abs beyond the
+    # first version, we're in trouble.
+    assert len(replacements) < len(abs_for_this_ident)
 
-        # Work backward, since we do not know whether there were replacements
-        # prior to the start of the daily.log file.
-        repl_map = {}
-        for i, event in enumerate(replacements[::-1]):
-            repl_map[abs_for_this_ident[-(i + 1)].identifier.version] = event
+    # Work backward, since we do not know whether there were replacements
+    # prior to the start of the daily.log file.
+    repl_map = {}
+    for i, event in enumerate(replacements[::-1]):
+        repl_map[abs_for_this_ident[-(i + 1)].identifier.version] = event
 
-        # Generate replacement events as needed, and remove cross-list
-        # categories for which we have explicit CROSSLIST events in daily.
-        for i, abs_datum in enumerate(abs_for_this_ident):
-            if abs_datum.identifier.version in repl_map:
-                event_date = _datetime_from_date(
-                    repl_map[abs_datum.identifier.version].event_date
-                )
-            else:
-                # We don't know the announcement date, so we will fall back to
-                # the submission date for this abs version.
-                event_date = _datetime_from_date(abs_datum.submitted_date)
+    # Generate replacement events as needed, and remove cross-list
+    # categories for which we have explicit CROSSLIST events in daily.
+    for i, abs_datum in enumerate(abs_for_this_ident):
+        if abs_datum.identifier.version in repl_map:
+            event_date = _datetime_from_date(
+                repl_map[abs_datum.identifier.version].event_date,
+                identifier
+            )
+        else:
+            # We don't know the announcement date, so we will fall back to
+            # the submission date for this abs version.
+            event_date = _datetime_from_date(abs_datum.submitted_date,
+                                             identifier)
 
-            # Some of the abs categories may have been added after the
-            # initial new/replacement event. We want to pare out those
-            # secondaries, since they were not actually present.
-            while crosslists and crosslists[0].event_date < event_date.date():
-                cross = crosslists.pop(0)
-                last = events[-1]
-                last.version.metadata.secondary_classification = [
-                    c for c in last.version.metadata.secondary_classification
-                    if c not in cross.categories
-                ]
+        # Some of the abs categories may have been added after the
+        # initial new/replacement event. We want to pare out those
+        # secondaries, since they were not actually present.
+        while crosslists and crosslists[0].event_date < event_date.date():
+            cross = crosslists.pop(0)
+            last = events[-1]
+            last.version.metadata.secondary_classification = [
+                c for c in last.version.metadata.secondary_classification
+                if c not in cross.categories
+            ]
 
-            # If we have aligned an abs version with an event from daily.log,
-            # we will skip it for now; we will handle all events from daily.log
-            # in order later on.
-            if abs_datum.identifier.version not in repl_map:
-                # This event is inferred from the presence of an abs file.
-                events.append(_event_from_abs(abs_path, abs_datum, event_date))
-                current[events[-1].identifier.arxiv_id] \
-                    = events[-1].identifier.version
-                if events[-1].identifier.version == 1:
-                    first[events[-1].identifier.arxiv_id] = event_date
+        # If we have aligned an abs version with an event from daily.log,
+        # we will skip it for now; we will handle all events from daily.log
+        # in order later on.
+        if abs_datum.identifier.version not in repl_map:
+            # This event is inferred from the presence of an abs file.
+            events.append(_event_from_abs(abs_path, abs_datum, event_date))
+            current[events[-1].identifier.arxiv_id] \
+                = events[-1].identifier.version
+            if events[-1].identifier.version == 1:
+                first[events[-1].identifier.arxiv_id] = event_date
     return events
+
+
+def _make_id(event_datum: daily.EventData,
+             current: MutableMapping[Identifier, int]) -> VersionedIdentifier:
+    if event_datum.event_type == EventType.NEW:
+        identifier = VersionedIdentifier.from_parts(event_datum.arxiv_id, 1)
+
+    elif event_datum.event_type == EventType.CROSSLIST:
+        identifier = VersionedIdentifier.from_parts(
+            event_datum.arxiv_id,
+            current[event_datum.arxiv_id]
+        )
+
+    elif event_datum.event_type == EventType.REPLACED:
+        identifier = VersionedIdentifier.from_parts(
+            event_datum.arxiv_id,
+            current[event_datum.arxiv_id] + 1
+        )
+    else:
+        raise RuntimeError(f'Unxpected event type: {event_datum.event_type}')
+    return identifier
+
+
+def _make_categories(event_datum: daily.EventData, abs_datum: abs.AbsData) \
+        -> Tuple[Category, List[Category]]:
+    if event_datum.event_type in [EventType.NEW, EventType.REPLACED]:
+        primary_classification = event_datum.categories[0]
+        secondary_classification = event_datum.categories[1:]
+    elif event_datum.event_type == EventType.CROSSLIST:
+        primary_classification = abs_datum.primary_classification
+        secondary_classification = abs_datum.secondary_classification
+    else:
+        raise RuntimeError(f'Unxpected event type: {event_datum.event_type}')
+    return primary_classification, secondary_classification
 
 
 def _event_from_abs(abs_path: str, abs_data: abs.AbsData,
@@ -269,20 +355,16 @@ def _event_from_cross(abs_datum: abs.AbsData, categories: List[Category],
     ...
 
 
-def _datetime_from_date(source_date: date) -> datetime:
+def _datetime_from_date(source_date: date, identifier: Identifier) -> datetime:
+    # We are artificially coercing a date value to a datetime, which
+    # means that every event on a particular day will occur at
+    # precisely the same moment. In order to preserve event order, we
+    # set the microsecond part based on the arXiv ID.
     return datetime(year=source_date.year,
                     month=source_date.month,
                     day=source_date.day,
                     hour=20,
                     minute=0,
                     second=0,
+                    microsecond=int(identifier.incremental_part),
                     tzinfo=ET)
-
-
-def load_events(daily_path: str, abs_path: str,
-                for_date: Optional[date] = None) -> Iterable[Event]:
-    if not for_date:
-        for_date = datetime.now(ET).date()
-
-    for datum in daily.parse(daily_path, for_date=for_date):
-        abs.parse(abs.get_path(abs_path, datum.arxiv_id))
