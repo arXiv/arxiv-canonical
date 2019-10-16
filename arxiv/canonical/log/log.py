@@ -2,7 +2,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Iterable, Optional
 
 from backports.datetime_fromisoformat import MonkeyPatch
 from pytz import timezone
@@ -145,3 +145,7 @@ class Log:
             if entry.state == SUCCEEDED:
                 return entry
         return None
+
+    def read_all(self) -> Iterable[LogEntry]:
+        for line in self._reader.readlines():
+            yield LogEntry.from_repr(line)

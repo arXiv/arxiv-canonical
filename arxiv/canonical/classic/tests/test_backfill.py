@@ -1,11 +1,14 @@
 """Tests for :mod:`arxiv.canonical.classic.backfill`."""
 
+import json
+import os
 import tempfile
 from datetime import date, datetime
 from unittest import TestCase, mock
 
 from ...domain import EventType, Category, Identifier, License, \
     VersionedIdentifier
+from ...log import Log
 from ...register import IRegisterAPI
 from .. import backfill, abs, daily
 
@@ -14,15 +17,15 @@ class TestBackfillRecord(TestCase):
     def setUp(self):
         """The classic record has two e-prints."""
         # One of them was first announced prior to the daily record.
-        ident = Identifier('1902.00123')
+        self.ident = Identifier('1902.00123')
         # The other one was announced after the daily record began.
-        ident2 = Identifier('1902.00125')
+        self.ident2 = Identifier('1902.00125')
 
         self.state_path = tempfile.mkdtemp()
         self.events = [
             # The first event we have in the daily record for 1902.00123.
             daily.EventData(
-                arxiv_id=ident,
+                arxiv_id=self.ident,
                 event_date=date(2019, 2, 9),
                 event_type=EventType.CROSSLIST,
                 version=-1,   # Who knows what version this is?
@@ -30,7 +33,7 @@ class TestBackfillRecord(TestCase):
             ),
             # Here is where 1902.00125 is first announced.
             daily.EventData(
-                arxiv_id=ident2,
+                arxiv_id=self.ident2,
                 event_date=date(2019, 2, 9),
                 event_type=EventType.NEW,
                 version=1,
@@ -41,7 +44,7 @@ class TestBackfillRecord(TestCase):
             ),
             # Here is where the second version of 1902.00123 is announced.
             daily.EventData(
-                arxiv_id=ident,
+                arxiv_id=self.ident,
                 event_date=date(2019, 2, 10),
                 event_type=EventType.REPLACED,
                 version=-1,   # Who knows what version this is?
@@ -58,7 +61,7 @@ class TestBackfillRecord(TestCase):
         self.abs = [
             # The first version of 1902.00123 (pre-daily).
             abs.AbsData(
-                identifier=VersionedIdentifier.from_parts(ident, 1),
+                identifier=VersionedIdentifier.from_parts(self.ident, 1),
                 submitter=None,
                 submitted_date=date(2019, 2, 1),
                 announced_month='2019-02',
@@ -78,7 +81,7 @@ class TestBackfillRecord(TestCase):
             ),
             # The second version of 1902.00123, which was noted in daily.log.
             abs.AbsData(
-                identifier=VersionedIdentifier.from_parts(ident, 2),
+                identifier=VersionedIdentifier.from_parts(self.ident, 2),
                 submitter=None,
                 submitted_date=date(2019, 2, 9),
                 announced_month='2019-02',
@@ -99,7 +102,7 @@ class TestBackfillRecord(TestCase):
             ),
             # The first version of 1902.00125, which was noted in daily.log.
             abs.AbsData(
-                identifier=VersionedIdentifier.from_parts(ident2, 1),
+                identifier=VersionedIdentifier.from_parts(self.ident2, 1),
                 submitter=None,
                 submitted_date=date(2019, 2, 9),
                 announced_month='2019-02',
@@ -169,6 +172,35 @@ class TestBackfillRecord(TestCase):
         for (expected_type, expected_id), event in zip(expected, added_events):
             self.assertEqual(expected_type, event.event_type)
             self.assertEqual(expected_id, event.identifier)
+
+        with open(os.path.join(self.state_path, 'first.json')) as f:
+            first = json.load(f)
+
+        self.assertEqual(len(first), 2, 'Two entries in first announced index')
+        self.assertIn(self.ident, first)
+        self.assertIn(self.ident2, first)
+
+        with open(os.path.join(self.state_path, 'current.json')) as f:
+            current = json.load(f)
+
+        self.assertEqual(len(current), 2,
+                         'Two entries in current version index')
+        self.assertIn(self.ident, current)
+        self.assertEqual(current[self.ident], 2)
+        self.assertIn(self.ident2, current)
+        self.assertEqual(current[self.ident2], 1)
+
+        log = Log(self.state_path)
+        log_entries = list(log.read_all())
+        self.assertEqual(len(log_entries), len(added_events),
+                         'There is a log entry for each event')
+        for entry in log_entries:
+            self.assertEqual(entry.state, 'SUCCESS', 'All entries are SUCCESS')
+
+        for event, entry in zip(added_events, log_entries):
+            self.assertEqual(event.event_id, entry.event_id,
+                             'Log entries are in the same order as events')
+
 
 
 class TestLoadPredailyEvents(TestCase):
