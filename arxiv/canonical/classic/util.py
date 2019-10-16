@@ -13,12 +13,6 @@ class _Persistent:
         with open(path, 'w') as f:
             json.dump(self, f, cls=ISO8601JSONEncoder)
 
-    def __del__(self) -> None:
-        try:
-            self.save()
-        except AttributeError:
-            pass
-
 
 class PersistentIndex(dict, _Persistent):
     """Persistent lookup with JSON serialization."""
@@ -30,6 +24,7 @@ class PersistentIndex(dict, _Persistent):
                 json.dump({}, f, cls=ISO8601JSONEncoder)
         with open(path, 'r') as f:
             self.update(json.load(f, cls=ISO8601JSONDecoder))
+        print(self)
 
 
 class PersistentList(list, _Persistent):
@@ -42,4 +37,5 @@ class PersistentList(list, _Persistent):
                 json.dump([], f, cls=ISO8601JSONEncoder)
         with open(path, 'r') as f:
             self.extend(json.load(f, cls=ISO8601JSONDecoder))
+
 

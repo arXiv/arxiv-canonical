@@ -129,7 +129,6 @@ class TestBackfillRecord(TestCase):
 
         self._get_abs = _get_abs
 
-
     @mock.patch(f'{backfill.__name__}.daily')
     @mock.patch(f'{backfill.__name__}.abs')
     def test_backfill(self, mock_abs, mock_daily):
@@ -201,6 +200,96 @@ class TestBackfillRecord(TestCase):
             self.assertEqual(event.event_id, entry.event_id,
                              'Log entries are in the same order as events')
 
+    @mock.patch(f'{backfill.__name__}.daily')
+    @mock.patch(f'{backfill.__name__}.abs')
+    def test_backfill_with_errors(self, mock_abs, mock_daily):
+        register = mock.MagicMock(spec=IRegisterAPI)
+        added_events = []
+        register.add_events.side_effect = added_events.append
+        def _parse(path, for_date=None):
+            if for_date is not None:
+                return self.events[0:2]
+            return self.events
+        mock_daily.parse.side_effect = _parse
+
+        # This call will get events for a particular identifier during
+        # parsing of pre-daily announcements. So we just return the events
+        # for 1902.00123.
+        mock_daily.scan.return_value = [self.events[0], self.events[2]]
+        # Handle a call to list all of the identifiers prior to the first one
+        # in daily.log.
+        mock_abs.list_all.return_value = \
+            list(set([a.identifier.arxiv_id for a in self.abs[:2]]))
+
+        # Return an AbsData based on the requested identifier. But raise a
+        # RuntimeError when handling one of the records!
+        raise_an_error = [True]
+        def _get_abs(identifier):
+            if identifier == '1902.00125v1' and raise_an_error:
+                raise_an_error.pop()
+                raise RuntimeError('')
+            for a in self.abs:
+                if a.identifier == identifier:
+                    return a
+            raise RuntimeError(f'No such abs: {identifier}')
+
+        mock_abs.get_path.side_effect = lambda b, i: i   # Pass ID through.
+        mock_abs.parse.side_effect = _get_abs       # Get AbsData by ID.
+
+        # This is called when parsing the pre-daily records, and gets all of
+        # the AbsData of the e-print that was first announced prior to daily.
+        mock_abs.parse_versions.return_value = self.abs[0:2]
+
+        # We gave generated a RuntimeError intentionally...
+        with self.assertRaises(RuntimeError):
+            backfill.backfill_record(register, '/fo', '/ba', self.state_path)
+        # ...and call backfill_record again to resume.
+        backfill.backfill_record(register, '/fo', '/ba', self.state_path)
+
+        # We expect an ordered series of events that represents both what is
+        # directly known from daily.log and what is inferred from the presence
+        # of abs files and replacement events in daily.log.
+        expected = [
+            (EventType.NEW, VersionedIdentifier('1902.00123v1')),
+            (EventType.CROSSLIST, VersionedIdentifier('1902.00123v1')),
+            (EventType.NEW, VersionedIdentifier('1902.00125v1')),
+            (EventType.REPLACED, VersionedIdentifier('1902.00123v2')),
+        ]
+        for (expected_type, expected_id), event in zip(expected, added_events):
+            self.assertEqual(expected_type, event.event_type)
+            self.assertEqual(expected_id, event.identifier)
+
+        with open(os.path.join(self.state_path, 'first.json')) as f:
+            first = json.load(f)
+
+        self.assertEqual(len(first), 2, 'Two entries in first announced index')
+        self.assertIn(self.ident, first)
+        self.assertIn(self.ident2, first)
+
+        with open(os.path.join(self.state_path, 'current.json')) as f:
+            current = json.load(f)
+
+        self.assertEqual(len(current), 2,
+                         'Two entries in current version index')
+        self.assertIn(self.ident, current)
+        self.assertEqual(current[self.ident], 2)
+        self.assertIn(self.ident2, current)
+        self.assertEqual(current[self.ident2], 1)
+
+        log = Log(self.state_path)
+        log_entries = list(log.read_all())
+        self.assertEqual(len(log_entries) - 1, len(added_events),
+                         'There is a log entry for each event, plus a'
+                         'FAILED entry')
+        success_entries = [e for e in log_entries if e.state == 'SUCCESS']
+        self.assertEqual(len(success_entries), len(added_events),
+                         'There is one SUCCESS entry per event')
+        failed_entries = [e for e in log_entries if e.state == 'FAILED']
+        self.assertEqual(len(failed_entries), 1, 'There is one FAILED entry')
+
+        for event, entry in zip(added_events, success_entries):
+            self.assertEqual(event.event_id, entry.event_id,
+                             'Log entries are in the same order as events')
 
 
 class TestLoadPredailyEvents(TestCase):
