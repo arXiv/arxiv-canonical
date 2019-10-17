@@ -33,20 +33,31 @@ use this legacy data structure to generate :class:`.Event` data that can be
 serialized in the daily listing files.
 
 """
-
-from typing import Tuple, List, Mapping, Iterable, NamedTuple, Optional
+import logging
+import os
+import re
+import string
+import tempfile
+from operator import attrgetter
+from typing import Dict, Tuple, List, Mapping, MutableMapping, Iterable, NamedTuple, Optional
 from collections import defaultdict
 from datetime import date, datetime
-import string
-import re
+
 from itertools import chain, groupby
 
 import warnings
 
-from ..domain import Event, Identifier, VersionedIdentifier, EventType
+from arxiv.base.logging import getLogger
 
-Entry = Tuple[Identifier, str]
-"""An ``arxiv_id, category`` tuple."""
+from ..domain import Event, Identifier, InvalidIdentifier, \
+    VersionedIdentifier, EventType
+from .util import PersistentMultifileIndex
+
+logger = logging.getLogger(__name__)
+logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))
+
+Entry = Tuple[Identifier, EventType, str]
+MergedEntry = Tuple[Identifier, EventType, List[str]]
 
 LINE = re.compile(r'^(?P<event_date>\d{6})\|(?P<archive>[a-z-]+)'
                   r'\|(?P<data>.*)$')
@@ -150,11 +161,53 @@ class DailyLogParser:
             Each item is an :class:`.EventData` from the log file.
 
         """
-        return chain.from_iterable(
+        return self._merge(chain.from_iterable(
             (self.parse_line(line) for line in open(path, 'r', -1)
              if for_date is None
              or for_date == self._parse_date_only(line))
-        )
+        ))
+
+    def _merge(self, entries: Iterable[EventData]) -> Iterable[EventData]:
+        """
+
+        It is possible for a singular event to be represented in multiple
+        archive sections. For example ``math-ph/0702031`` was replaced
+        on 2007-02-13; on that day, it is listed in both ``math-ph`` and
+        ``math`` archive sections of the record.
+
+        This function takes a series of entries from a given day that may
+        contain multiple entries per event, and returns a series of entries
+        that correspond directly to unique announcement events.
+        """
+        _event_date = attrgetter('event_date')
+        _identifier = attrgetter('arxiv_id')
+
+        def _event_type(datum: EventData) -> Tuple[int, EventType]:
+            order = {EventType.NEW: 0,
+                    EventType.REPLACED: 1,
+                    EventType.CROSSLIST: 2,
+                    EventType.UPDATED_METADATA: 4}
+            return order[datum.event_type], datum.event_type
+
+
+        # We assume that the entries are sorted by date already.
+        for event_date, day_entries in groupby(entries, key=_event_date):
+            # These will be coming in one archive at a time, so we need to
+            # sort and group by identifier and event type to merge
+            # appropriately.
+            grouped_by_id = groupby(sorted(day_entries, key=_identifier),
+                                    key=_identifier)
+            for identifier, i_entries in grouped_by_id:
+                grouped_by_etype = groupby(sorted(i_entries, key=_event_type),
+                                           key=_event_type)
+                for (_, event_type), e_entries in grouped_by_etype:
+                    yield EventData(
+                        arxiv_id=identifier,
+                        event_date=event_date,
+                        event_type=EventType(event_type),
+                        version=1 if event_type == EventType.NEW else -1,
+                        categories=[c for e in e_entries for c in e.categories]
+                    )
 
     def parse_line(self, raw: str) -> Iterable[EventData]:
         """
@@ -186,24 +239,44 @@ class DailyLogParser:
 class LineParser:
     """Shared behavior among newstyle and oldstyle line parsing."""
 
-    def _to_events(self, e_date: date, e_type: EventType,
-                   entries: Iterable[Entry],
+    def _merge(self, entries: Iterable[Entry]) -> Iterable[MergedEntry]:
+        """
+        Merge entries within an archive for a particular day.
+
+        There is one entry per category, so multiple entries may belong to the
+        same announcement event.
+        """
+        def _identifier(entry: Entry) -> Identifier:
+            return entry[0]
+
+        def _event_type(entry: Entry) -> str:
+            return str(entry[1].value)
+
+        for ident, ent \
+                in groupby(sorted(entries, key=_identifier), key=_identifier):
+            for event_type, ev_ent \
+                    in groupby(sorted(ent, key=_event_type), key=_event_type):
+                yield ident, EventType(event_type), [c for _, _, c in ev_ent]
+
+    def _to_events(self,
+                   e_date: date,
+                   entries: Iterable[MergedEntry],
                    version: int = -1) -> Iterable[EventData]:
         event_date = date(e_date.year, e_date.month, e_date.day)
-        for paper_id, entries in groupby(entries, key=lambda o: o[0]):
-            yield EventData(Identifier(paper_id), event_date, e_type, version,
-                            [category for _, category in entries])
+        for paper_id, event_type, categories in entries:
+            yield EventData(paper_id,
+                            event_date,
+                            event_type,
+                            version,
+                            categories)
 
     def parse(self, e_date: date, archive: str, data: str) \
             -> Iterable[EventData]:
         """Parse data from a daily log file line."""
         new, cross, replace = data.split('|')
-        return chain(self._to_events(e_date, EventType.NEW,
-                                     self.parse_new(archive, new), 1),
-                     self._to_events(e_date, EventType.CROSSLIST,
-                                     self.parse_cross(archive, cross)),
-                     self._to_events(e_date, EventType.REPLACED,
-                                     self.parse_replace(archive, replace)))
+        return chain(self._to_events(e_date, self._merge(self.parse_new(archive, new)), 1),
+                     self._to_events(e_date, self._merge(self.parse_cross(archive, cross))),
+                     self._to_events(e_date, self._merge(self.parse_replace(archive, replace))))
 
     def parse_new(self, archive: str, fragment: str) -> Iterable[Entry]:
         """Parse entries for new e-prints."""
@@ -254,9 +327,17 @@ class OldStyleLineParser(LineParser):
             for _identifier in range(start_id, end_id + 1):  # Inclusive.
                 identifier = str(_identifier).zfill(7)
                 paper_id = f'{archive}/{identifier}'
-                yield paper_id, archive
+                try:
+                    yield Identifier(paper_id), EventType.NEW, archive
+                except InvalidIdentifier as e:
+                    warnings.warn(f'Skipping: {e}')
+                    continue
         elif SINGLE_IDENTIFIER.match(fragment):
-            yield f'{archive}/{fragment}', archive
+            paper_id = f'{archive}/{fragment}'
+            try:
+                yield Identifier(paper_id), EventType.NEW, archive
+            except InvalidIdentifier as e:
+                warnings.warn(f'Skipping: {e}')
         elif re.match(r'\S', fragment) is None:   # Blank is OK
             pass
         else:
@@ -289,7 +370,11 @@ class OldStyleLineParser(LineParser):
                 category = match.group('category')
                 if category:
                     crossed_to += category
-                yield paper_id, crossed_to
+                try:
+                    yield Identifier(paper_id), EventType.CROSSLIST, crossed_to
+                except InvalidIdentifier as e:
+                    warnings.warn(f'Skipping: {e}')
+                    continue
             else:
                 warnings.warn(f'Failed parsing cross (old style): {paper_id}')
 
@@ -311,10 +396,12 @@ class OldStyleLineParser(LineParser):
 
         """
         for paper_id in fragment.strip().split():
+
             abs_only = False
             if paper_id.endswith('.abs'):
                 abs_only = True
                 paper_id = paper_id[:-4]
+
             match_threepart = THREEPART_REPLACEMENT.match(paper_id)
             match_fourpart = FOURPART_REPLACEMENT.match(paper_id)
             match_weird = WEIRD_INVERTED_ENTRY.match(paper_id)
@@ -338,7 +425,14 @@ class OldStyleLineParser(LineParser):
             else:
                 warnings.warn(f'Failed parsing repl (old style): {paper_id}')
                 continue
-            yield paper_id, crossed_to
+            if abs_only:
+                event_type = EventType.UPDATED_METADATA
+            else:
+                event_type = EventType.REPLACED
+            try:
+                yield Identifier(paper_id), event_type, crossed_to
+            except InvalidIdentifier as e:
+                warnings.warn(f'Skipping: {e}')
 
 
 class NewStyleLineParser(LineParser):
@@ -377,7 +471,10 @@ class NewStyleLineParser(LineParser):
                 warnings.warn(f'Failed parsing new (new style): {paper_id}')
                 continue
             for category in categories:
-                yield paper_id, category
+                try:
+                    yield Identifier(paper_id), EventType.NEW, category
+                except InvalidIdentifier as e:
+                    warnings.warn(f'Skipping: {e}')
 
     def parse_cross(self, archive: str, fragment: str) -> Iterable[Entry]:
         """
@@ -405,7 +502,10 @@ class NewStyleLineParser(LineParser):
                 warnings.warn(f'Failed parsing cross (new style): {paper_id}')
                 continue
             for crossed_to in categories:
-                yield paper_id, crossed_to
+                try:
+                    yield Identifier(paper_id), EventType.CROSSLIST, crossed_to
+                except InvalidIdentifier as e:
+                    warnings.warn(f'Skipping: {e}')
 
     def parse_replace(self, archive: str, fragment: str) -> Iterable[Entry]:
         """
@@ -432,8 +532,15 @@ class NewStyleLineParser(LineParser):
             except AssertionError:
                 warnings.warn(f'Failed parsing repl (new style): {paper_id}')
                 continue
+            if abs_only:
+                event_type = EventType.UPDATED_METADATA
+            else:
+                event_type = EventType.REPLACED
             for category in categories:
-                yield paper_id, category
+                try:
+                    yield Identifier(paper_id), event_type, category
+                except InvalidIdentifier as e:
+                    warnings.warn(f'Skipping: {e}')
 
     def _parse_entry(self, entry: str) -> Tuple[str, bool, List[str]]:
         """
@@ -458,7 +565,11 @@ class NewStyleLineParser(LineParser):
         return paper_id, abs_only, categories_list
 
 
-def parse(path: str, for_date: Optional[date] = None) -> Iterable[EventData]:
+EVENT_DATA: Optional[Mapping[date, Iterable[EventData]]] = None
+
+
+def parse(path: str, for_date: Optional[date] = None,
+          cache_path: Optional[str] = None) -> Iterable[EventData]:
     """
     Parse the daily log file.
 
@@ -473,9 +584,46 @@ def parse(path: str, for_date: Optional[date] = None) -> Iterable[EventData]:
         Each item is an :class:`.EventData` from the log file.
 
     """
-    return DailyLogParser().parse(path, for_date=for_date)
+    global EVENT_DATA
+    if cache_path is None:
+        cache_path = tempfile.mkdtemp()
+
+    if EVENT_DATA is None:
+        EVENT_DATA = PersistentMultifileIndex()
+        EVENT_DATA.load(cache_path)
+
+    if EVENT_DATA:
+        logger.debug('Load events from cache')
+        if for_date:
+            for e in EVENT_DATA[for_date.isoformat()]:
+                yield e
+        else:
+            for events in EVENT_DATA.values():
+                for e in events:
+                    yield e
+        return
+
+    logger.debug('Parse events for the first time')
+    year: Optional[int] = None
+    last = 0
+    for i, e in enumerate(DailyLogParser().parse(path)):
+        if e.event_date.year != year:
+            if year is not None:
+                logger.info('Parsed %i events in %i', i + 1 - last, year)
+            year = e.event_date.year
+            last = i
+
+        cache_key = e.event_date.isoformat()
+        if cache_key not in EVENT_DATA:
+            EVENT_DATA[cache_key] = []
+        EVENT_DATA[cache_key].append(e)
+    logger.debug('Parsed %i events', i + 1)
+    EVENT_DATA.save()
+    for e in parse(path, for_date=for_date, cache_path=cache_path):
+        yield e
 
 
-def scan(path: str, identifier: Identifier) -> Iterable[EventData]:
-    return (ed for ed in DailyLogParser().parse(path)
+def scan(path: str, identifier: Identifier, cache_path: Optional[str] = None) \
+        -> Iterable[EventData]:
+    return (ed for ed in parse(path, cache_path=cache_path)
             if ed.arxiv_id == identifier)

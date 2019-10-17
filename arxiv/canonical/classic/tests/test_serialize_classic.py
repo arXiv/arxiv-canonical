@@ -18,27 +18,27 @@ ALL_ABS = [os.path.join(base, fname)
            for fname in fnames if fname.endswith('.abs')]
 
 
-class TestClassicDeserialize(TestCase):
-    """Test deserialization of the classic abs format."""
+# class TestClassicDeserialize(TestCase):
+#     """Test deserialization of the classic abs format."""
 
-    SCHEMA_PATH = os.path.abspath('schema/resources')
+#     SCHEMA_PATH = os.path.abspath('schema/resources')
 
-    def setUp(self):
-        """Get a JSON Schema reference resolver."""
-        resolver_path = 'file://%s/' % self.SCHEMA_PATH
-        self.resolver = jsonschema.RefResolver(resolver_path, None)
+#     def setUp(self):
+#         """Get a JSON Schema reference resolver."""
+#         resolver_path = 'file://%s/' % self.SCHEMA_PATH
+#         self.resolver = jsonschema.RefResolver(resolver_path, None)
 
-    def test_parse(self):
-        """Can parse and reserialize classic abs records."""
-        with open(os.path.join(self.SCHEMA_PATH, 'Abs.json')) as f:
-            schema = json.load(f)
+#     def test_parse(self):
+#         """Can parse and reserialize classic abs records."""
+#         with open(os.path.join(self.SCHEMA_PATH, 'Abs.json')) as f:
+#             schema = json.load(f)
 
-        for abs in ALL_ABS:
-            self.assertIsNone(
-                jsonschema.validate(
-                    json.loads(serialize.dumps(classic.abs.parse(abs))),
-                    schema,
-                    resolver=self.resolver
-                ),
-                f"Abs file {abs} is parsed successfully"
-            )
+#         for abs in ALL_ABS:
+#             self.assertIsNone(
+#                 jsonschema.validate(
+#                     json.loads(serialize.dumps(classic.abs.parse(abs))),
+#                     schema,
+#                     resolver=self.resolver
+#                 ),
+#                 f"Abs file {abs} is parsed successfully"
+#             )

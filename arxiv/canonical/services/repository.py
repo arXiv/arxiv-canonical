@@ -33,4 +33,5 @@ class RemoteRepository(RemoteSource):
 
     def load_deferred(self, key: D.URI, stream: bool = True) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""
-        return super(RemoteRepository, self).load_deferred(self._to_http(key), stream=stream)
+        return super(RemoteRepository, self).load_deferred(self._to_http(key),
+                                                           stream=stream)

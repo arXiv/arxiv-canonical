@@ -13,5 +13,5 @@ class TestParseWithdrawn(TestCase):
 
     def test_withdrawn(self):
         """Parsed data should indicate withdrawn submission."""
-        data = abs.parse(os.path.join(self.DATA, 'withdrawn.abs'))
+        data = abs._parse(os.path.join(self.DATA, 'withdrawn.abs'))
         self.assertEqual(data.submission_type, EventType.WITHDRAWN)

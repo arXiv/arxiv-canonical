@@ -95,7 +95,7 @@ class TestParseLine(TestCase):
         replaced = [e for e in events if e.event_type is EventType.REPLACED]
         self.assertEqual(len(new), 530)
         self.assertEqual(len(cross), 15)
-        self.assertEqual(len(replaced), 406)
+        self.assertEqual(len(replaced), 317)
 
 
 class TestParse(TestCase):

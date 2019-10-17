@@ -2,7 +2,8 @@
 
 import os
 import re
-from typing import Any, Dict, Iterable, List, Optional, Tuple, NamedTuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, \
+    NamedTuple
 from functools import wraps
 from dateutil import parser
 from pytz import timezone
@@ -10,6 +11,8 @@ from datetime import datetime, date
 from dateutil.tz import tzutc, gettz
 
 from .. import domain as D
+
+AnyIdentifier = Union[D.VersionedIdentifier, D.Identifier]
 
 EASTERN = gettz('US/Eastern')
 
@@ -95,63 +98,167 @@ class AbsData(NamedTuple):
     previous_versions: Optional[List[AbsRef]] = None
 
 
-# TODO: implement this!
-def get_path(base_path: str, identifier: D.VersionedIdentifier) -> str:
-    # Needs to handle both new-style and old-style identifiers.
-    # return os.path.join(base_path, )
-    return ""
+class NoSuchAbs(RuntimeError):
+    pass
 
 
-# TODO: implement this!
-def parse_versions(base_path: str, identifier: D.Identifier) \
+def original_base_path(data_path: str) -> str:
+    return os.path.join(data_path, 'orig')
+
+
+def latest_base_path(data_path: str) -> str:
+    return os.path.join(data_path, 'ftp')
+
+
+def latest_path_month(data_path: str, identifier: AnyIdentifier) -> str:
+    """
+    Get the base path for the month block containing the "latest" e-prints.
+
+    This is where the most recent version of each e-print always lives.
+    """
+    return os.path.join(
+        latest_base_path(data_path),
+        identifier.category_part if identifier.is_old_style else 'arxiv',
+        'papers',
+        identifier.yymm
+    )
+
+
+def original_path_month(data_path: str, identifier: AnyIdentifier) -> str:
+    """
+    Get the main base path for an abs file.
+
+    This is where all of the versions except for the most recent one live.
+    """
+    return os.path.join(
+        original_base_path(data_path),
+        identifier.category_part if identifier.is_old_style else 'arxiv',
+        'papers',
+        identifier.yymm
+    )
+
+
+def latest_path(data_path: str, identifier: AnyIdentifier) -> str:
+    return os.path.join(latest_path_month(data_path, identifier),
+                        f'{identifier.numeric_part}.abs')
+
+
+def original_path(data_path: str, identifier: D.VersionedIdentifier) -> str:
+    return os.path.join(original_path_month(data_path, identifier),
+                        f'{identifier.numeric_part}v{identifier.version}.abs')
+
+
+def get_path(data_path: str, identifier: D.VersionedIdentifier) -> str:
+    # We look first for an "original" abs file that is explicitly identified
+    # as the version we are looking for.
+    path = original_path(data_path, identifier)
+    if os.path.exists(path):
+        return path
+    # If we are asking for the first version and haven't found it already, the
+    # only possibility is that there is one version and its abs file is located
+    # in the "latest" section.
+    if identifier.version == 1:
+        path = latest_path(data_path, identifier)
+        if not os.path.exists(path):
+            raise NoSuchAbs(f'Cannot find abs record for {identifier}')
+        return path
+    # The only remaining possibility is that the version we are looking for
+    # is indeed the "latest" version, in which case we must be able to find
+    # an abs record for the previous version in the "original" section.
+    previous = D.VersionedIdentifier.from_parts(identifier.arxiv_id,
+                                                identifier.version - 1)
+    if os.path.exists(original_path(data_path, previous)):
+        return latest_path(data_path, identifier)   # Voila!
+    raise NoSuchAbs(f'Cannot find abs record for {identifier}')
+
+
+def parse_versions(data_path: str, identifier: D.Identifier) \
         -> Iterable[AbsData]:
-    # Needs to handle both new-style and old-style identifiers.
-    return [parse(get_path(base_path, v))
-            for v in list_versions(base_path, identifier)]
+    return [parse(data_path, v) for v in list_versions(data_path, identifier)]
 
 
-def parse_latest(base_path: str, identifier: D.Identifier) -> AbsData:
-    return parse(get_path(base_path, list_versions(base_path, identifier)[-1]))
+def parse_latest(data_path: str, identifier: D.Identifier) -> AbsData:
+    """Parse the abs for the latest version of an e-print."""
+    return parse(latest_path(data_path, identifier))
 
 
-def parse_first(base_path: str, identifier: D.Identifier) -> AbsData:
-    return parse(get_path(base_path, list_versions(base_path, identifier)[0]))
+def parse_first(data_path: str, identifier: D.Identifier) -> AbsData:
+    """Parse the abs for the first version of an e-print."""
+    return parse(get_path(data_path,
+                          D.VersionedIdentifier.from_parts(identifier, 1)))
 
 
-def list_all(base_path: str, from_id: Optional[D.Identifier] = None,
+def iter_all(data_path: str, from_id: Optional[D.Identifier] = None,
              to_id: Optional[D.Identifier] = None) -> Iterable[D.Identifier]:
-    """List all of the identifiers for which we have abs files."""
-    return []
+    """
+    List all of the identifiers for which we have abs files.
+
+    The "latest" section will have an abs file for every e-print, so that's the
+    only place we need look.
+    """
+    latest_root = latest_base_path(data_path)
+    for dirpath, _, filenames in os.walk(latest_root):
+        for filename in filenames:
+            if filename.endswith('.abs'):
+                prefix = dirpath.split(latest_root)[1].split('/')[1]
+                numeric_part, _ = os.path.splitext(filename)
+                if prefix == 'arxiv':
+                    identifier = D.Identifier(numeric_part)
+                else:
+                    identifier = D.Identifier(f'{prefix}/{numeric_part}')
+                if from_id and identifier < from_id:
+                    continue
+                elif to_id and identifier >= to_id:
+                    continue
+                yield identifier
 
 
-def list_versions(base_path: str, identifier: D.Identifier) \
+def list_versions(data_path: str, identifier: D.Identifier) \
         -> List[D.VersionedIdentifier]:
-    """List all of the versions for an identifier from abs files."""
-    return []
+    """
+    List all of the versions for an identifier from abs files.
+
+    This works by looking at the presence of abs files in both the "latest"
+    and "original" locations.
+    """
+    identifiers: List[D.VersionedIdentifier] = []
+
+    # We look first at "original" versions, as they will be explicitly named
+    # with their numeric version affix.
+    old_versions_exist = False
+    orig_month_root = original_path_month(data_path, identifier)
+    category = orig_month_root.split(data_path)[1].split('/')[2]
+    for dpath, _, fnames in os.walk(orig_month_root):
+        for filename in sorted(fnames):
+            if filename.endswith('.abs') \
+                    and filename.startswith(identifier.numeric_part):
+                numeric_part_v, _ = os.path.splitext(filename)
+                if identifier.is_old_style:
+                    vid = D.VersionedIdentifier(f'{category}/{numeric_part_v}')
+                else:
+                    vid = D.VersionedIdentifier(numeric_part_v)
+                old_versions_exist = True
+                identifiers.append(vid)
+
+    if old_versions_exist:
+        # We are looking only at past versions above; the most recent version
+        # lives somewhere else. We can infer its existence.
+        _, v = numeric_part_v.split('v')
+        identifiers.append(
+            D.VersionedIdentifier.from_parts(identifier, int(v) + 1)
+        )
+    elif os.path.exists(latest_path(data_path, identifier)):
+        # There is only one version, the first version, and it is the
+        # latest version.
+        identifiers.append(D.VersionedIdentifier.from_parts(identifier, 1))
+    return identifiers
 
 
-def get_source_path(base_path: str, identifier: D.VersionedIdentifier) \
-        -> D.URI:
-    ...
+def parse(data_path: str, identifier: D.VersionedIdentifier) -> AbsData:
+    return _parse(get_path(data_path, identifier))
 
 
-def get_render_path(base_path: str, identifier: D.VersionedIdentifier) \
-        -> D.URI:
-    # If a render exists (ps_cache), return a file:// uri; otherwise
-    # return an https:// uri.
-    ...
-
-
-def get_source(base_path: str, identifier: D.VersionedIdentifier) \
-        -> D.CanonicalFile:
-    ...
-
-def get_render(base_path: str, identifier: D.VersionedIdentifier) \
-        -> D.CanonicalFile:
-    ...
-
-
-def parse(path: str) -> AbsData:
+def _parse(path: str) -> AbsData:
     with open(path, mode='r', encoding='latin-1') as f:
         raw = f.read()
 
@@ -164,7 +271,7 @@ def parse(path: str) -> AbsData:
     # but the split must always return four components.
     components = RE_ABS_COMPONENTS.split(raw)
     if not len(components) == 4:
-        raise IOError('Unexpected number of components parsed from .abs.')
+        raise IOError(f'Unexpected number of components parsed from {path}')
 
     # Everything else is in the second main component.
     prehistory, misc_fields = re.split(r'\n\n', components[1])

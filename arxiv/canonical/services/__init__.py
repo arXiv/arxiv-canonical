@@ -1,3 +1,4 @@
 """Service integrations."""
 
-from .store import CanonicalStore
+from .remote import RemoteSource
+from .store import CanonicalStore, InMemoryStorage

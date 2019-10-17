@@ -6,7 +6,7 @@ from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
 from .content import ContentType
 from .eprint import EPrint
 from .file import CanonicalFile, URI, Key
-from .identifier import Identifier, VersionedIdentifier
+from .identifier import Identifier, InvalidIdentifier, VersionedIdentifier
 from .license import License
 from .listing import Listing, ListingDay, ListingMonth, ListingYear, \
     AllListings, ListingIdentifier
@@ -31,6 +31,7 @@ domain_classes = (
     EventSummary,
     EventType,
     Identifier,
+    InvalidIdentifier,
     Key,
     License,
     Listing,

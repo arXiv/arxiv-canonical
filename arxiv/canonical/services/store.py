@@ -38,7 +38,7 @@ from .readable import MemoizedReadable
 MonkeyPatch.patch_fromisoformat()
 
 logger = logging.getLogger(__name__)
-logger.setLevel(10)
+logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))
 
 _I = TypeVar('_I', I.IntegrityEntry, I.IntegrityMetadata, I.IntegrityListing,
              covariant=True)

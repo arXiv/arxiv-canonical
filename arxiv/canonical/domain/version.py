@@ -305,6 +305,11 @@ class EventType(Enum):
     MIGRATE = 'migrate'
     MIGRATE_METADATA = 'migrate_metadata'
 
+    @property
+    def is_new_version(self) -> bool:
+        """Indicate whether or not this event type results in a new version."""
+        return self in [self.NEW, self.REPLACED, self.WITHDRAWN]
+
 
 class _EventBase(CanonicalBase):
     identifier: VersionedIdentifier

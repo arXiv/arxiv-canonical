@@ -115,6 +115,8 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
     @property
     def checksum(self) -> str:
         """The checksum of this integrity collection."""
+        if self._checksum is None:
+            raise RuntimeError(f'Missing checksum for {self}')
         assert self._checksum is not None
         return self._checksum
 

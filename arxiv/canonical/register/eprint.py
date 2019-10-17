@@ -52,7 +52,7 @@ class RegisterEPrint(Base[D.Identifier,
         altered: List[RegisterVersion] = []
         for key in self._member_name(event):
             if key in self.members:
-                raise ConsistencyError('Version already exists')
+                raise ConsistencyError(f'Version already exists: {key}')
             self.members[key] \
                 = self.member_type.create(s, sources, event.version)
             altered.append(self.members[key])
@@ -94,6 +94,11 @@ class RegisterEPrint(Base[D.Identifier,
                                    sources: Sequence[ICanonicalSource],
                                    event: D.Event) -> List[RegisterVersion]:
         return self.add_event_update_metadata(s, sources, event)
+
+    def add_event_withdraw(self, s: ICanonicalStorage,
+                           sources: Sequence[ICanonicalSource],
+                           event: D.Event) -> List[RegisterVersion]:
+        return self.add_event_new(s, sources, event)
 
     def _add_events(self, s: ICanonicalStorage,
                     sources: Sequence[ICanonicalSource],

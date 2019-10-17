@@ -1,16 +1,109 @@
 """Tests for :mod:`arxiv.canonical.classic.backfill`."""
 
+import io
 import json
 import os
 import tempfile
 from datetime import date, datetime
+from pprint import pprint
 from unittest import TestCase, mock
 
-from ...domain import EventType, Category, Identifier, License, \
-    VersionedIdentifier
+from pytz import timezone
+
+from ...domain import ContentType, CanonicalFile, Category, EventType, \
+    Identifier, License, URI, VersionedIdentifier
 from ...log import Log
-from ...register import IRegisterAPI
+from ...register import IRegisterAPI, RegisterAPI
+from ...services import InMemoryStorage
 from .. import backfill, abs, daily
+
+ET = timezone('US/Eastern')
+
+
+class TestBackfillWithData(TestCase):
+    """
+    This runs backfill on a subset of identifiers using daily.log.
+
+    To run this test, set the environment variable DAILY_PATH to the
+    full path to daily.log.
+    """
+
+    __test__ = bool(os.environ.get('DAILY_PATH', None) is not None)
+
+    def setUp(self):
+        self.state_path = tempfile.mkdtemp()
+        self.record_path = tempfile.mkdtemp()
+        self.cache_path = './.cache'
+        print('state_path ::', self.state_path)
+        self.mock_source = mock.MagicMock()
+        self.mock_source.can_resolve.return_value = True
+        self.mock_source.load_deferred = \
+            lambda *a, **k: io.BytesIO(b'foocontent')
+
+        self.storage = InMemoryStorage()
+        self.api = RegisterAPI(self.storage, [self.storage, self.mock_source])
+
+        self.abs_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'data'
+        )
+        self.daily_path = os.environ.get('DAILY_PATH')
+        self.identifiers = [
+            Identifier('adap-org/9509003'),
+            Identifier('0704.0001'),
+            Identifier('0801.1021'),
+            Identifier('0802.0193'),
+            Identifier('0808.4142'),
+            Identifier('0905.2326'),
+            Identifier('0906.2112'),
+            Identifier('0906.3336'),
+            Identifier('0906.3421'),
+            Identifier('0906.5132'),
+            Identifier('0906.5504'),
+            Identifier('1210.8438'),
+            Identifier('1605.09669'),
+            Identifier('1607.08199'),
+            Identifier('cond-mat/9805021'),
+            Identifier('funct-an/9301001'),
+            Identifier('hep-th/9709111'),
+            Identifier('hep-th/9901001'),
+            Identifier('math/0202001'),
+            Identifier('math-ph/0702031'),
+            Identifier('physics/9707012')
+        ]
+
+    @mock.patch(f'{backfill.__name__}.content')
+    def test_backfill_with_content(self, mock_content):
+        mock_content.get_source.return_value = CanonicalFile(
+            created=datetime.now(ET),
+            modified=datetime.now(ET),
+            size_bytes=42,
+            content_type=ContentType.targz,
+            ref=URI('/foo/path.tar.gz'),
+            filename='path.tar.gz'
+        )
+        mock_content.get_render.return_value = CanonicalFile(
+            created=datetime.now(ET),
+            modified=datetime.now(ET),
+            size_bytes=42,
+            content_type=ContentType.pdf,
+            ref=URI('/foo/path.pdf'),
+            filename='path.pdf'
+        )
+        for e in backfill.backfill(self.api,
+                                   self.daily_path,
+                                   self.abs_path,
+                                   self.state_path,
+                                   limit_to=set(self.identifiers),
+                                   cache_path=self.cache_path):
+            print(e.identifier, e.event_type, e.event_date)
+
+        events, N = self.api.load_events(1997)
+        events = list(events)
+        self.assertEqual(
+            len([e for e in events if e.event_type == EventType.NEW]),
+            2, 'There are two NEW events in 1997'
+        )
 
 
 class TestBackfillRecord(TestCase):
@@ -121,7 +214,7 @@ class TestBackfillRecord(TestCase):
             )
         ]
 
-        def _get_abs(identifier):
+        def _get_abs(path, identifier, *args, **kwargs):
             for a in self.abs:
                 if a.identifier == identifier:
                     return a
@@ -129,6 +222,7 @@ class TestBackfillRecord(TestCase):
 
         self._get_abs = _get_abs
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.daily')
     @mock.patch(f'{backfill.__name__}.abs')
     def test_backfill(self, mock_abs, mock_daily):
@@ -148,6 +242,8 @@ class TestBackfillRecord(TestCase):
         # in daily.log.
         mock_abs.list_all.return_value = \
             list(set([a.identifier.arxiv_id for a in self.abs[:2]]))
+        mock_abs.iter_all.return_value = \
+            list(set([a.identifier.arxiv_id for a in self.abs[:2]]))
 
         # Return an AbsData based on the requested identifier.
         mock_abs.get_path.side_effect = lambda b, i: i   # Pass ID through.
@@ -157,7 +253,7 @@ class TestBackfillRecord(TestCase):
         # the AbsData of the e-print that was first announced prior to daily.
         mock_abs.parse_versions.return_value = self.abs[0:2]
 
-        backfill.backfill_record(register, '/daily', '/abs', self.state_path)
+        list(backfill.backfill(register, '/daily', '/abs', self.state_path))
 
         # We expect an ordered series of events that represents both what is
         # directly known from daily.log and what is inferred from the presence
@@ -200,16 +296,19 @@ class TestBackfillRecord(TestCase):
             self.assertEqual(event.event_id, entry.event_id,
                              'Log entries are in the same order as events')
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.daily')
     @mock.patch(f'{backfill.__name__}.abs')
     def test_backfill_with_errors(self, mock_abs, mock_daily):
         register = mock.MagicMock(spec=IRegisterAPI)
         added_events = []
         register.add_events.side_effect = added_events.append
-        def _parse(path, for_date=None):
+
+        def _parse(path, for_date=None, **kwargs):
             if for_date is not None:
                 return self.events[0:2]
             return self.events
+
         mock_daily.parse.side_effect = _parse
 
         # This call will get events for a particular identifier during
@@ -220,11 +319,13 @@ class TestBackfillRecord(TestCase):
         # in daily.log.
         mock_abs.list_all.return_value = \
             list(set([a.identifier.arxiv_id for a in self.abs[:2]]))
-
+        mock_abs.iter_all.return_value = \
+            list(set([a.identifier.arxiv_id for a in self.abs[:2]]))
         # Return an AbsData based on the requested identifier. But raise a
         # RuntimeError when handling one of the records!
         raise_an_error = [True]
-        def _get_abs(identifier):
+
+        def _get_abs(dpath, identifier, *args, **kwargs):
             if identifier == '1902.00125v1' and raise_an_error:
                 raise_an_error.pop()
                 raise RuntimeError('')
@@ -233,7 +334,6 @@ class TestBackfillRecord(TestCase):
                     return a
             raise RuntimeError(f'No such abs: {identifier}')
 
-        mock_abs.get_path.side_effect = lambda b, i: i   # Pass ID through.
         mock_abs.parse.side_effect = _get_abs       # Get AbsData by ID.
 
         # This is called when parsing the pre-daily records, and gets all of
@@ -242,9 +342,10 @@ class TestBackfillRecord(TestCase):
 
         # We gave generated a RuntimeError intentionally...
         with self.assertRaises(RuntimeError):
-            backfill.backfill_record(register, '/fo', '/ba', self.state_path)
-        # ...and call backfill_record again to resume.
-        backfill.backfill_record(register, '/fo', '/ba', self.state_path)
+            list(backfill.backfill(register, '/fo', '/ba', self.state_path))
+
+        # ...and call backfill again to resume.
+        list(backfill.backfill(register, '/fo', '/ba', self.state_path))
 
         # We expect an ordered series of events that represents both what is
         # directly known from daily.log and what is inferred from the presence
@@ -295,6 +396,7 @@ class TestBackfillRecord(TestCase):
 class TestLoadPredailyEvents(TestCase):
     """Load events from before there were events!"""
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.daily')
     @mock.patch(f'{backfill.__name__}.abs')
     def test_load_new_before_daily(self, mock_abs, mock_daily):
@@ -370,6 +472,7 @@ class TestLoadPredailyEvents(TestCase):
                          [Category('cs.IR'), Category('cs.WT')],
                          'And the correct cross-list categories')
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.daily')
     @mock.patch(f'{backfill.__name__}.abs')
     def test_load_new_before_daily_with_cross(self, mock_abs, mock_daily):
@@ -450,6 +553,7 @@ class TestLoadPredailyEvents(TestCase):
 class TestDailyEvents(TestCase):
     """Load daily events!"""
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.abs')
     def test_load_new(self, mock_abs):
         """Load a NEW event."""
@@ -499,6 +603,7 @@ class TestDailyEvents(TestCase):
             ' order.'
         )
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.abs')
     def test_load_cross(self, mock_abs):
         """Load a CROSSLIST event."""
@@ -548,6 +653,7 @@ class TestDailyEvents(TestCase):
             ' order.'
         )
 
+    @mock.patch(f'{backfill.__name__}.content', mock.MagicMock())
     @mock.patch(f'{backfill.__name__}.abs')
     def test_load_replacement(self, mock_abs):
         """Load a REPLACED event."""
@@ -585,9 +691,6 @@ class TestDailyEvents(TestCase):
         current = {ident: 1}    # The current version number.
         first = {ident: date(2019, 2, 11)}   # First announcement date.
         event = backfill._load_daily_event('', event_datum, current, first)
-
-        self.assertEqual(mock_abs.get_path.call_args[0][1], '2302.00123v2',
-                         'The correct abs version is pulled')
 
         self.assertEqual(event.event_type, EventType.REPLACED,
                          'Creates REPLACED event')

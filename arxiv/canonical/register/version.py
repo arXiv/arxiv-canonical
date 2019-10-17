@@ -1,6 +1,6 @@
 from datetime import date
 from functools import partial
-from typing import Optional, Sequence, Set, Type, Union
+from typing import Dict, Optional, Sequence, Set, Type, Union
 
 from .core import (Base, D, R, I, ICanonicalStorage, ICanonicalSource, _Self,
                    dereference)
@@ -23,7 +23,7 @@ class RegisterVersion(Base[D.VersionedIdentifier,
     def create(cls, s: ICanonicalStorage, sources: Sequence[ICanonicalSource],
                d: D.Version, save_members: bool = True) -> 'RegisterVersion':
         r = R.RecordVersion.from_domain(d, partial(dereference, sources))
-        i = I.IntegrityVersion.from_record(r)
+        i = I.IntegrityVersion.from_record(r, calculate_new_checksum=True)
         members = {}
         for i_member in i.iter_members():
             if isinstance(i_member.record, R.RecordFile):
@@ -66,13 +66,40 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         manifest = s.load_manifest(R.RecordVersion.make_manifest_key(identifier))
         r = R.RecordVersion.from_domain(d, partial(dereference, sources),
                                         metadata=_r)
+        print(checksum)
         i = I.IntegrityVersion.from_record(
             r,
             checksum=checksum,
-            calculate_new_checksum=False,
+            calculate_new_checksum=bool(checksum is None),
             manifest=manifest
         )
-        return cls(date, domain=d, record=r, integrity=i)
+
+        return cls(r.name, domain=d, record=r, integrity=i,
+                   members=cls._get_version_members(s, i, save_members=False))
+
+    @classmethod
+    def _get_version_members(cls, s: ICanonicalStorage,
+                             integrity: I.IntegrityVersion,
+                             save_members: bool = True) -> Dict[str, RegisterFile]:
+        members = {}
+        for i_member in integrity.iter_members():
+            if isinstance(i_member.record, R.RecordFile):
+                assert isinstance(i_member.record.domain, D.CanonicalFile)
+                member = RegisterFile(i_member.name,
+                                      domain=i_member.record.domain,
+                                      record=i_member.record,
+                                      integrity=i_member)
+            elif isinstance(i_member.record, R.RecordMetadata):
+                assert isinstance(i_member.record.domain, D.Version)
+                assert isinstance(i_member, I.IntegrityMetadata)
+                member = RegisterMetadata(i_member.name,
+                                          domain=i_member.record.domain,
+                                          record=i_member.record,
+                                          integrity=i_member)
+            if save_members:
+                member.save(s)
+            members[member.name] = member
+        return members
 
     @property
     def member_names(self) -> Set[str]:
@@ -97,7 +124,7 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         update). Saves any new/changed members, and updates the manifest.
         """
         new_version = self.create(s, sources, version, save_members=False)
-        assert self.members is not None and new_version.members is not None
+        # assert self.members is not None and new_version.members is not None
         to_remove = self.member_names - new_version.member_names
 
         to_add = [name for name in new_version.members
