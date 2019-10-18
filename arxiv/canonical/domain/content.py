@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 
 class SourceFileType(Enum):
@@ -75,6 +76,39 @@ class SourceType(str):
     @property
     def has_ps_only(self) -> bool:
         return bool(SourceFileType.PostscriptOnly in self._types)
+
+    @property
+    def available_formats(self) -> List['ContentType']:
+        """
+        List the available dissemination formats for this source type.
+
+        Depending on the original source type, we may not be able to provide
+        all supported formats.
+
+        This does not include the source format. Note also that this does
+        **not** enforce rules about what should be displayed as an option
+        or provided to end users.
+        """
+        formats = []
+        if self.has_ignore and not self.has_encrypted_source:
+            pass
+        elif self.has_ps_only:
+            formats.extend([ContentType.pdf, ContentType.ps])
+        elif self.has_pdflatex:
+            formats.append(ContentType.pdf)
+        elif self.has_pdf_only:
+            formats.append(ContentType.pdf)
+        elif self.has_html:
+            formats.append(ContentType.html)
+        elif self.has_docx or self.has_odf:
+            formats.append(ContentType.pdf)
+        else:
+            formats.extend([
+                ContentType.pdf,
+                ContentType.ps,
+                ContentType.dvi,
+            ])
+        return formats
 
 
 class ContentType(Enum):

@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Iterable, Optional
 
 from pytz import timezone
 
@@ -58,16 +58,36 @@ def get_source(data: str, ident: D.VersionedIdentifier) -> D.CanonicalFile:
     )
 
 
-# def get_render(data: str, ident: D.VersionedIdentifier) -> D.CanonicalFile:
+def get_formats(data: str, ident: D.VersionedIdentifier,
+                source_type: D.SourceType) -> Iterable[D.CanonicalFile]:
+    """Get the dissemination formats for a version."""
+    for content_type in source_type.available_formats:
+        filename = f'{ident}.{content_type.ext}'
+        cached = _cache(data, ident, filename)
+        if os.path.exists(cached):
+            mtime = datetime.utcfromtimestamp(os.path.getmtime(cached)) \
+                .astimezone(ET)
+            yield D.CanonicalFile(
+                created=mtime,
+                modified=mtime,
+                size_bytes=os.path.getsize(cached),
+                content_type=content_type,
+                ref=D.URI(cached),
+                filename=filename
+            )
+        else:
+            yield _get_via_http(ident, content_type)
 
-def _get_render_via_http(data: str, ident: D.VersionedIdentifier) \
-        -> D.CanonicalFile:
+
+def _get_via_http(ident: D.VersionedIdentifier,
+                  content_type: D.ContentType) -> D.CanonicalFile:
     """Retrieve the"""
     logger.debug(f'Getting render for {ident}')
-    global REMOTE
+    global REMOTE       # This is fine for now since this is single-threaded.
     if REMOTE is None:
         REMOTE = RemoteSourceWithHead('arxiv.org')
-    return REMOTE.head(D.URI(f'https://arxiv.org/pdf/{ident}.pdf'))
+    path = f'{content_type.value}/{ident}.{content_type.ext}'
+    return REMOTE.head(D.URI(f'https://arxiv.org/{path}'))
 
 
 class RemoteSourceWithHead(RemoteSource):
