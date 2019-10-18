@@ -14,7 +14,7 @@ from backports.datetime_fromisoformat import MonkeyPatch
 
 from arxiv.taxonomy import Category  # pylint: disable=no-name-in-module
 
-from .base import CanonicalBase, Callback, with_callbacks
+from .base import CanonicalBase
 from .identifier import Identifier, VersionedIdentifier
 from .person import Person
 from .file import CanonicalFile
@@ -65,9 +65,7 @@ class Metadata(CanonicalBase):
         self.acm_class = acm_class
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'Metadata':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Metadata':
         return cls(
             primary_classification=Category(data['primary_classification']),
             secondary_classification=[
@@ -76,7 +74,7 @@ class Metadata(CanonicalBase):
             title=data['title'],
             abstract=data['abstract'],
             authors=data['authors'],
-            license=License.from_dict(data['license'], callbacks=callbacks),
+            license=License.from_dict(data['license']),
             comments=data.get('comments'),
             journal_ref=data.get('journal_ref'),
             report_num=data.get('report_num'),
@@ -94,8 +92,7 @@ class Metadata(CanonicalBase):
             if category not in self.secondary_classification:
                 self.secondary_classification.append(category)
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'primary_classification': str(self.primary_classification),
             'secondary_classification': [
@@ -104,7 +101,7 @@ class Metadata(CanonicalBase):
             'title': self.title,
             'abstract': self.abstract,
             'authors': self.authors,
-            'license': self.license.to_dict(callbacks=callbacks),
+            'license': self.license.to_dict(),
             'comments': self.comments,
             'journal_ref': self.journal_ref,
             'report_num': self.report_num,
@@ -127,17 +124,14 @@ class VersionReference(CanonicalBase):
         self.submitted_date = submitted_date
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'VersionReference':
+    def from_dict(cls, data: Dict[str, Any]) -> 'VersionReference':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore; pylint: disable=no-member
             submitted_date=datetime.fromisoformat(data['submitted_date']).date(),  # type: ignore; pylint: disable=no-member
         )
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'identifier': str(self.identifier),
             'announced_date': self.announced_date.isoformat(),
@@ -211,26 +205,24 @@ class Version(CanonicalBase):
         self.source_type = source_type
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'Version':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Version':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore ; pylint: disable=no-member
             announced_date_first=datetime.fromisoformat(data['announced_date_first']).date(),  # type: ignore ; pylint: disable=no-member
             submitted_date=datetime.fromisoformat(data['submitted_date']),  # type: ignore ; pylint: disable=no-member
             updated_date=datetime.fromisoformat(data['updated_date']),  # type: ignore ; pylint: disable=no-member
-            metadata=Metadata.from_dict(data['metadata'], callbacks=callbacks),
-            events=[EventSummary.from_dict(e, callbacks=callbacks) for e in data['events']],
-            previous_versions=[VersionReference.from_dict(v, callbacks=callbacks) for v in data['previous_versions']],
-            submitter=Person.from_dict(data['submitter'], callbacks=callbacks) if data.get('submitter') else None,
+            metadata=Metadata.from_dict(data['metadata']),
+            events=[EventSummary.from_dict(e) for e in data['events']],
+            previous_versions=[VersionReference.from_dict(v) for v in data['previous_versions']],
+            submitter=Person.from_dict(data['submitter']) if data.get('submitter') else None,
             proxy=data.get('proxy'),
             is_announced=data['is_announced'],
             is_withdrawn=data['is_withdrawn'],
             reason_for_withdrawal=data.get('reason_for_withdrawal'),
             is_legacy=data['is_legacy'],
-            render=CanonicalFile.from_dict(data['render'], callbacks=callbacks),
-            source=CanonicalFile.from_dict(data['source'], callbacks=callbacks),
+            render=CanonicalFile.from_dict(data['render']),
+            source=CanonicalFile.from_dict(data['source']),
             source_type=data.get('source_type')
         )
 
@@ -247,28 +239,27 @@ class Version(CanonicalBase):
         assert self.source is not None
         return int(round(self.source.size_bytes / 1_028))
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'identifier': str(self.identifier),
             'announced_date': self.announced_date.isoformat(),
             'announced_date_first': self.announced_date_first.isoformat(),
             'submitted_date': self.submitted_date.isoformat(),
             'updated_date': self.updated_date.isoformat(),
-            'metadata': self.metadata.to_dict(callbacks=callbacks),
-            'events': [s.to_dict(callbacks=callbacks) for s in self.events],
+            'metadata': self.metadata.to_dict(),
+            'events': [s.to_dict() for s in self.events],
             'previous_versions': [
-                v.to_dict(callbacks=callbacks) for v in self.previous_versions
+                v.to_dict() for v in self.previous_versions
             ],
-            'submitter': self.submitter.to_dict(callbacks=callbacks)
+            'submitter': self.submitter.to_dict()
                 if self.submitter else None,
             'proxy': self.proxy,
             'is_announced': self.is_announced,
             'is_withdrawn': self.is_withdrawn,
             'reason_for_withdrawal': self.reason_for_withdrawal,
             'is_legacy': self.is_legacy,
-            'render': self.render.to_dict(callbacks=callbacks),
-            'source': self.source.to_dict(callbacks=callbacks),
+            'render': self.render.to_dict(),
+            'source': self.source.to_dict(),
             'source_type': self.source_type
         }
 
@@ -362,15 +353,13 @@ class Event(_EventBase):
                                     event_agent=event_agent)
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'Event':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Event':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             event_date=datetime.fromisoformat(data['event_date']),  # type: ignore ; pylint: disable=no-member
             event_type=EventType(data['event_type']),
             categories=[Category(cat) for cat in data['categories']],
-            version=Version.from_dict(data['version'], callbacks=callbacks),
+            version=Version.from_dict(data['version']),
             description=data['description'],
             is_legacy=data['is_legacy'],
             event_agent=data.get('event_agent')
@@ -410,14 +399,13 @@ class Event(_EventBase):
             event_agent=self.event_agent
         )
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'identifier': str(self.identifier),
             'event_date': self.event_date.isoformat(),
             'event_type': self.event_type.value,
             'categories': [str(cat) for cat in self.categories],
-            'version': self.version.to_dict(callbacks=callbacks),
+            'version': self.version.to_dict(),
             'description': self.description,
             'is_legacy': self.is_legacy,
             'event_agent': self.event_agent,
@@ -451,9 +439,7 @@ class EventSummary(_EventBase):
                                            event_agent=event_agent)
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'EventSummary':
+    def from_dict(cls, data: Dict[str, Any]) -> 'EventSummary':
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             event_date=datetime.fromisoformat(data['event_date']),  # type: ignore ; pylint: disable=no-member
@@ -465,8 +451,7 @@ class EventSummary(_EventBase):
             event_agent=data.get('event_agent')
         )
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'identifier': str(self.identifier),
             'event_date': self.event_date.isoformat(),

@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Iterable, List, Optional
 
-from .base import CanonicalBase, Callback, with_callbacks
+from .base import CanonicalBase
 
 
 class Person(CanonicalBase):
@@ -32,9 +32,7 @@ class Person(CanonicalBase):
         self.affiliation = affiliation
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'Person':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Person':
         return cls(
             full_name=data['full_name'],
             last_name=data.get('last_name'),
@@ -45,8 +43,7 @@ class Person(CanonicalBase):
             affiliation=data.get('affiliation', []),
         )
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'full_name': self.full_name,
             'last_name': self.last_name,

@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import NamedTuple, MutableSequence, Mapping, Tuple, Optional, \
     Any, Dict, Iterable, Callable
 
-from .base import CanonicalBase, Callback, with_callbacks
+from .base import CanonicalBase
 from .eprint import EPrint, Identifier
 from .version import Event, EventType
 
@@ -41,11 +41,9 @@ class Listing(CanonicalBase):
         self.events = events
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'Listing':
+    def from_dict(cls, data: Dict[str, Any]) -> 'Listing':
         return cls(identifier=ListingIdentifier(data['identifier']),
-                   events=[Event.from_dict(e, callbacks=callbacks)
+                   events=[Event.from_dict(e)
                            for e in data['events']])
 
     @property
@@ -79,11 +77,10 @@ class Listing(CanonicalBase):
             return datetime.datetime.now()
         return self.events[0].event_date
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'identifier': str(self.identifier),
-            'events': [e.to_dict(callbacks=callbacks) for e in self.events]
+            'events': [e.to_dict() for e in self.events]
         }
 
 

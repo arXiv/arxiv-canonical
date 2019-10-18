@@ -1,7 +1,7 @@
 """Core data structures and concepts."""
 
 from arxiv.taxonomy import Category
-from .base import CanonicalBase, CanonicalBaseCollection, Callback
+from .base import CanonicalBase, CanonicalBaseCollection
 from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
 from .content import ContentType
 from .eprint import EPrint

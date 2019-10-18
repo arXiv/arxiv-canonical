@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Iterable
 
-from .base import CanonicalBase, Callback, with_callbacks
+from .base import CanonicalBase
 
 
 class License(CanonicalBase):
@@ -14,12 +14,8 @@ class License(CanonicalBase):
         self.href = href
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'License':
+    def from_dict(cls, data: Dict[str, Any]) -> 'License':
         return cls(href=data['href'])
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) \
-            -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {'href': self.href}

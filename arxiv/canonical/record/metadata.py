@@ -34,10 +34,9 @@ class RecordMetadata(RecordEntry[D.Version]):
                 f'{ident.arxiv_id}/v{ident.version}')
 
     @classmethod
-    def from_domain(cls: Type[_Self], version: D.Version,
-                    callbacks: Iterable[D.Callback] = ()) -> _Self:
+    def from_domain(cls: Type[_Self], version: D.Version) -> _Self:
         content, size_bytes = RecordMetadata._encode(version,
-                                                     callbacks=callbacks)
+                                                     )
         content_type = D.ContentType.json
         key = RecordMetadata.make_key(version.identifier)
         return cls(
@@ -59,23 +58,20 @@ class RecordMetadata(RecordEntry[D.Version]):
         )
 
     @classmethod
-    def _encode(cls, version: D.Version,
-                callbacks: Iterable[D.Callback] = ()) -> Tuple[IO[bytes], int]:
-        content = dumps(version.to_dict(callbacks=callbacks)).encode('utf-8')
+    def _encode(cls, version: D.Version) -> Tuple[IO[bytes], int]:
+        content = dumps(version.to_dict()).encode('utf-8')
         return BytesIO(content), len(content)
 
     @classmethod
-    def to_domain(cls, stream: RecordStream,
-                  callbacks: Iterable[D.Callback] = ()) -> D.Version:
+    def to_domain(cls, stream: RecordStream) -> D.Version:
         assert stream.content is not None
         version = D.Version.from_dict(load(stream.content),
-                                      callbacks=callbacks)
+                                      )
         if stream.content.seekable:
             stream.content.seek(0)
         return version  # RecordVersion.post_to_domain(version, load_content)
 
     @classmethod
-    def from_stream(cls, key: D.Key, stream: RecordStream,
-                    callbacks: Iterable[D.Callback] = ()) -> 'RecordMetadata':
+    def from_stream(cls, key: D.Key, stream: RecordStream) -> 'RecordMetadata':
         return cls(key=key, stream=stream,
-                   domain=cls.to_domain(stream, callbacks=callbacks))
+                   domain=cls.to_domain(stream))

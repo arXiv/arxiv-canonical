@@ -38,7 +38,7 @@ class RegisterListing(Base[D.ListingIdentifier,
             key = R.RecordListing.make_key(identifier)
             stream, _checksum = s.load_entry(key)
 
-            d = R.RecordListing.to_domain(stream, callbacks=[])
+            d = R.RecordListing.to_domain(stream)
             r = R.RecordListing(key=key, stream=stream, domain=d)
             if checksum is not None:
                 assert checksum == _checksum
@@ -46,7 +46,7 @@ class RegisterListing(Base[D.ListingIdentifier,
                                                calculate_new_checksum=False)
         except Exception:
             d = D.Listing(identifier, events=[])
-            r = R.RecordListing.from_domain(d, callbacks=[])
+            r = R.RecordListing.from_domain(d)
             i = I.IntegrityListing.from_record(r)
         return cls(identifier, domain=d, integrity=i, record=r)
 
@@ -70,8 +70,7 @@ class RegisterListing(Base[D.ListingIdentifier,
         N = len(events)
         for i, event in enumerate(events):
             self.domain.events.insert(N + i, event)
-        self.record = R.RecordListing.from_domain(self.domain,
-                                                  callbacks=[])
+        self.record = R.RecordListing.from_domain(self.domain)
         self.integrity = I.IntegrityListing.from_record(self.record)
 
     def save(self, s: ICanonicalStorage) -> str:

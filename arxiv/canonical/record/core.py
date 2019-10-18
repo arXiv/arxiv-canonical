@@ -80,13 +80,11 @@ class RecordEntry(Generic[_EDomain]):
         return os.path.splitext(fname)[0]
 
     @classmethod
-    def from_domain(cls: Type[_Self], d: _EDomain,
-                    callbacks: Iterable[D.Callback] = ()) -> _Self:
+    def from_domain(cls: Type[_Self], d: _EDomain) -> _Self:
         raise NotImplementedError("Must be implemented by child class")
 
     @classmethod
-    def to_domain(cls, stream: RecordStream,
-                  callbacks: Iterable[D.Callback] = ()) -> _EDomain:
+    def to_domain(cls, stream: RecordStream) -> _EDomain:
         raise NotImplementedError("Must be implemented by child class")
 
 

@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from typing_extensions import Protocol
 
-from .base import CanonicalBase, Callback, with_callbacks
+from .base import CanonicalBase
 from .content import ContentType
 
 
@@ -86,9 +86,7 @@ class CanonicalFile(CanonicalBase):
         # self.content = content
 
     @classmethod
-    @with_callbacks
-    def from_dict(cls, data: Dict[str, Any],
-                  callbacks: Iterable[Callback] = ()) -> 'CanonicalFile':
+    def from_dict(cls, data: Dict[str, Any]) -> 'CanonicalFile':
         return cls(
             created=datetime.fromisoformat(data['created']),  # type: ignore ; pylint: disable=no-member
             modified=datetime.fromisoformat(data['modified']),  # type: ignore ; pylint: disable=no-member
@@ -103,8 +101,7 @@ class CanonicalFile(CanonicalBase):
     def mime_type(self) -> str:
         return self.content_type.mime_type
 
-    @with_callbacks
-    def to_dict(self, callbacks: Iterable[Callback] = ()) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'created': self.created.isoformat(),
             'modified': self.modified.isoformat(),

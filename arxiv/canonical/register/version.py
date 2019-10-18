@@ -59,14 +59,13 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         # record.
         key = R.RecordMetadata.make_key(identifier)
         stream, _ = s.load_entry(key)
-        d = R.RecordMetadata.to_domain(stream, callbacks=[])   # self.load_deferred
+        d = R.RecordMetadata.to_domain(stream)   # self.load_deferred
         _r = R.RecordMetadata(key=key, stream=stream, domain=d)
 
         assert d.source is not None and d.render is not None
         manifest = s.load_manifest(R.RecordVersion.make_manifest_key(identifier))
         r = R.RecordVersion.from_domain(d, partial(dereference, sources),
                                         metadata=_r)
-        print(checksum)
         i = I.IntegrityVersion.from_record(
             r,
             checksum=checksum,

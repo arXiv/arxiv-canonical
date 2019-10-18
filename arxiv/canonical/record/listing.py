@@ -12,10 +12,9 @@ class RecordListing(RecordEntry[D.Listing]):
     """A listing entry."""
 
     @classmethod
-    def from_domain(cls: Type[_Self], listing: D.Listing,
-                    callbacks: Iterable[D.Callback] = ()) -> _Self:
+    def from_domain(cls: Type[_Self], listing: D.Listing) -> _Self:
         """Serialize a :class:`.Listing`."""
-        content, size_bytes = RecordListing._encode(listing, callbacks=callbacks)
+        content, size_bytes = RecordListing._encode(listing)
         key = RecordListing.make_key(listing.identifier)
         return cls(
             key=key,
@@ -36,10 +35,9 @@ class RecordListing(RecordEntry[D.Listing]):
         )
 
     @classmethod
-    def from_stream(cls, key: D.Key, stream: RecordStream,
-                    callbacks: Iterable[D.Callback] = ()) -> 'RecordListing':
+    def from_stream(cls, key: D.Key, stream: RecordStream) -> 'RecordListing':
         return cls(key=key, stream=stream,
-                   domain=cls.to_domain(stream, callbacks=callbacks))
+                   domain=cls.to_domain(stream))
 
     @classmethod
     def make_key(cls, identifier: D.ListingIdentifier) -> D.Key:
@@ -54,19 +52,17 @@ class RecordListing(RecordEntry[D.Listing]):
         return date.strftime(f'announcement/%Y/%m/%d')
 
     @classmethod
-    def to_domain(cls, stream: RecordStream,
-                  callbacks: Iterable[D.Callback] = ()) -> D.Listing:
+    def to_domain(cls, stream: RecordStream) -> D.Listing:
         assert stream.content is not None
         listing = D.Listing.from_dict(load(stream.content),
-                                      callbacks=callbacks)
+                                      )
         if stream.content.seekable:
             stream.content.seek(0)
         return listing
 
     @classmethod
-    def _encode(cls, listing: D.Listing,
-                callbacks: Iterable[D.Callback] = ()) -> Tuple[IO[bytes], int]:
-        content = dumps(listing.to_dict(callbacks=callbacks)).encode('utf-8')
+    def _encode(cls, listing: D.Listing) -> Tuple[IO[bytes], int]:
+        content = dumps(listing.to_dict()).encode('utf-8')
         return BytesIO(content), len(content)
 
     @property

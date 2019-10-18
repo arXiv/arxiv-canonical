@@ -39,8 +39,7 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
     @classmethod
     def from_domain(cls, version: D.Version,
                     dereferencer: Callable[[D.URI], IO[bytes]],
-                    metadata: Optional[RecordMetadata] = None,
-                    callbacks: Iterable[D.Callback] = ()) -> 'RecordVersion':
+                    metadata: Optional[RecordMetadata] = None) -> 'RecordVersion':
         """Serialize an :class:`.Version` to an :class:`.RecordVersion`."""
         if version.source is None:
             raise ValueError('Source is missing')
@@ -85,7 +84,7 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         )
 
         if metadata is None:
-            metadata = RecordMetadata.from_domain(version, callbacks=callbacks)
+            metadata = RecordMetadata.from_domain(version)
 
         return RecordVersion(
             version.identifier,
@@ -153,11 +152,11 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         assert 'source' in self.members
         return self.members['source']
 
-    def instance_to_domain(self, callbacks: Iterable[D.Callback] = ()) \
+    def instance_to_domain(self) \
             -> D.Version:
         """Deserialize an :class:`.RecordVersion` to an :class:`.Version`."""
         version = self.metadata.to_domain(self.metadata.stream,
-                                          callbacks=callbacks)
+                                          )
         if version.source is None or version.render is None:
             raise ValueError('Failed to to_domain source or render metadata')
         return version
