@@ -6,6 +6,9 @@ class ContentType(Enum):
     targz = 'targz'
     json = 'json'
     abs = 'abs'
+    html = 'html'
+    dvi = 'dvi'
+    ps = 'ps'
 
     @property
     def mime_type(self) -> str:
@@ -25,6 +28,9 @@ _mime_types = {
     ContentType.targz: 'application/gzip',
     ContentType.json: 'application/json',
     ContentType.abs: 'text/plain',
+    ContentType.html: 'text/html',
+    ContentType.dvi: 'application/x-dvi',
+    ContentType.ps: 'application/postscript',
 }
 
 _extensions = {
@@ -32,4 +38,7 @@ _extensions = {
     ContentType.targz: 'tar.gz',
     ContentType.json: 'json',
     ContentType.abs: 'abs',
+    ContentType.html: 'html',
+    ContentType.dvi: 'x-dvi',
+    ContentType.ps: 'ps',
 }

@@ -15,6 +15,7 @@ from backports.datetime_fromisoformat import MonkeyPatch
 from arxiv.taxonomy import Category  # pylint: disable=no-name-in-module
 
 from .base import CanonicalBase
+from .content import ContentType
 from .identifier import Identifier, VersionedIdentifier
 from .person import Person
 from .file import CanonicalFile
@@ -168,6 +169,7 @@ class Version(CanonicalBase):
     source: CanonicalFile
     source_type: Optional[str]  # TODO: make this an enum?
     """Internal code for the source type."""
+    formats: Dict[ContentType, CanonicalFile]
 
     def __init__(self, identifier: VersionedIdentifier,
                  announced_date: date,
@@ -185,7 +187,8 @@ class Version(CanonicalBase):
                  is_withdrawn: bool = False,
                  is_legacy: bool = False,
                  reason_for_withdrawal: Optional[str] = None,
-                 source_type: Optional[str] = None) -> None:
+                 source_type: Optional[str] = None,
+                 formats: Dict[ContentType, CanonicalFile] = {}) -> None:
         self.identifier = identifier
         self.announced_date = announced_date
         self.announced_date_first = announced_date_first
@@ -203,6 +206,7 @@ class Version(CanonicalBase):
         self.render = render
         self.source = source
         self.source_type = source_type
+        self.formats = formats
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Version':
@@ -223,7 +227,12 @@ class Version(CanonicalBase):
             is_legacy=data['is_legacy'],
             render=CanonicalFile.from_dict(data['render']),
             source=CanonicalFile.from_dict(data['source']),
-            source_type=data.get('source_type')
+            source_type=data.get('source_type'),
+            formats={
+                ContentType(entry["format"]):
+                    CanonicalFile.from_dict(entry["content"])
+                for entry in data.get('formats', [])
+            }
         )
 
     @property
@@ -260,7 +269,13 @@ class Version(CanonicalBase):
             'is_legacy': self.is_legacy,
             'render': self.render.to_dict(),
             'source': self.source.to_dict(),
-            'source_type': self.source_type
+            'source_type': self.source_type,
+            'formats': [
+                {
+                    "format": fmt.value,
+                    "content": cf.to_dict()
+                } for fmt, cf in self.formats.items()
+            ]
         }
 
 

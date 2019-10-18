@@ -1,5 +1,5 @@
 import datetime
-from typing import Callable, IO, Iterable, Optional
+from typing import Callable, Dict, IO, Iterable, Optional
 
 from .core import RecordBase, RecordEntry, RecordEntryMembers, RecordStream, \
     D, Year, YearMonth
@@ -52,6 +52,8 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         # to live.
         source_content = dereferencer(version.source.ref)
         render_content = dereferencer(version.render.ref)
+        format_content = {fmt: dereferencer(cf.ref)
+                          for fmt, cf in version.formats.items()}
 
         # From now on we refer to the source and render bitstreams with
         # canonical URIs.
@@ -59,8 +61,15 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
                                             version.render.filename)
         source_key = RecordVersion.make_key(version.identifier,
                                             version.source.filename)
+        format_keys = {
+            fmt: RecordVersion.make_key(version.identifier, cf.filename)
+            for fmt, cf in version.formats.items()
+        }
         version.source.ref = source_key
         version.render.ref = render_key
+        for fmt, cf in version.formats.items():
+            cf.ref = format_keys[fmt]
+
         source = RecordFile(
             key=source_key,
             stream=RecordStream(
@@ -83,6 +92,19 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             domain=version.render
         )
 
+        formats = {
+            fmt.value: RecordFile(
+                key=format_keys[fmt],
+                stream=RecordStream(
+                    domain=cf,
+                    content=format_content[fmt],
+                    content_type=cf.content_type,
+                    size_bytes=cf.size_bytes,
+                ),
+                domain=cf
+            ) for fmt, cf in version.formats.items()
+        }
+
         if metadata is None:
             metadata = RecordMetadata.from_domain(version)
 
@@ -91,7 +113,8 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             members=RecordEntryMembers(
                 metadata=metadata,
                 source=source,
-                render=render
+                render=render,
+                **formats
             ),
             domain=version
         )
@@ -147,16 +170,20 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         return self.members['render']
 
     @property
+    def formats(self) -> Dict[D.ContentType, RecordEntry]:
+        return {D.ContentType(fmt): entry
+                for fmt, entry in self.members.items()
+                if fmt not in ['metadata', 'source', 'render']}
+
+    @property
     def source(self) -> RecordEntry:
         """Gzipped tarball containing the e-print source."""
         assert 'source' in self.members
         return self.members['source']
 
-    def instance_to_domain(self) \
-            -> D.Version:
+    def instance_to_domain(self) -> D.Version:
         """Deserialize an :class:`.RecordVersion` to an :class:`.Version`."""
-        version = self.metadata.to_domain(self.metadata.stream,
-                                          )
+        version = self.metadata.to_domain(self.metadata.stream)
         if version.source is None or version.render is None:
             raise ValueError('Failed to to_domain source or render metadata')
         return version

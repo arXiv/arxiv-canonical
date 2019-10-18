@@ -1,6 +1,6 @@
 
 from datetime import date
-from typing import Mapping, Optional, Type, Union
+from typing import Dict, Mapping, Optional, Type, Union
 
 from ..manifest import ManifestEntry, Manifest, checksum_from_manifest
 
@@ -55,6 +55,7 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
         calculate_new_checksum_for_members = bool(manifest is None)
         render_checksum: Optional[str] = None
         source_checksum: Optional[str] = None
+        format_checksums: Dict[D.ContentType, Optional[str]]
         if manifest:
             render_checksum = checksum_from_manifest(
                 manifest,
@@ -70,7 +71,20 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                     version.source.domain.filename
                 )
             )
-
+            format_checksums = {
+                fmt: checksum_from_manifest(
+                    manifest,
+                    R.RecordVersion.make_key(version.identifier,
+                                             cf.domain.filename)
+                ) for fmt, cf in version.formats.items()
+            }
+        formats = {
+            fmt.value: IntegrityEntry.from_record(
+                cf,
+                checksum=format_checksums.get(fmt),
+                calculate_new_checksum=calculate_new_checksum_for_members
+            ) for fmt, cf in version.formats.items()
+        }
         members = IntegrityVersionMembers(
             metadata=IntegrityMetadata.from_record(version.metadata),
             render=IntegrityEntry.from_record(
@@ -82,7 +96,8 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                 version.source,
                 checksum=source_checksum,
                 calculate_new_checksum=calculate_new_checksum_for_members
-            )
+            ),
+            **formats
         )
 
         manifest = cls.make_manifest(members)
@@ -121,6 +136,11 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
     @property
     def source(self) -> IntegrityEntry:
         return self.members['source']
+
+    @property
+    def formats(self) -> Dict[D.ContentType, IntegrityEntry]:
+        return {D.ContentType(fmt): cf for fmt, cf in self.members.items()
+                if fmt not in ['metadata', 'source', 'render']}
 
 
 class IntegrityEPrint(IntegrityBase[D.Identifier,

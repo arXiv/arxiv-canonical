@@ -93,6 +93,20 @@
     "source": {
       "$ref": "./CanonicalFile.json"
     },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "./CanonicalFile.json"
+          }
+        }
+      }
+    },
     "source_type": {
       "oneOf": [
         {"type": "string"},
