@@ -87,7 +87,7 @@ class AbsData(NamedTuple):
     size_kilobytes: int
     submission_type: D.EventType
     secondary_classification: List[D.Category]
-    source_type: Optional[str] = None
+    source_type: Optional[D.SourceType] = None
     journal_ref: Optional[str] = None
     report_num: Optional[str] = None
     doi: Optional[str] = None

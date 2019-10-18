@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 
 class SourceFileType(Enum):
@@ -152,3 +152,27 @@ _extensions = {
     ContentType.dvi: 'x-dvi',
     ContentType.ps: 'ps',
 }
+
+
+DISSEMINATION_FORMATS_BY_SOURCE_EXT = [
+    ('.tar.gz', None),
+    ('.pdf', [ContentType.pdf]),
+    ('.ps.gz', [ContentType.pdf, ContentType.ps]),
+    ('.gz', None),
+    ('.dvi.gz', None),
+    ('.html.gz', [ContentType.html])
+]
+"""Dissemination formats that can be inferred from source file extension."""
+
+
+def available_formats_by_ext(filename: str) -> Optional[List[ContentType]]:
+    """
+    Attempt to determine the available dissemination formats by file extension.
+
+    It sometimes (but not always) possible to infer the available dissemination
+    formats based on the filename extension of the source package.
+    """
+    for ext, formats in DISSEMINATION_FORMATS_BY_SOURCE_EXT:
+        if filename.endswith(ext):
+            return formats
+    return None

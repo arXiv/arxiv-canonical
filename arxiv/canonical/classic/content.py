@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, List, Optional
 
 from pytz import timezone
 
@@ -59,9 +59,17 @@ def get_source(data: str, ident: D.VersionedIdentifier) -> D.CanonicalFile:
 
 
 def get_formats(data: str, ident: D.VersionedIdentifier,
-                source_type: D.SourceType) -> Iterable[D.CanonicalFile]:
+                source_type: Optional[D.SourceType],
+                source: D.CanonicalFile) -> Iterable[D.CanonicalFile]:
     """Get the dissemination formats for a version."""
-    for content_type in source_type.available_formats:
+    available_formats: Optional[List[D.ContentType]] = None
+    if source.filename is not None:
+        available_formats = D.available_formats_by_ext(source.filename)
+    if available_formats is None and source_type is not None:
+        available_formats = source_type.available_formats
+    if not available_formats:   # Nothing more can be done at this point.
+        return
+    for content_type in available_formats:
         filename = f'{ident}.{content_type.ext}'
         cached = _cache(data, ident, filename)
         if os.path.exists(cached):

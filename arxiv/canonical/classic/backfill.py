@@ -35,8 +35,8 @@ from typing import Iterable, List, Mapping, MutableMapping, Optional, Set, \
 from pytz import timezone
 from pprint import pprint
 
-from ..domain import Event, Identifier, EventType, VersionedIdentifier, \
-    Version, Metadata, EventSummary, Category
+from ..domain import Category, ContentType, Event, EventSummary, EventType, \
+    Identifier, Metadata, Version, VersionedIdentifier
 from ..log import Log, WRITE
 from ..register import IRegisterAPI
 from . import abs, daily, content
@@ -195,6 +195,13 @@ def _make_event(abs_path: str, abs_datum: abs.AbsData,
     else:
         event_type = event_datum.event_type
         is_withdrawn = False
+
+    source = content.get_source(abs_path, identifier)
+    formats = {cf.content_type: cf
+               for cf in content.get_formats(abs_path, identifier,
+                                             abs_datum.source_type, source)}
+    render = formats.get(ContentType.pdf, None)
+
     version = Version(
         identifier=identifier,
         announced_date=event_datum.event_date,
@@ -221,8 +228,9 @@ def _make_event(abs_path: str, abs_datum: abs.AbsData,
         is_announced=True,
         is_withdrawn=is_withdrawn,
         is_legacy=True,
-        source=content.get_source(abs_path, identifier),
-        render=content.get_render(abs_path, identifier),
+        source=source,
+        render=render,
+        formats=formats,
         source_type=abs_datum.source_type
     )
     event = Event(
@@ -353,6 +361,12 @@ def _make_categories(event_datum: daily.EventData, abs_datum: abs.AbsData) \
 
 def _event_from_abs(abs_path: str, abs_data: abs.AbsData,
                     event_date: datetime) -> Event:
+
+    source = content.get_source(abs_path, abs_data.identifier)
+    formats = {cf.content_type: cf
+               for cf in content.get_formats(abs_path, abs_data.identifier,
+                                             abs_data.source_type, source)}
+    render = formats.get(ContentType.pdf, None)
     version = Version(
         identifier=abs_data.identifier,
         announced_date=abs_data.submitted_date,
@@ -379,8 +393,9 @@ def _event_from_abs(abs_path: str, abs_data: abs.AbsData,
         is_announced=True,
         is_withdrawn=False,
         is_legacy=True,
-        source=content.get_source(abs_path, abs_data.identifier),
-        render=content.get_render(abs_path, abs_data.identifier),
+        source=source,
+        render=render,
+        formats=formats,
         source_type=abs_data.source_type
     )
     event = Event(

@@ -3,7 +3,7 @@
 from arxiv.taxonomy import Category
 from .base import CanonicalBase, CanonicalBaseCollection
 from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
-from .content import ContentType, SourceType
+from .content import ContentType, SourceType, available_formats_by_ext
 from .eprint import EPrint
 from .file import CanonicalFile, URI, Key
 from .identifier import Identifier, InvalidIdentifier, VersionedIdentifier
@@ -51,6 +51,8 @@ domain_classes = (
 
 __all__ = [cls.__name__ for cls in domain_classes]
 """All of the core domain classes in this package."""
+
+__all__ += ['available_formats_by_ext']
 
 
 class Canon(CanonicalBase):
