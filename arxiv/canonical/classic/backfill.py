@@ -167,7 +167,11 @@ def _load_daily_event(abs_path: str, event_datum: daily.EventData,
     identifier = _make_id(event_datum, current)
 
     abs_datum = abs.parse(abs_path, identifier)
-    assert abs_datum.identifier == identifier  # Loaded the correct abs file.
+
+    if abs_datum.identifier != identifier:  # Loaded the correct abs file?
+        raise RuntimeError(f'Loaded the wrong abs file! Expected {identifier},'
+                           f' got {abs_datum.identifier}. This may be because'
+                           f' the abs file for {identifier} is missing.')
 
     event = _make_event(abs_path, abs_datum, event_datum, identifier, first)
 

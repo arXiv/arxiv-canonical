@@ -69,7 +69,7 @@ class AbsRef(NamedTuple):
     identifier: D.VersionedIdentifier
     submitted_date: datetime
     announced_month: str
-    source_type: str
+    source_type: D.SourceType
     size_kilobytes: int
 
 
@@ -179,13 +179,13 @@ def parse_versions(data_path: str, identifier: D.Identifier) \
 
 def parse_latest(data_path: str, identifier: D.Identifier) -> AbsData:
     """Parse the abs for the latest version of an e-print."""
-    return parse(latest_path(data_path, identifier))
+    return _parse(latest_path(data_path, identifier))
 
 
 def parse_first(data_path: str, identifier: D.Identifier) -> AbsData:
     """Parse the abs for the first version of an e-print."""
-    return parse(get_path(data_path,
-                          D.VersionedIdentifier.from_parts(identifier, 1)))
+    return _parse(get_path(data_path,
+                           D.VersionedIdentifier.from_parts(identifier, 1)))
 
 
 def iter_all(data_path: str, from_id: Optional[D.Identifier] = None,
