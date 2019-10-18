@@ -1,6 +1,21 @@
 from unittest import TestCase
 
-from ..content import ContentType, SourceFileType, SourceType
+from ..content import ContentType, SourceFileType, SourceType, \
+    available_formats_by_ext
+
+
+class TestAvailableFormatsFromFilename(TestCase):
+
+    def test_formats_from_source_file_name(self):
+        """Test formats returned from file name."""
+        self.assertListEqual(available_formats_by_ext('foo.pdf'),
+                             [ContentType.pdf])
+        self.assertListEqual(available_formats_by_ext('/bar.ps.gz'),
+                             [ContentType.pdf, ContentType.ps])
+        self.assertListEqual(available_formats_by_ext('abc.html.gz'),
+                             [ContentType.html])
+        self.assertIsNone(available_formats_by_ext('baz.html'))
+        self.assertIsNone(available_formats_by_ext(''))
 
 
 class TestSourceType(TestCase):
