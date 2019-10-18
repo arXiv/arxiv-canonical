@@ -15,7 +15,7 @@ from backports.datetime_fromisoformat import MonkeyPatch
 from arxiv.taxonomy import Category  # pylint: disable=no-name-in-module
 
 from .base import CanonicalBase
-from .content import ContentType
+from .content import ContentType, SourceType
 from .identifier import Identifier, VersionedIdentifier
 from .person import Person
 from .file import CanonicalFile
@@ -167,7 +167,7 @@ class Version(CanonicalBase):
     PDF, HTML document, or other product.
     """
     source: CanonicalFile
-    source_type: Optional[str]  # TODO: make this an enum?
+    source_type: Optional[SourceType]
     """Internal code for the source type."""
     formats: Dict[ContentType, CanonicalFile]
 
@@ -187,7 +187,7 @@ class Version(CanonicalBase):
                  is_withdrawn: bool = False,
                  is_legacy: bool = False,
                  reason_for_withdrawal: Optional[str] = None,
-                 source_type: Optional[str] = None,
+                 source_type: Optional[SourceType] = None,
                  formats: Dict[ContentType, CanonicalFile] = {}) -> None:
         self.identifier = identifier
         self.announced_date = announced_date
@@ -210,6 +210,9 @@ class Version(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Version':
+        source_type: Optional[SourceType] = None
+        if 'source_type' in data and data['source_type']:
+            source_type = SourceType(data['source_type'])
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore ; pylint: disable=no-member
@@ -227,7 +230,7 @@ class Version(CanonicalBase):
             is_legacy=data['is_legacy'],
             render=CanonicalFile.from_dict(data['render']),
             source=CanonicalFile.from_dict(data['source']),
-            source_type=data.get('source_type'),
+            source_type=source_type,
             formats={
                 ContentType(entry["format"]):
                     CanonicalFile.from_dict(entry["content"])
@@ -247,6 +250,19 @@ class Version(CanonicalBase):
     def size_kilobytes(self) -> int:
         assert self.source is not None
         return int(round(self.source.size_bytes / 1_028))
+
+    def get_format(self, desired_format: str) -> CanonicalFile:
+        if desired_format == 'source':
+            return self.source
+        if desired_format == 'render':
+            return self.render
+        try:
+            return self.formats[ContentType(desired_format)]
+        except ValueError as e:
+            raise ValueError(f'Unknown format: {desired_format}') from e
+        except KeyError as e:
+            raise KeyError(f'Format {desired_format} not available'
+                           f' for {self.identifier}') from e
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -269,7 +285,7 @@ class Version(CanonicalBase):
             'is_legacy': self.is_legacy,
             'render': self.render.to_dict(),
             'source': self.source.to_dict(),
-            'source_type': self.source_type,
+            'source_type': str(self.source_type) if self.source_type else None,
             'formats': [
                 {
                     "format": fmt.value,

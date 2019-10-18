@@ -84,10 +84,10 @@ class AbsData(NamedTuple):
     title: str
     abstract: str
     authors: str
-    source_type: str
     size_kilobytes: int
     submission_type: D.EventType
     secondary_classification: List[D.Category]
+    source_type: Optional[str] = None
     journal_ref: Optional[str] = None
     report_num: Optional[str] = None
     doi: Optional[str] = None
@@ -396,7 +396,7 @@ def _parse_versions(arxiv_id: str, version_entry_list: List) -> List[AbsRef]:
         except (ValueError, TypeError):
             raise IOError(f'Could not parse submitted date {sd} as datetime')
 
-        source_type = date_match.group('source_type')
+        source_type = D.SourceType(date_match.group('source_type'))
         size_kilobytes = int(date_match.group('size_kilobytes'))
         V = len(version_entries) + 1
         identifier = \

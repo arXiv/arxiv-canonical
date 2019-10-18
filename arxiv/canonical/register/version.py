@@ -24,24 +24,7 @@ class RegisterVersion(Base[D.VersionedIdentifier,
                d: D.Version, save_members: bool = True) -> 'RegisterVersion':
         r = R.RecordVersion.from_domain(d, partial(dereference, sources))
         i = I.IntegrityVersion.from_record(r, calculate_new_checksum=True)
-        members = {}
-        for i_member in i.iter_members():
-            if isinstance(i_member.record, R.RecordFile):
-                assert isinstance(i_member.record.domain, D.CanonicalFile)
-                member = RegisterFile(i_member.name,
-                                      domain=i_member.record.domain,
-                                      record=i_member.record,
-                                      integrity=i_member)
-            elif isinstance(i_member.record, R.RecordMetadata):
-                assert isinstance(i_member.record.domain, D.Version)
-                assert isinstance(i_member, I.IntegrityMetadata)
-                member = RegisterMetadata(i_member.name,
-                                          domain=i_member.record.domain,
-                                          record=i_member.record,
-                                          integrity=i_member)
-            if save_members:
-                member.save(s)
-            members[member.name] = member
+        members = RegisterVersion._get_v_members(s, i, save_members)
         return cls(r.name, domain=d, record=r, integrity=i, members=members)
 
     @classmethod
@@ -55,15 +38,17 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         This method is overridden since it uses a different member mapping
         struct than higher-level collection types.
         """
-        # All of the data needed to reconstitute the Version is in the metadata
-        # record.
+        # Most of the data needed to reconstitute the Version is in the
+        # metadata record.
         key = R.RecordMetadata.make_key(identifier)
         stream, _ = s.load_entry(key)
         d = R.RecordMetadata.to_domain(stream)   # self.load_deferred
         _r = R.RecordMetadata(key=key, stream=stream, domain=d)
 
-        assert d.source is not None and d.render is not None
-        manifest = s.load_manifest(R.RecordVersion.make_manifest_key(identifier))
+        # The manifest provides pre-calculated checksums for version members
+        # (source, render, other formats, etc).
+        manifest \
+            = s.load_manifest(R.RecordVersion.make_manifest_key(identifier))
         r = R.RecordVersion.from_domain(d, partial(dereference, sources),
                                         metadata=_r)
         i = I.IntegrityVersion.from_record(
@@ -72,17 +57,30 @@ class RegisterVersion(Base[D.VersionedIdentifier,
             calculate_new_checksum=bool(checksum is None),
             manifest=manifest
         )
+        # This just makes references to the members based on what is already
+        # loaded in the IntegrityVersion.
+        members = RegisterVersion._get_v_members(s, i, False)
 
         return cls(r.name, domain=d, record=r, integrity=i,
-                   members=cls._get_version_members(s, i, save_members=False))
+                   members=members)
 
     @classmethod
-    def _get_version_members(cls, s: ICanonicalStorage,
-                             integrity: I.IntegrityVersion,
-                             save_members: bool = True) -> Dict[str, RegisterFile]:
-        members = {}
+    def _get_v_members(cls, s: ICanonicalStorage,
+                       integrity: I.IntegrityVersion,
+                       save_members: bool = True) \
+            -> Dict[str, Union[RegisterFile, RegisterMetadata]]:
+        """
+        Describe members of this version.
+
+        This is a little different from the base ``_get_members()`` method,
+        in that we are working from an Integrity object rather than a manifest
+        alone.
+        """
+        members: Dict[str, Union[RegisterFile, RegisterMetadata]] = {}
+        member: Union[RegisterFile, RegisterMetadata]
         for i_member in integrity.iter_members():
             if isinstance(i_member.record, R.RecordFile):
+                assert isinstance(i_member, I.IntegrityEntry)
                 assert isinstance(i_member.record.domain, D.CanonicalFile)
                 member = RegisterFile(i_member.name,
                                       domain=i_member.record.domain,

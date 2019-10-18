@@ -52,7 +52,6 @@ class TestSerializePreservationRecord(TestCase):
             title='The Title of Everything',
             abstract='Very abstract. Too short to be a real abstract.',
             authors='Ima N. Author (FSU)',
-            source_type='tex',
             size_kilobytes=1,
             previous_versions=[],
             secondary_classification=['cs.AI', 'cs.DL'],

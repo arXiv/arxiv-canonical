@@ -3,7 +3,7 @@
 from arxiv.taxonomy import Category
 from .base import CanonicalBase, CanonicalBaseCollection
 from .block import AllEPrints, EPrintYear, EPrintMonth, EPrintDay
-from .content import ContentType
+from .content import ContentType, SourceType
 from .eprint import EPrint
 from .file import CanonicalFile, URI, Key
 from .identifier import Identifier, InvalidIdentifier, VersionedIdentifier
@@ -41,6 +41,7 @@ domain_classes = (
     ListingMonth,
     Metadata,
     Person,
+    SourceType,
     URI,
     Version,
     VersionedIdentifier,

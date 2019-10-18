@@ -164,7 +164,6 @@ class TestBackfillRecord(TestCase):
                 title='foo title before daily.log existed',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.NEW,
                 secondary_classification=[
@@ -184,7 +183,6 @@ class TestBackfillRecord(TestCase):
                 title='fooooo title after daily.log exists',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.REPLACED,
                 secondary_classification=[
@@ -205,7 +203,6 @@ class TestBackfillRecord(TestCase):
                 title='another very cool title',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.REPLACED,
                 secondary_classification=[
@@ -414,7 +411,6 @@ class TestLoadPredailyEvents(TestCase):
                 title='foo title before daily.log existed',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.NEW,
                 secondary_classification=[
@@ -433,7 +429,6 @@ class TestLoadPredailyEvents(TestCase):
                 title='fooooo title after daily.log exists',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.REPLACED,
                 secondary_classification=[
@@ -490,7 +485,6 @@ class TestLoadPredailyEvents(TestCase):
                 title='foo title before daily.log existed',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.NEW,
                 secondary_classification=[
@@ -509,7 +503,6 @@ class TestLoadPredailyEvents(TestCase):
                 title='fooooo title after daily.log exists',
                 abstract='very abstract',
                 authors='Ima N. Author',
-                source_type='tex',
                 size_kilobytes=42,
                 submission_type=EventType.REPLACED,
                 secondary_classification=[
@@ -580,7 +573,6 @@ class TestDailyEvents(TestCase):
             title='foo title',
             abstract='very abstract',
             authors='Ima N. Author',
-            source_type='tex',
             size_kilobytes=42,
             submission_type=EventType.NEW,
             secondary_classification=[
@@ -627,7 +619,6 @@ class TestDailyEvents(TestCase):
             title='foo title',
             abstract='very abstract',
             authors='Ima N. Author',
-            source_type='tex',
             size_kilobytes=42,
             submission_type=EventType.NEW,
             secondary_classification=[
@@ -681,7 +672,6 @@ class TestDailyEvents(TestCase):
             title='foo title',
             abstract='very abstract',
             authors='Ima N. Author',
-            source_type='tex',
             size_kilobytes=42,
             submission_type=EventType.NEW,
             secondary_classification=[
