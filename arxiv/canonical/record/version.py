@@ -43,22 +43,15 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         """Serialize an :class:`.Version` to an :class:`.RecordVersion`."""
         if version.source is None:
             raise ValueError('Source is missing')
-        if version.render is None:
-            raise ValueError('Render is missing')
         if version.announced_date_first is None:
             raise ValueError('First announcement date not set')
 
-        # Dereference the source and render bitstreams, wherever they happen
-        # to live.
+        # Dereference the bitstreams, wherever they happen to live.
         source_content = dereferencer(version.source.ref)
-        render_content = dereferencer(version.render.ref)
         format_content = {fmt: dereferencer(cf.ref)
                           for fmt, cf in version.formats.items()}
 
-        # From now on we refer to the source and render bitstreams with
-        # canonical URIs.
-        render_key = RecordVersion.make_key(version.identifier,
-                                            version.render.filename)
+        # From now on we refer to bitstreams with  canonical URIs.
         source_key = RecordVersion.make_key(version.identifier,
                                             version.source.filename)
         format_keys = {
@@ -66,7 +59,6 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             for fmt, cf in version.formats.items()
         }
         version.source.ref = source_key
-        version.render.ref = render_key
         for fmt, cf in version.formats.items():
             cf.ref = format_keys[fmt]
 
@@ -81,17 +73,6 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             domain=version.source
         )
 
-        render = RecordFile(
-            key=render_key,
-            stream=RecordStream(
-                domain=version.render,
-                content=render_content,
-                content_type=version.render.content_type,
-                size_bytes=version.render.size_bytes,
-            ),
-            domain=version.render
-        )
-
         formats = {
             fmt.value: RecordFile(
                 key=format_keys[fmt],
@@ -104,6 +85,21 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
                 domain=cf
             ) for fmt, cf in version.formats.items()
         }
+        if version.render:
+            render_content = dereferencer(version.render.ref)
+            render_key = RecordVersion.make_key(version.identifier,
+                                                version.render.filename)
+            version.render.ref = render_key
+            formats['render'] = RecordFile(
+                key=render_key,
+                stream=RecordStream(
+                    domain=version.render,
+                    content=render_content,
+                    content_type=version.render.content_type,
+                    size_bytes=version.render.size_bytes,
+                ),
+                domain=version.render
+            )
 
         if metadata is None:
             metadata = RecordMetadata.from_domain(version)
@@ -113,7 +109,6 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
             members=RecordEntryMembers(
                 metadata=metadata,
                 source=source,
-                render=render,
                 **formats
             ),
             domain=version
@@ -164,10 +159,11 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         return member
 
     @property
-    def render(self) -> RecordEntry:
+    def render(self) -> Optional[RecordEntry]:
         """Canonical PDF for the e-print."""
-        assert 'render' in self.members
-        return self.members['render']
+        if 'render' in self.members:
+            return self.members['render']
+        return None
 
     @property
     def formats(self) -> Dict[D.ContentType, RecordEntry]:

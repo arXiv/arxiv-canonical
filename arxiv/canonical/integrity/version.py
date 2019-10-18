@@ -9,13 +9,13 @@ from .core import (IntegrityBase, IntegrityEntryBase, IntegrityEntryMembers,
                    calculate_checksum, GenericMonoDict)
 from .metadata import IntegrityMetadata
 
-_VersionMembers = Union[IntegrityEntry, IntegrityMetadata]
+_VersionMember = Union[IntegrityEntry, IntegrityMetadata]
 
 
-class IntegrityVersionMembers(GenericMonoDict[str, _VersionMembers]):
+class IntegrityVersionMembers(GenericMonoDict[str, _VersionMember]):
     """Member mapping that supports IntegrityEntry and IntegrityMetadata."""
 
-    def __getitem__(self, key: str) -> _VersionMembers:
+    def __getitem__(self, key: str) -> _VersionMember:
         value = dict.__getitem__(self, key)
         assert isinstance(value, (IntegrityEntry, IntegrityMetadata))
         return value
@@ -24,7 +24,7 @@ class IntegrityVersionMembers(GenericMonoDict[str, _VersionMembers]):
 class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                                      R.RecordVersion,
                                      str,
-                                     _VersionMembers]):
+                                     _VersionMember]):
     """Integrity collection for an e-print version."""
 
     @classmethod
@@ -57,13 +57,6 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
         source_checksum: Optional[str] = None
         format_checksums: Dict[D.ContentType, Optional[str]]
         if manifest:
-            render_checksum = checksum_from_manifest(
-                manifest,
-                R.RecordVersion.make_key(
-                    version.identifier,
-                    version.render.domain.filename
-                )
-            )
             source_checksum = checksum_from_manifest(
                 manifest,
                 R.RecordVersion.make_key(
@@ -78,6 +71,14 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                                              cf.domain.filename)
                 ) for fmt, cf in version.formats.items()
             }
+            if version.render:
+                render_checksum = checksum_from_manifest(
+                    manifest,
+                    R.RecordVersion.make_key(
+                        version.identifier,
+                        version.render.domain.filename
+                    )
+                )
         formats = {
             fmt.value: IntegrityEntry.from_record(
                 cf,
@@ -85,13 +86,14 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                 calculate_new_checksum=calculate_new_checksum_for_members
             ) for fmt, cf in version.formats.items()
         }
-        members = IntegrityVersionMembers(
-            metadata=IntegrityMetadata.from_record(version.metadata),
-            render=IntegrityEntry.from_record(
+        if version.render:
+            formats['render'] = IntegrityEntry.from_record(
                 version.render,
                 checksum=render_checksum,
                 calculate_new_checksum=calculate_new_checksum_for_members
-            ),
+            )
+        members = IntegrityVersionMembers(
+            metadata=IntegrityMetadata.from_record(version.metadata),
             source=IntegrityEntry.from_record(
                 version.source,
                 checksum=source_checksum,
@@ -99,7 +101,6 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
             ),
             **formats
         )
-
         manifest = cls.make_manifest(members)
         if calculate_new_checksum:
             checksum = calculate_checksum(manifest)
@@ -107,7 +108,7 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
                    manifest=manifest, checksum=checksum)
 
     @classmethod
-    def make_manifest(cls, members: Mapping[str, IntegrityEntry]) -> Manifest:
+    def make_manifest(cls, members: Mapping[str, _VersionMember]) -> Manifest:
         """Make a :class:`.Manifest` for this integrity collection."""
         return Manifest(
             entries=[cls.make_manifest_entry(members[n]) for n in members],
@@ -117,7 +118,7 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
         )
 
     @classmethod
-    def make_manifest_entry(cls, member: IntegrityEntry) -> ManifestEntry:
+    def make_manifest_entry(cls, member: _VersionMember) -> ManifestEntry:
         return ManifestEntry(
             key=member.manifest_name,
             checksum=member.checksum,
@@ -126,21 +127,27 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
         )
 
     @property
-    def metadata(self) -> IntegrityEntry:
+    def metadata(self) -> IntegrityMetadata:
+        assert isinstance(self.members['metadata'], IntegrityMetadata)
         return self.members['metadata']
 
     @property
-    def render(self) -> IntegrityEntry:
-        return self.members['render']
+    def render(self) -> Optional[IntegrityEntry]:
+        if 'render' in self.members:
+            assert isinstance(self.members['render'], IntegrityEntry)
+            return self.members['render']
+        return None
 
     @property
     def source(self) -> IntegrityEntry:
+        assert isinstance(self.members['source'], IntegrityEntry)
         return self.members['source']
 
     @property
     def formats(self) -> Dict[D.ContentType, IntegrityEntry]:
         return {D.ContentType(fmt): cf for fmt, cf in self.members.items()
-                if fmt not in ['metadata', 'source', 'render']}
+                if fmt not in ['metadata', 'source', 'render']
+                and isinstance(cf, IntegrityEntry)}
 
 
 class IntegrityEPrint(IntegrityBase[D.Identifier,

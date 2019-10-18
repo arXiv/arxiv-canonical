@@ -62,7 +62,7 @@ class TestIntegrityVersion(TestCase):
     def test_manifest(self):
         """IntegrityVersion makes a manifest from an IntegrityRecord."""
         integrity = IntegrityVersion.from_record(self.record)
-        expected_entries = [
+        expected_entries = sorted([
             {'key':
                 'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.json',
              'checksum': 'xLOiGxEmoytrXeB7Nw3lHw==',
@@ -77,22 +77,25 @@ class TestIntegrityVersion(TestCase):
              'checksum': '1GR0xuZYavi6N04v3-1wIw==',
              'size_bytes': 4304,
              'mime_type': 'application/gzip'}
-        ]
+        ], key=lambda e: e['key'])
+
+        manifest_entries = sorted(integrity.manifest['entries'],
+                                  key=lambda e: e['key'])
 
         self.assertListEqual(
-            [e['key'] for e in integrity.manifest['entries']],
+            [e['key'] for e in manifest_entries],
             [e['key'] for e in expected_entries],
             'Manifest contains the expected keys'
         )
         self.assertListEqual(   # Exclude the abs file.
-            [e['size_bytes'] for e in integrity.manifest['entries']
+            [e['size_bytes'] for e in manifest_entries
              if not e['key'].endswith('2901.00345v1.json')],
             [e['size_bytes'] for e in expected_entries
              if not e['key'].endswith('2901.00345v1.json')],
             'Manifest contains the expected sizes'
         )
-        self.assertListEqual([
-            e['mime_type'] for e in integrity.manifest['entries']],
+        self.assertListEqual(
+            [e['mime_type'] for e in manifest_entries],
             [e['mime_type'] for e in expected_entries],
             'Manifest contains the mime types.'
         )

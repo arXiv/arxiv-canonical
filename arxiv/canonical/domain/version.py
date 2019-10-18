@@ -149,9 +149,11 @@ class Version(CanonicalBase):
     submitted_date: datetime
     updated_date: datetime
     """The last time the record for this version was written."""
+
     metadata: Metadata
     events: List['EventSummary']
     """Events that are specific to this version of the e-print."""
+
     previous_versions: List[VersionReference]
     submitter: Optional[Person]
     proxy: Optional[str]
@@ -159,16 +161,21 @@ class Version(CanonicalBase):
     is_withdrawn: bool
     reason_for_withdrawal: Optional[str]
     is_legacy: bool
-    render: CanonicalFile
+
+    source: CanonicalFile
+    """The original user-submitted source package."""
+
+    render: Optional[CanonicalFile]
     """
     Human-readable representation of the e-print.
 
     Usually a PDF generated from the source, but may also be a user-provided
-    PDF, HTML document, or other product.
+    PDF.
     """
-    source: CanonicalFile
+
     source_type: Optional[SourceType]
     """Internal code for the source type."""
+
     formats: Dict[ContentType, CanonicalFile]
 
     def __init__(self, identifier: VersionedIdentifier,
@@ -177,7 +184,6 @@ class Version(CanonicalBase):
                  submitted_date: datetime,
                  updated_date: datetime,
                  metadata: Metadata,
-                 render: CanonicalFile,
                  source: CanonicalFile,
                  events: Optional[List['EventSummary']] = None,
                  previous_versions: Optional[List[VersionReference]] = None,
@@ -188,6 +194,7 @@ class Version(CanonicalBase):
                  is_legacy: bool = False,
                  reason_for_withdrawal: Optional[str] = None,
                  source_type: Optional[SourceType] = None,
+                 render: Optional[CanonicalFile] = None,
                  formats: Dict[ContentType, CanonicalFile] = {}) -> None:
         self.identifier = identifier
         self.announced_date = announced_date
@@ -213,6 +220,10 @@ class Version(CanonicalBase):
         source_type: Optional[SourceType] = None
         if 'source_type' in data and data['source_type']:
             source_type = SourceType(data['source_type'])
+
+        render: Optional[CanonicalFile] = None
+        if 'render' in data and data['render']:
+            render = CanonicalFile.from_dict(data['render'])
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore ; pylint: disable=no-member
@@ -228,7 +239,7 @@ class Version(CanonicalBase):
             is_withdrawn=data['is_withdrawn'],
             reason_for_withdrawal=data.get('reason_for_withdrawal'),
             is_legacy=data['is_legacy'],
-            render=CanonicalFile.from_dict(data['render']),
+            render=render,
             source=CanonicalFile.from_dict(data['source']),
             source_type=source_type,
             formats={
@@ -254,7 +265,7 @@ class Version(CanonicalBase):
     def get_format(self, desired_format: str) -> CanonicalFile:
         if desired_format == 'source':
             return self.source
-        if desired_format == 'render':
+        if desired_format == 'render' and self.render:
             return self.render
         try:
             return self.formats[ContentType(desired_format)]
@@ -283,7 +294,7 @@ class Version(CanonicalBase):
             'is_withdrawn': self.is_withdrawn,
             'reason_for_withdrawal': self.reason_for_withdrawal,
             'is_legacy': self.is_legacy,
-            'render': self.render.to_dict(),
+            'render': self.render.to_dict() if self.render else None,
             'source': self.source.to_dict(),
             'source_type': str(self.source_type) if self.source_type else None,
             'formats': [
