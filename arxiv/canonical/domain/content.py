@@ -156,11 +156,11 @@ _extensions = {
 
 DISSEMINATION_FORMATS_BY_SOURCE_EXT = [
     ('.tar.gz', None),
+    ('.dvi.gz', None),
     ('.pdf', [ContentType.pdf]),
     ('.ps.gz', [ContentType.pdf, ContentType.ps]),
     ('.html.gz', [ContentType.html]),
     ('.gz', None),
-    ('.dvi.gz', None),
 ]
 """Dissemination formats that can be inferred from source file extension."""
 
