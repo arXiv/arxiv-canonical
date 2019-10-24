@@ -24,7 +24,6 @@ class ControllerTestCase(TestCase):
 
         self.render = D.CanonicalFile(
             filename='2901.00345v1.pdf',
-            created=created,
             modified=created,
             size_bytes=404,
             content_type=D.ContentType.pdf,
@@ -50,7 +49,6 @@ class ControllerTestCase(TestCase):
             ),
             source=D.CanonicalFile(
                 filename='2901.00345v1.tar.gz',
-                created=created,
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.targz,

@@ -23,7 +23,10 @@ class ICanonicalSource(Protocol):
 
 def dereference(sources: Sequence[ICanonicalSource], uri: D.URI) -> IO[bytes]:
     for source in sources:
+
         if source.can_resolve(uri):
+            # print(f'{source} can resolve {uri}')
             return source.load_deferred(uri)
-    raise RuntimeError('Cannot resolve URI')
+        # print(f'{source} cannot resolve {uri}')
+    raise RuntimeError(f'Cannot resolve URI: {uri}')
 

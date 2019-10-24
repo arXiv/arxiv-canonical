@@ -1,5 +1,5 @@
 import io
-
+import time
 from http import HTTPStatus as status
 from typing import Any, Callable, Iterable, IO, Optional, Tuple, Union
 from urllib3.util.retry import Retry
@@ -9,7 +9,7 @@ import requests
 from .. import domain as D
 from .. import record as R
 from ..register import ICanonicalSource
-from .readable import ReadWrapper, MemoizedReadable
+from .readable import IterReadWrapper, MemoizedReadable
 
 
 class RemoteSource(ICanonicalSource):
@@ -67,13 +67,36 @@ class DeferredRequestReader(io.BytesIO):
         self._method = method
         self._uri = uri
         self._stream = stream
-        self._reader: Optional[IO[bytes]] = None
+        self._loaded_reader: Optional[IO[bytes]] = None
+
+    @property
+    def _reader(self) -> IO[bytes]:
+        if self._loaded_reader is None:
+            self._loaded_reader = self._get_reader()
+        return self._loaded_reader
+
+    def _get_reader(self) -> IO[bytes]:
+        response = self._method(str(self._uri), stream=self._stream)
+        while response.status_code == 200 and 'Refresh' in response.headers:
+            time.sleep(int(response.headers['Refresh']))
+            response = self._method(str(self._uri), stream=self._stream)
+        if response.status_code != 200:
+            # logger.error('%i: %s', response.status_code, response.headers)
+            raise IOError(f'Could not retrieve {self._uri}:'
+                          f' {response.status_code}')
+        return IterReadWrapper(response.iter_content)
 
     def read(self, size: Optional[int] = -1) -> bytes:
         """Read from the remote resource."""
-        if self._reader is None:
-            response = self._method(str(self._uri), stream=self._stream)
-            self._reader = ReadWrapper(response.iter_content)
         if size is None:
             size = -1
         return self._reader.read(size)
+
+    def seek(self, offset: int, whence: int = 0) -> None:
+        self._reader.seek(offset, whence=whence)
+
+    def seekable(self) -> bool:
+        self._reader.seekable()
+
+    def tell(self) -> bool:
+        self._reader.tell()

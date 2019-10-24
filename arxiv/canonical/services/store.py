@@ -120,7 +120,6 @@ class CanonicalStore(ICanonicalStorage):
         response = self.client.get_object(Bucket=self._bucket, Key=key)
         stream = R.RecordStream(
             domain=D.CanonicalFile(
-                created=datetime.fromisoformat(response['Metadata']['created']),  # type: ignore ; pylint: disable=no-member
                 modified=response['LastModified'],
                 filename=key.filename,
                 size_bytes=response['ContentLength'],
@@ -141,7 +140,6 @@ class CanonicalStore(ICanonicalStorage):
 
     def store_entry(self, ri: IStorableEntry) -> None:
         assert ri.record.stream.content is not None
-        metadata = {'created': ri.record.stream.created.isoformat()}
         self.client.put_object(Bucket=self._bucket,
                                Key=ri.record.key,
                                Body=ri.record.stream.content.read(),

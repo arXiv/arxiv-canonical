@@ -38,7 +38,6 @@ class IStorableEntry(Protocol):
     @property
     def record(self) -> R.RecordEntry:
         """Reference to a :class:`.RecordEntry`."""
-        ...  # pylint: disable=pointless-statement; this is a stub.
 
 
 class IManifestStorage(Protocol):
@@ -51,11 +50,9 @@ class IManifestStorage(Protocol):
 
     def store_manifest(self, key: D.Key, manifest: Manifest) -> None:  # pylint: disable=unused-argument; this is a stub.
         """Store an integrity manifest."""
-        ...  # pylint: disable=pointless-statement; this is a stub.
 
     def load_manifest(self, key: D.Key) -> Manifest:  # pylint: disable=unused-argument; this is a stub.
         """Load an integrity manifest."""
-        ...  # pylint: disable=pointless-statement; this is a stub.
 
 
 _I = TypeVar('_I', I.IntegrityEntry, I.IntegrityMetadata, I.IntegrityListing,
@@ -67,11 +64,9 @@ class ICanonicalStorage(ICanonicalSource, IManifestStorage, Protocol):
 
     def list_subkeys(self, key: D.URI) -> List[str]:  # pylint: disable=unused-argument; this is a stub.
         """List all of the subkeys for ``key`` in the record."""
-        ...  # pylint: disable=pointless-statement; this is a stub.
 
     def store_entry(self, ri: IStorableEntry) -> None:  # pylint: disable=unused-argument; this is a stub.
         """Store an entry in the record."""
-        ...  # pylint: disable=pointless-statement; this is a stub.
 
 
 _Name = TypeVar('_Name')

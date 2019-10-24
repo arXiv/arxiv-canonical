@@ -23,7 +23,8 @@ class MemoizedReadable(io.BytesIO):
         if self._read is None:
             raise ValueError('Resource is closed')
         if self._content is None:
-            self._content = io.BytesIO(self._read())
+            c = self._read()
+            self._content = io.BytesIO(c)
         return self._content
 
     def close(self) -> None:
@@ -104,22 +105,32 @@ class MemoizedReadable(io.BytesIO):
             del self._content
 
 
-class ReadWrapper(io.BytesIO):
-    """
-    Wraps a response body streaming iterator to provide ``read()``.
-
-    Warning! Instances of this class are not re-entrant.
-    """
+class IterReadWrapper(io.BytesIO):
+    """Wraps a response body streaming iterator to provide ``read()``."""
 
     def __init__(self, iter_content: Callable[[int], Iterator[bytes]],
                  size: int = 4096) -> None:
         """Initialize the streaming iterator."""
         self._iter_content = iter_content(size)
         self._buff = bytearray()
+        self._pos = 0
 
-    def seekable(self) -> Literal[False]:
-        """Indicate that this is a non-seekable stream."""
-        return False
+    def seek(self, offset: int, whence: int = 0) -> int:
+        """Change the stream position to the given byte offset."""
+        if whence != 0:
+            raise NotImplementedError('Only supports 0-based seeks')
+        if offset > self._pos:
+            self._read_ahead(offset + 1)
+        self._pos = offset
+        return self._pos
+
+    def seekable(self) -> Literal[True]:
+        """Indicate that this is a seekable stream."""
+        return True
+
+    def tell(self) -> int:
+        """Return the current stream position."""
+        return self._pos
 
     def readable(self) -> Literal[True]:
         """Indicate that it *is* a readable stream."""
@@ -128,16 +139,25 @@ class ReadWrapper(io.BytesIO):
     def read(self, size: Optional[int] = -1) -> bytes:
         """Read from the content stream, loading more content if necessary."""
         if size == -1 or size is None:  # Read everything!
-            in_buff = bytes(self._buff)
-            self._buff.clear()      # We are consuming the whole thing.
-            return in_buff + b''.join(self._iter_content)
-        if size > len(self._buff):
-            while size > len(self._buff):
+            self._buff.extend(bytearray(b''.join(self._iter_content)))
+            content = self._buff[self._pos:]
+
+        else:
+            if size > len(self._buff) - self._pos:
+                self._read_ahead(self._pos + size)
+            content = self._buff[self._pos:self._pos + size]
+        self._pos += len(content)
+        return content
+
+    def _read_ahead(self, offset: int) -> None:
+        while offset > len(self._buff):
+            try:
                 chunk = next(self._iter_content)
-                if not chunk:   # No more content to read.
-                    size = len(self._buff)
-                    break
-                self._buff.extend(bytearray(chunk))
-        return bytes(bytearray(self._buff.pop(0) for _ in range(size)))
+            except StopIteration:
+                break       # No more content to read.
+            if not chunk:   # May issue empty chunks due to keep-alive.
+                continue
+            self._buff.extend(bytearray(chunk))
+
 
 

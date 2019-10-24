@@ -62,7 +62,6 @@ class Key(URI):
 class CanonicalFile(CanonicalBase):
     """Represents a file in the canonical record, e.g. a source package."""
 
-    created: datetime
     modified: datetime
     size_bytes: int
     content_type: ContentType
@@ -71,13 +70,11 @@ class CanonicalFile(CanonicalBase):
 
     exclude_from_comparison = {'ref'}
 
-    def __init__(self, created: datetime,
-                 modified: datetime,
+    def __init__(self, modified: datetime,
                  size_bytes: int,
                  content_type: ContentType,
                  ref: URI,
                  filename: Optional[str] = None) -> None:
-        self.created = created
         self.modified = modified
         self.size_bytes = size_bytes
         self.content_type = content_type
@@ -88,7 +85,6 @@ class CanonicalFile(CanonicalBase):
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CanonicalFile':
         return cls(
-            created=datetime.fromisoformat(data['created']),  # type: ignore ; pylint: disable=no-member
             modified=datetime.fromisoformat(data['modified']),  # type: ignore ; pylint: disable=no-member
             size_bytes=data['size_bytes'],
             content_type=ContentType(data['content_type']),
@@ -103,7 +99,6 @@ class CanonicalFile(CanonicalBase):
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'created': self.created.isoformat(),
             'modified': self.modified.isoformat(),
             'size_bytes': self.size_bytes,
             'content_type': self.content_type.value,

@@ -61,6 +61,7 @@ from typing import Union
 
 from ..util import GenericMonoDict
 
+from .checksum import calculate_checksum
 from .core import (IntegrityBase, IntegrityEntry, IntegrityEntryBase,
                    IntegrityEntryMembers, R)
 from .listing import (IntegrityListing, IntegrityListingDay,

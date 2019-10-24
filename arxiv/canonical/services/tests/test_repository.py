@@ -46,7 +46,7 @@ class TestLoadDeferred(TestCase):
 
     def test_load_deferred(self):
         """Can load content from the HTTP URI."""
-        mock_response = mock.MagicMock()
+        mock_response = mock.MagicMock(status_code=200)
         mock_response.iter_content.return_value = \
             iter([b'foo', b'con' b'ten', b't'])
         self.mock_session.get.return_value = mock_response

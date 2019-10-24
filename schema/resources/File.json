@@ -14,10 +14,6 @@
       "checksum": {
         "type": "string"
       },
-      "created": {
-        "type": "string",
-        "format": "date-time"
-      },
       "modified": {
         "type": "string",
         "format": "date-time"

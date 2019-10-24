@@ -55,7 +55,7 @@ class IntegrityVersion(IntegrityBase[D.VersionedIdentifier,
         calculate_new_checksum_for_members = bool(manifest is None)
         render_checksum: Optional[str] = None
         source_checksum: Optional[str] = None
-        format_checksums: Dict[D.ContentType, Optional[str]]
+        format_checksums: Dict[D.ContentType, Optional[str]] = {}
         if manifest:
             source_checksum = checksum_from_manifest(
                 manifest,

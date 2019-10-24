@@ -14,7 +14,7 @@ def calculate_checksum(obj: Union[bytes, IO[bytes], Manifest, RecordStream]) \
     if isinstance(obj, bytes):
         return checksum_raw(obj)
     if isinstance(obj, dict):
-        return checksum_manifest(cast(Manifest, obj))
+        return checksum_manifest(obj)
     if isinstance(obj, io.IOBase):
         return checksum_io(obj)
     if isinstance(obj, RecordStream):

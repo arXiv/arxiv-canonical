@@ -88,7 +88,6 @@ class TestCanonicalFile(TestCase):
     def setUp(self):
         """Given a canonical file."""
         self.canonical_file = CanonicalFile(
-            created=datetime.now(),
             modified=datetime.now(),
             size_bytes=5_324,
             content_type=ContentType.json,

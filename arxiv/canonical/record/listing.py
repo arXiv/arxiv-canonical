@@ -20,7 +20,6 @@ class RecordListing(RecordEntry[D.Listing]):
             key=key,
             stream=RecordStream(
                 domain=D.CanonicalFile(
-                    created=listing.start_datetime,
                     modified=listing.end_datetime,
                     size_bytes=size_bytes,
                     content_type=D.ContentType.json,

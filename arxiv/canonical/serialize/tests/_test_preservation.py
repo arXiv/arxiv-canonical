@@ -26,7 +26,6 @@ class TestSerializePreservationRecord(TestCase):
             mime_type='application/gzip',
             checksum=source_checksum,
             content=source_content,
-            created=datetime.now(UTC),
             modified=datetime.now(UTC)
         )
 
@@ -37,7 +36,6 @@ class TestSerializePreservationRecord(TestCase):
             mime_type='application/pdf',
             checksum=pdf_checksum,
             content=pdf_content,
-            created=datetime.now(UTC),
             modified=datetime.now(UTC)
         )
 

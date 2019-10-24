@@ -149,7 +149,7 @@ class RegisterMonth(Base[YearMonth,
 
     @classmethod
     def _manifest_to_member_name(cls, key: str) -> date:
-        return datetime.strptime(key, '%Y-%m-%d').date()
+        return datetime.strptime(key[:10], '%Y-%m-%d').date()
 
 
 class RegisterYear(Base[Year,

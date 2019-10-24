@@ -1,15 +1,26 @@
 import io
+import json
+import logging
 import os
+from datetime import datetime
 from http import HTTPStatus as status
-from typing import IO, Iterable, Tuple, Union
+from typing import IO, Iterable, List, Tuple, Union
 from urllib3.util.retry import Retry
 
 import requests
+from pytz import timezone, UTC
 
 from .. import domain as D
 from .. import record as R
-from ..register import ICanonicalSource
+from .. import integrity as I
+from ..manifest import Manifest, ManifestEncoder, ManifestDecoder
+from ..register import ICanonicalStorage, IStorableEntry, ICanonicalSource
 from .readable import MemoizedReadable
+
+logger = logging.getLogger(__name__)
+logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))
+
+ET = timezone('US/Eastern')
 
 
 class Filesystem(ICanonicalSource):
@@ -18,18 +29,101 @@ class Filesystem(ICanonicalSource):
     def __init__(self, base_path: str) -> None:
         self._base_path = base_path
 
+    def _make_path(self, uri: D.URI) -> str:
+        return os.path.normpath(uri.path)
+
     def can_resolve(self, uri: D.URI) -> bool:
-        return self.__can_resolve(uri)
-
-    def __can_resolve(self, uri: D.URI) -> bool:
         return uri.is_file and self._base_path in os.path.normpath(uri.path)
-
-    def load_entry(self, uri: D.URI) -> Tuple[R.RecordStream, str]:
-        """Load an entry from the record."""
-        raise NotImplementedError('Implement me!')
 
     def load_deferred(self, uri: D.URI) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""
-        if not self.__can_resolve(uri):
+        if not self.can_resolve(uri):
             raise RuntimeError(f'Cannot resolve this URI: {uri}')
-        return open(os.path.normpath(uri.path), 'rb')
+        return open(self._make_path(uri), 'rb')
+
+
+class CanonicalFilesystem(Filesystem, ICanonicalStorage):
+    """Filesystem storage for the canonical record."""
+
+    def can_resolve(self, uri: D.URI) -> bool:
+        return uri.is_canonical
+
+    def can_store(self, key: D.Key) -> bool:
+        return key.is_canonical
+
+    def _make_path(self, uri: D.URI) -> str:
+        return os.path.join(self._base_path, uri.path.lstrip('/'))
+
+    def list_subkeys(self, key: D.URI) -> List[str]:
+        """List all of the subkeys for ``key`` in the record."""
+        if not self.can_resolve(key):
+            raise RuntimeError(f'Cannot resolve this URI: {key}')
+        return os.listdir(self._make_path(key))
+
+    def load_entry(self, uri: D.URI) -> Tuple[R.RecordStream, str]:
+        """Load an entry from the record."""
+        if not self.can_resolve(uri):
+            raise RuntimeError(f'Cannot resolve this URI: {uri}')
+        assert isinstance(uri, D.Key)
+        path = self._make_path(uri)
+        pointer = open(path, 'rb')
+        content_type = D.ContentType.from_filename(path)
+        size_bytes = os.stat(path).st_size
+        stream = R.RecordStream(
+            domain=D.CanonicalFile(
+                modified=datetime.fromtimestamp(os.path.getmtime(path), tz=ET)
+                    .astimezone(tz=UTC),
+                filename=uri.filename,
+                size_bytes=size_bytes,
+                content_type=content_type,
+                ref=uri
+            ),
+            content=pointer,
+            content_type=content_type,
+            size_bytes=size_bytes
+        )
+        return stream, I.calculate_checksum(pointer)
+
+    def load_manifest(self, key: D.Key) -> Manifest:
+        """Load an integrity manifest."""
+        if not self.can_store(key):
+            raise RuntimeError(f'Cannot load this manifest: {key}')
+        with open(self._make_path(key), 'r') as f:
+            manifest: Manifest = json.load(f, cls=ManifestDecoder)
+        return manifest
+
+    def store_entry(self, ri: IStorableEntry) -> None:
+        """Store an entry in the record."""
+        if not self.can_store(ri.record.key) or not ri.record.stream.content:
+            logger.error(f'Cannot store: {ri.record.key}')
+            raise RuntimeError(f'Cannot store: {ri.record.key}')
+        path = self._make_path(ri.record.key)
+        parent, _ = os.path.split(path)
+        if not os.path.exists(parent):
+            os.makedirs(parent)   # Pave the way!
+
+        logger.debug('Ready to write to %s from %s', path, ri.record.stream)
+        if ri.record.stream.content.seekable():
+            ri.record.stream.content.seek(0)
+
+        with open(path, 'wb') as f:
+            while True:
+                chunk = ri.record.stream.content.read(4096)
+                if not chunk:
+                    break
+                f.write(chunk)
+
+        logger.debug('Wrote %i bytes to %s', os.path.getsize(path), path)
+        if os.path.getsize(path) == 0:
+            raise IOError(f'Wrote {os.path.getsize(path)} bytes to {path}')
+
+    def store_manifest(self, key: D.Key, manifest: Manifest) -> None:
+        """Store an integrity manifest."""
+        if not self.can_store(key):
+            raise RuntimeError(f'Cannot store this manifest: {key}')
+        path = self._make_path(key)
+        parent, _ = os.path.split(path)
+        if not os.path.exists(parent):
+            os.makedirs(parent)   # Pave the way!
+        with open(path, 'w') as f:
+            f.write(json.dumps(manifest, cls=ManifestEncoder))

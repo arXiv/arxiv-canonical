@@ -565,7 +565,7 @@ class NewStyleLineParser(LineParser):
         return paper_id, abs_only, categories_list
 
 
-EVENT_DATA: Optional[Mapping[date, Iterable[EventData]]] = None
+EVENT_DATA: Optional[Mapping[str, Iterable[EventData]]] = None
 
 
 def parse(path: str, for_date: Optional[date] = None,

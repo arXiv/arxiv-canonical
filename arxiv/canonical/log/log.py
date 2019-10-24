@@ -51,7 +51,6 @@ class LogEntry:
                  message: str) -> None:
         self.timestamp = timestamp
         self.event_id = event_id
-        # self.key = key
         self.action = action
         self.state = state
         self.message = message
@@ -72,7 +71,6 @@ class LogEntry:
         return json.dumps({
             'timestamp': self.timestamp.isoformat(),
             'event_id': self.event_id,
-            # 'key': self.key,
             'action': self.action,
             'state': self.state,
             'message': self.message
@@ -100,14 +98,12 @@ class Log:
 
     def write(self,
               event_id: D.EventIdentifier,
-            #   key: D.Key,
               action: Action,
               state: Outcome,
               message: str) -> LogEntry:
         """Write a log entry."""
         entry = LogEntry(datetime.now(ET),
                          event_id,
-                        #  key,
                          action,
                          state,
                          message)

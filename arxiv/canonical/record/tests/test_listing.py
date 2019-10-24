@@ -58,7 +58,6 @@ class TestRecordListing(TestCase):
             ),
             source=D.CanonicalFile(
                 filename='2901.00345v1.tar.gz',
-                created=self.created,
                 modified=self.created,
                 size_bytes=4_304,
                 content_type=D.ContentType.targz,
@@ -66,7 +65,6 @@ class TestRecordListing(TestCase):
             ),
             render=D.CanonicalFile(
                 filename='2901.00345v1.pdf',
-                created=self.created,
                 modified=self.created,
                 size_bytes=404,
                 content_type=D.ContentType.pdf,
@@ -85,7 +83,6 @@ class TestRecordListing(TestCase):
     def test_from_domain(self):
         """Can load a RecordListing from a Listing domain object."""
         record = RecordListing.from_domain(self.listing)
-        self.assertEqual(record.created, self.created)
         self.assertEqual(
             record.key,
             'arxiv:///announcement/2029/01/29/2029-01-29-foo.json',

@@ -51,16 +51,12 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         format_content = {fmt: dereferencer(cf.ref)
                           for fmt, cf in version.formats.items()}
 
-        # From now on we refer to bitstreams with  canonical URIs.
         source_key = RecordVersion.make_key(version.identifier,
                                             version.source.filename)
         format_keys = {
             fmt: RecordVersion.make_key(version.identifier, cf.filename)
             for fmt, cf in version.formats.items()
         }
-        version.source.ref = source_key
-        for fmt, cf in version.formats.items():
-            cf.ref = format_keys[fmt]
 
         source = RecordFile(
             key=source_key,
@@ -104,6 +100,11 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         if metadata is None:
             metadata = RecordMetadata.from_domain(version)
 
+        # From now on we refer to bitstreams with canonical URIs.
+        version.source.ref = source_key
+        for fmt, cf in version.formats.items():
+            cf.ref = format_keys[fmt]
+
         return RecordVersion(
             version.identifier,
             members=RecordEntryMembers(
@@ -123,8 +124,10 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
 
     @classmethod
     def make_manifest_key(cls, ident: D.VersionedIdentifier) -> D.Key:
-        return D.Key(f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/'
-                   f'{ident.arxiv_id}/{ident}.manifest.json')
+        date_part = f'e-prints/{ident.year}/{str(ident.month).zfill(2)}'
+        if ident.is_old_style:
+            return D.Key(f'{date_part}/{ident.category_part}/{ident.numeric_part}/{ident.numeric_part}.manifest.json')
+        return D.Key(f'{date_part}/{ident.arxiv_id}/{ident}.manifest.json')
 
     @classmethod
     def make_prefix(cls, ident: D.VersionedIdentifier) -> str:
@@ -143,8 +146,10 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         str
 
         """
-        return (f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/'
-                f'{ident.arxiv_id}/v{ident.version}')
+        date_part = f'e-prints/{ident.year}/{str(ident.month).zfill(2)}'
+        if ident.is_old_style:
+            return f'{date_part}/{ident.category_part}/{ident.numeric_part}/v{ident.version}'
+        return f'{date_part}/{ident.arxiv_id}/v{ident.version}'
 
     @property
     def identifier(self) -> D.VersionedIdentifier:

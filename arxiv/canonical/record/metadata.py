@@ -11,7 +11,11 @@ class RecordMetadata(RecordEntry[D.Version]):
 
     @classmethod
     def make_key(cls, identifier: D.VersionedIdentifier) -> D.Key:
-        return D.Key(f'{cls.make_prefix(identifier)}/{identifier}.json')
+        if identifier.is_old_style:
+            filename = f'{identifier.numeric_part}v{identifier.version}.json'
+        else:
+            filename = f'{identifier}.json'
+        return D.Key(f'{cls.make_prefix(identifier)}/{filename}')
 
     @classmethod
     def make_prefix(cls, ident: D.VersionedIdentifier) -> str:
@@ -30,8 +34,10 @@ class RecordMetadata(RecordEntry[D.Version]):
         str
 
         """
-        return (f'e-prints/{ident.year}/{str(ident.month).zfill(2)}/'
-                f'{ident.arxiv_id}/v{ident.version}')
+        date_part = f'e-prints/{ident.year}/{str(ident.month).zfill(2)}'
+        if ident.is_old_style:
+            return f'{date_part}/{ident.category_part}/{ident.numeric_part}/v{ident.version}'
+        return f'{date_part}/{ident.arxiv_id}/v{ident.version}'
 
     @classmethod
     def from_domain(cls: Type[_Self], version: D.Version) -> _Self:
@@ -43,7 +49,6 @@ class RecordMetadata(RecordEntry[D.Version]):
             key=key,
             stream=RecordStream(
                 domain=D.CanonicalFile(
-                    created=version.updated_date,
                     modified=version.updated_date,
                     size_bytes=size_bytes,
                     content_type=content_type,
@@ -73,5 +78,4 @@ class RecordMetadata(RecordEntry[D.Version]):
 
     @classmethod
     def from_stream(cls, key: D.Key, stream: RecordStream) -> 'RecordMetadata':
-        return cls(key=key, stream=stream,
-                   domain=cls.to_domain(stream))
+        return cls(key=key, stream=stream, domain=cls.to_domain(stream))

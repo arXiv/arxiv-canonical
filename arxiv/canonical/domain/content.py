@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import List, Optional
 
+from .identifier import VersionedIdentifier
+
 
 class SourceFileType(Enum):
     """Source file types are represented by single-character codes."""
@@ -129,8 +131,22 @@ class ContentType(Enum):
         return _extensions[self]
 
     @classmethod
+    def from_filename(cls, filename: str) -> 'ContentType':
+        for ctype, ext in _extensions.items():
+            if filename.endswith(ext):
+                return ctype
+        raise ValueError(f'Unrecognized extension: {filename}')
+
+    @classmethod
     def from_mimetype(cls, mime: str) -> 'ContentType':
         return {v: k for k, v in _mime_types.items()}[mime]
+
+    def make_filename(self, identifier: VersionedIdentifier) -> str:
+        """Make a filename for this content type based on an identifier."""
+        if identifier.is_old_style:
+            return f'{identifier.numeric_part}v{identifier.version}.{self.ext}'
+        return f'{identifier}.{self.ext}'
+
 
 
 _mime_types = {
@@ -149,8 +165,8 @@ _extensions = {
     ContentType.json: 'json',
     ContentType.abs: 'abs',
     ContentType.html: 'html',
-    ContentType.dvi: 'x-dvi',
-    ContentType.ps: 'ps',
+    ContentType.dvi: 'dvi',
+    ContentType.ps: 'ps.gz',
 }
 
 
@@ -176,3 +192,7 @@ def available_formats_by_ext(filename: str) -> Optional[List[ContentType]]:
         if filename.endswith(ext):
             return formats
     return None
+
+
+def list_source_extensions() -> List[str]:
+    return [ext for ext, _ in DISSEMINATION_FORMATS_BY_SOURCE_EXT]

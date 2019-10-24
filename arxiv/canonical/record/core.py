@@ -34,10 +34,6 @@ class RecordStream(NamedTuple):
     size_bytes: int
     """Size of ``content`` in bytes."""
 
-    @property
-    def created(self) -> datetime.datetime:
-        return self.domain.created
-
 
 class RecordEntryMembers(GenericMonoDict[str, 'RecordEntry']):
     """
