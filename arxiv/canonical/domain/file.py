@@ -25,7 +25,7 @@ class URI(str):
         o = urlparse(value)
         self.scheme = o.scheme
         if not self.scheme:
-            raise ValueError('Not a valid URI')
+            raise ValueError(f'Not a valid URI: {value}')
         self.netloc = o.netloc
         self.path = o.path
         self.params = o.params

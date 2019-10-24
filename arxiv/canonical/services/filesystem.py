@@ -30,10 +30,10 @@ class Filesystem(ICanonicalSource):
         self._base_path = base_path
 
     def _make_path(self, uri: D.URI) -> str:
-        return os.path.normpath(uri.path)
+        return os.path.abspath(uri.path)
 
     def can_resolve(self, uri: D.URI) -> bool:
-        return uri.is_file and self._base_path in os.path.normpath(uri.path)
+        return uri.is_file and self._base_path in os.path.abspath(uri.path)
 
     def load_deferred(self, uri: D.URI) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""

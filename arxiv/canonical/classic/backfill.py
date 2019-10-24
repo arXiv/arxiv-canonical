@@ -208,6 +208,8 @@ def _backfill(register: IRegisterAPI,
               until: Optional[date] = None) -> Iterable[Event]:
     # These mappings are stored on disk so that we can resume after a failure.
     # They will be created now if they don't already exist.
+    if not os.path.exists(state_path):
+        os.makedirs(state_path)
     first = PersistentIndex()
     first.load(os.path.join(state_path, 'first.json'))
     current = PersistentIndex()
@@ -389,6 +391,12 @@ def _load_all(daily_path: str,
     if first is None:
         first = {}
 
+    # Normalize all of our paths.
+    daily_path = os.path.abspath(daily_path)
+    cache_path = os.path.abspath(cache_path)
+    abs_path = os.path.abspath(abs_path)
+    ps_cache_path = os.path.abspath(ps_cache_path)
+
     logger.info(f'Load events from {daily_path}')
     # We can't infer whether an abs file was written prior to the daily.log
     # from the abs file alone. But if the e-print identifier comes prior to the
@@ -442,6 +450,7 @@ def _load_daily_event(abs_path: str, ps_cache_path: str,
                       current: MutableMapping[Identifier, int],
                       first: MutableMapping[Identifier, date],
                       cf_cache: Optional[_CF_PersistentIndex] = None) -> Event:
+
     identifier = _make_id(event_datum, current)
 
     abs_datum = abs.parse(abs_path, identifier)
@@ -594,6 +603,13 @@ def _load_today(daily_path: str,
         Yields :class:`Event`s in chronological order.
 
     """
+    # Normalize all of our paths.
+    daily_path = os.path.abspath(daily_path)
+    if cache_path is not None:
+        cache_path = os.path.abspath(cache_path)
+    abs_path = os.path.abspath(abs_path)
+    ps_cache_path = os.path.abspath(ps_cache_path)
+
     if first is None:
         first = {}
 
@@ -698,6 +714,7 @@ def _make_id(event_datum: daily.EventData,
             current[event_datum.arxiv_id] + 1
         )
     else:
+        print(event_datum.event_type)
         identifier = VersionedIdentifier.from_parts(
             event_datum.arxiv_id,
             current[event_datum.arxiv_id]

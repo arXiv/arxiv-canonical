@@ -21,7 +21,7 @@ jsonschema = "*"
 python-dateutil = "*"
 pytz = "*"
 typing-extensions = "*"
-arxiv-base = "==0.15.8.post1"
+arxiv-base = "==0.16.2"
 arxiv-auth = "*"
 arxiv-canonical = {path = "."}
 mypy = "==0.720"

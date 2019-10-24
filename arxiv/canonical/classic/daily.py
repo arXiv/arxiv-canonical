@@ -1,36 +1,37 @@
 """
 Parser for the daily.log file.
 
-From the original arXiv::Updates::DailyLog:
-
-```
-Module to provide information about updates to the archive
-over specified periods. This should be the only section
-of code that reads the daily.log file.
-
- Simeon Warner - 6Jan2000...
- 25Jan2000 - modified so that undef $startdate or $enddate select
-   the beginning or end of time respectively.
- 25Jan2000 - modified so that by simply removing the `-' from
-   and ISO8601 date we get YYYYMMDD from YYYY-MM-DD
- 16Oct2000 - to allow easy resumption in the OAI1 interface and
-   because it seems that it might be useful in other contexts the
-   number limited behaviour has been changed. query_daily_log() and
-   hence all other routines now stop at then end of a day and
-   returns the that day (in the form YYYY-MM-DD) as the value
-   if limited, undef otherwise.
-
-Thoughts: If this is to be used on the mirror sites then we will need
-to mirror the daily log. This probably means that that file
-should be split up.
-
- [CVS: $Id: DailyLog.pm,v 1.6 2010/03/23 03:53:09 arxiv Exp $]
-```
-
 The main goal of this implementation is parsing the log file for the purpose
 of transforming it into the arXiv Canonical format. Specifically, we want to
 use this legacy data structure to generate :class:`.Event` data that can be
 serialized in the daily listing files.
+
+From the original ``arXiv::Updates::DailyLog``:
+
+.. code-block:: plain
+
+    Module to provide information about updates to the archive
+    over specified periods. This should be the only section
+    of code that reads the daily.log file.
+
+     Simeon Warner - 6Jan2000...
+     25Jan2000 - modified so that undef $startdate or $enddate select
+       the beginning or end of time respectively.
+     25Jan2000 - modified so that by simply removing the `-' from
+       and ISO8601 date we get YYYYMMDD from YYYY-MM-DD
+     16Oct2000 - to allow easy resumption in the OAI1 interface and
+       because it seems that it might be useful in other contexts the
+       number limited behaviour has been changed. query_daily_log() and
+       hence all other routines now stop at then end of a day and
+       returns the that day (in the form YYYY-MM-DD) as the value
+       if limited, undef otherwise.
+
+    Thoughts: If this is to be used on the mirror sites then we will need
+    to mirror the daily log. This probably means that that file
+    should be split up.
+
+     [CVS: $Id: DailyLog.pm,v 1.6 2010/03/23 03:53:09 arxiv Exp $]
+```
 
 """
 import logging
@@ -38,20 +39,30 @@ import os
 import re
 import string
 import tempfile
+import warnings
 from operator import attrgetter
-from typing import Dict, Tuple, List, Mapping, MutableMapping, Iterable, NamedTuple, Optional
+from typing import Any, Dict, Tuple, List, Mapping, MutableMapping, Iterable, \
+    NamedTuple, Optional, Type
 from collections import defaultdict
 from datetime import date, datetime
-
 from itertools import chain, groupby
-
-import warnings
 
 from arxiv.base.logging import getLogger
 
 from ..domain import Event, Identifier, InvalidIdentifier, \
     VersionedIdentifier, EventType
 from .util import PersistentMultifileIndex
+
+
+def _showwarning(message: str,
+                 *args: Any,
+                 category: Type[Exception] = UserWarning,
+                 filename: str = '',
+                 lineno: int = -1,
+                 **kwargs: Any) -> None:
+    print(message)
+
+warnings.showwarning = _showwarning
 
 logger = logging.getLogger(__name__)
 logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))

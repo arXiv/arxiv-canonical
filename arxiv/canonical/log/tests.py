@@ -18,7 +18,7 @@ class TestLog(TestCase):
         """Log paths based on the root path and current date."""
         self.assertEqual(
             self.log.current_log_path,
-            f'{self.path}.{datetime.now(ET).date().isoformat()}.log'
+            f'{self.path}/.{datetime.now(ET).date().isoformat()}.log'
         )
 
     def test_deref_success(self):

@@ -33,10 +33,10 @@ class TestBackfillWithData(TestCase):
     __test__ = bool(os.environ.get('DAILY_PATH', None) is not None)
 
     def setUp(self):
-        # self.state_path = tempfile.mkdtemp()
-        # self.record_path = tempfile.mkdtemp()
-        self.state_path = '/var/folders/l7/5ygyvtbs29340t2s2nsq4lh00000gp/T/tmpmrktp19_'
-        self.record_path = '/var/folders/l7/5ygyvtbs29340t2s2nsq4lh00000gp/T/tmpengvav2y'
+        self.state_path = tempfile.mkdtemp()
+        self.record_path = tempfile.mkdtemp()
+        # self.state_path = '/var/folders/l7/5ygyvtbs29340t2s2nsq4lh00000gp/T/tmpmrktp19_'
+        # self.record_path = '/var/folders/l7/5ygyvtbs29340t2s2nsq4lh00000gp/T/tmpengvav2y'
         self.cache_path = './.cache'
         print('state_path ::', self.state_path)
         print('record_path ::', self.record_path)

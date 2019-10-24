@@ -82,7 +82,7 @@ class Log:
 
     def __init__(self, path: str) -> None:
         """Initialize with a reader and writer."""
-        self.path = path
+        self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
             raise RuntimeError(f'No such path: {self.path}')
         try:
@@ -94,7 +94,7 @@ class Log:
     @property
     def current_log_path(self) -> str:
         """The path to the current log file."""
-        return f'{self.path}.{datetime.now(ET).date().isoformat()}.log'
+        return f'{self.path}/.{datetime.now(ET).date().isoformat()}.log'
 
     def write(self,
               event_id: D.EventIdentifier,
