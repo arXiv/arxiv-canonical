@@ -44,11 +44,12 @@ class RegisterTestCase(TestCase):
                 license=D.License(href="http://some.license")
             ),
             source=D.CanonicalFile(
-                filename='2901.00345v1.tar.gz',
+                filename='2901.00345v1.tar',
                 modified=created,
                 size_bytes=4_304,
-                content_type=D.ContentType.targz,
-                ref=D.URI('/fake/path.tar.gz')
+                content_type=D.ContentType.tar,
+                ref=D.URI('/fake/path.tar.gz'),
+                is_gzipped=True,
             ),
             render=D.CanonicalFile(
                 filename='2901.00345v1.pdf',

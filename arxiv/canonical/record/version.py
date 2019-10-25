@@ -148,7 +148,8 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
         """
         date_part = f'e-prints/{ident.year}/{str(ident.month).zfill(2)}'
         if ident.is_old_style:
-            return f'{date_part}/{ident.category_part}/{ident.numeric_part}/v{ident.version}'
+            return (f'{date_part}/{ident.category_part}/{ident.numeric_part}/'
+                    f'v{ident.version}')
         return f'{date_part}/{ident.arxiv_id}/v{ident.version}'
 
     @property

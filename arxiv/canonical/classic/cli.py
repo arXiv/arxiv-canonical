@@ -29,13 +29,16 @@ def cli() -> None:
 @click.option('--state-path', default=None, type=str)
 @click.option('--until', default=None, type=click.DateTime(['%Y-%m-%d']),   # pylint: disable=no-member
               help='If provided, will only backfill up to the specified date.')
+@click.option('--remote', default='arxiv.org', type=str,
+              help='Host to use when formats are missing from ps_cache')
 def backfill(record_path: str,
              classic_path: str,
              daily_path: str,
              ps_cache_path: str,
              state_path: Optional[str] = None,
              cache_path: Optional[str] = None,
-             until: Optional[datetime] = None) -> None:
+             until: Optional[datetime] = None,
+             remote: str = 'arxiv.org') -> None:
     """
     Backfill the canonical record from the classic record.
 
@@ -61,6 +64,8 @@ def backfill(record_path: str,
         classic bitstreams. Default: ``.backfill/cache/`` in the CWD.
     until : date
         If provided, will only backfill up to the specified date.
+    remote : str
+        Host to use when formats are missing from ps_cache.
 
     """
     if state_path is None:
@@ -69,14 +74,80 @@ def backfill(record_path: str,
         cache_path = './.backfill/cache'
     storage = CanonicalFilesystem(record_path)
     classic = Filesystem(classic_path)
-    remote = RemoteSource('arxiv.org')
-    api = RegisterAPI(storage, [storage, classic, remote])
+    remote_source = RemoteSource(remote)
+    api = RegisterAPI(storage, [storage, classic, remote_source])
 
     until_date: Optional[date] = None if not until else until.date()
 
     for event in _backfill.backfill(api, daily_path, classic_path,
                                     ps_cache_path, state_path,
                                     cache_path=cache_path, until=until_date):
+        click.echo(f'{event.event_date}'
+                   f'\t{event.identifier}'
+                   f'\t{event.event_type.value}')
+
+
+@click.command('backfill_today',
+               short_help='Backfill today\'s events from the classic record.')
+@click.argument('record_path')
+@click.argument('classic_path', default='/data')
+@click.argument('daily_path', default='/data/logs_archive/misc/daily.log')
+@click.argument('ps_cache_path', default='/cache')
+@click.option('--state-path', default=None, type=str)
+@click.option('--until', default=None, type=click.DateTime(['%Y-%m-%d']),   # pylint: disable=no-member
+              help='If provided, will only backfill up to the specified date.')
+@click.option('--remote', default='arxiv.org', type=str,
+              help='Host to use when formats are missing from ps_cache')
+def backfill_today(record_path: str,
+                   classic_path: str,
+                   daily_path: str,
+                   ps_cache_path: str,
+                   state_path: Optional[str] = None,
+                   cache_path: Optional[str] = None,
+                   remote: str = 'arxiv.org') -> None:
+    """
+    Backfill today\'s events from the classic record.
+
+    This is a unique case, in that we are able to directly infer the version
+    associated with each event based on the most recent abs file for each
+    e-print.
+
+    TODO: add support for ``s3://`` path for ``record_path``.
+
+    \b
+    Parameters
+    ----------
+    record_path : str
+        Full path to the target canonical record.
+    classic_path : str
+        Path to data directory containing orig/, ftp/. Default: ``/data``.
+    daily_path : str
+        Full path to the daily.log file. Default:
+        ``/data/logs_archive/misc/daily.log``.
+    ps_cache_path : str
+        Full path to the directory containing ps_cache/. Default: ``/cache``.
+    state_path : str
+        Path for the backfill state. Allows re-starting from the last
+        successfully handled event. Default: ``.backfill/`` in the CWD.
+    cache_path : str
+        Path for the backfill cache. Used to cache expensive metadata about
+        classic bitstreams. Default: ``.backfill/cache/`` in the CWD.
+    remote : str
+        Host to use when formats are missing from ps_cache.
+
+    """
+    if state_path is None:
+        state_path = './.backfill'
+    if cache_path is None:
+        cache_path = './.backfill/cache'
+    storage = CanonicalFilesystem(record_path)
+    classic = Filesystem(classic_path)
+    remote_source = RemoteSource(remote)
+    api = RegisterAPI(storage, [storage, classic, remote_source])
+
+    for event in _backfill.backfill_today(api, daily_path, classic_path,
+                                          ps_cache_path, state_path,
+                                          cache_path=cache_path):
         click.echo(f'{event.event_date}'
                    f'\t{event.identifier}'
                    f'\t{event.event_type.value}')

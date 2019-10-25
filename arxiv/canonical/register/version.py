@@ -1,6 +1,6 @@
 from datetime import date
 from functools import partial
-from typing import Dict, Optional, Sequence, Set, Type, Union
+from typing import Dict, Iterable, Optional, Sequence, Set, Type, Union
 
 from .core import (Base, D, R, I, ICanonicalStorage, ICanonicalSource, _Self,
                    dereference)
@@ -78,6 +78,7 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         """
         members: Dict[str, Union[RegisterFile, RegisterMetadata]] = {}
         member: Union[RegisterFile, RegisterMetadata]
+        meta: Optional[I.IntegrityMetadata] = None
         for i_member in integrity.iter_members():
             if isinstance(i_member.record, R.RecordFile):
                 assert isinstance(i_member, I.IntegrityEntry)
@@ -89,13 +90,32 @@ class RegisterVersion(Base[D.VersionedIdentifier,
             elif isinstance(i_member.record, R.RecordMetadata):
                 assert isinstance(i_member.record.domain, D.Version)
                 assert isinstance(i_member, I.IntegrityMetadata)
-                member = RegisterMetadata(i_member.name,
-                                          domain=i_member.record.domain,
-                                          record=i_member.record,
-                                          integrity=i_member)
+                # Defer handling the metadata member until the end (see below).
+                meta = i_member
+                continue
             if save_members:
                 member.save(s)
             members[member.name] = member
+
+        # We have deferred handling the metadata until the end, since (if we
+        # are saving members, especially for the first time) it is possible
+        # that some of the other members will have changed during the storage
+        # process due to gzip decompression.
+        if meta is None:
+            raise RuntimeError('No IntegrityMetadata member')
+        meta_record = meta.record
+        # If we are currently saving, we need to rebuild the metadata record
+        # that will be stored.
+        if save_members:
+            meta_record = R.RecordMetadata.from_domain(meta.record.domain)
+            meta.set_record(meta_record)
+        member = RegisterMetadata(meta.name,
+                                  domain=meta.record.domain,
+                                  record=meta_record,
+                                  integrity=meta)
+        if save_members:
+            member.save(s)
+        members[member.name] = member
         return members
 
     @property
@@ -141,5 +161,27 @@ class RegisterVersion(Base[D.VersionedIdentifier,
             self.members[name] = new_version.members[name]
             altered.add(self.members[name])
         self.save_members(s, altered)   # Updates our manifest.
+
+    def save_members(self, s: ICanonicalStorage,
+                     members: Iterable[Union[RegisterFile, RegisterMetadata]]) -> None:
+        """Save members that have changed, and update our manifest."""
+        meta: Optional[RegisterMetadata] = None
+        for member in members:
+            if isinstance(member, RegisterMetadata):
+                meta = member
+            checksum = member.save(s)
+            assert checksum is not None
+            self.integrity.update_or_extend_manifest(member, checksum)
+
+        # We have deferred handling the metadata until the end, since it is
+        # possible that some of the other members will have changed during the
+        # storage process due to gzip decompression.
+        if meta is None:
+            raise RuntimeError('No RegisterMetadata member')
+        meta.record = R.RecordMetadata.from_domain(meta.record.domain)
+        meta.integrity.set_record(meta.record)
+        checksum = meta.save(s)
+        assert checksum is not None
+        self.integrity.update_or_extend_manifest(meta, checksum)
 
 

@@ -115,12 +115,14 @@ class SourceType(str):
 
 class ContentType(Enum):
     pdf = 'pdf'
+    tar = 'tar'
     targz = 'targz'
     json = 'json'
     abs = 'abs'
     html = 'html'
     dvi = 'dvi'
     ps = 'ps'
+    tex = 'tex'
 
     @property
     def mime_type(self) -> str:
@@ -141,44 +143,63 @@ class ContentType(Enum):
     def from_mimetype(cls, mime: str) -> 'ContentType':
         return {v: k for k, v in _mime_types.items()}[mime]
 
-    def make_filename(self, identifier: VersionedIdentifier) -> str:
+    def make_filename(self, identifier: VersionedIdentifier,
+                      is_gzipped: bool = False) -> str:
         """Make a filename for this content type based on an identifier."""
         if identifier.is_old_style:
-            return f'{identifier.numeric_part}v{identifier.version}.{self.ext}'
-        return f'{identifier}.{self.ext}'
+            fn = f'{identifier.numeric_part}v{identifier.version}.{self.ext}'
+        else:
+            fn = f'{identifier}.{self.ext}'
+        if is_gzipped:
+            fn = f'{fn}.gz'
+        return fn
 
 
 
 _mime_types = {
     ContentType.pdf: 'application/pdf',
+    ContentType.tar: 'application/x-tar',
     ContentType.targz: 'application/gzip',
     ContentType.json: 'application/json',
     ContentType.abs: 'text/plain',
     ContentType.html: 'text/html',
     ContentType.dvi: 'application/x-dvi',
     ContentType.ps: 'application/postscript',
+    ContentType.tex: 'application/x-tex',
 }
 
 _extensions = {
     ContentType.pdf: 'pdf',
-    ContentType.targz: 'tar.gz',
+    ContentType.targz: 'tar',
+    ContentType.tar: 'tar',
     ContentType.json: 'json',
     ContentType.abs: 'abs',
     ContentType.html: 'html',
     ContentType.dvi: 'dvi',
-    ContentType.ps: 'ps.gz',
+    ContentType.ps: 'ps',
+    ContentType.tex: 'tex'
 }
 
 
 DISSEMINATION_FORMATS_BY_SOURCE_EXT = [
     ('.tar.gz', None),
+    ('.tar', None),
     ('.dvi.gz', None),
+    ('.dvi', None),
     ('.pdf', [ContentType.pdf]),
     ('.ps.gz', [ContentType.pdf, ContentType.ps]),
+    ('.ps', [ContentType.pdf, ContentType.ps]),
     ('.html.gz', [ContentType.html]),
+    ('.html', [ContentType.html]),
     ('.gz', None),
 ]
-"""Dissemination formats that can be inferred from source file extension."""
+"""
+Dissemination formats that can be inferred from source file extension.
+
+.. note::
+    This is largely to support format discovery in classic. In the NG
+    canonical record, this should all be explicit.
+"""
 
 
 def available_formats_by_ext(filename: str) -> Optional[List[ContentType]]:
@@ -187,6 +208,11 @@ def available_formats_by_ext(filename: str) -> Optional[List[ContentType]]:
 
     It sometimes (but not always) possible to infer the available dissemination
     formats based on the filename extension of the source package.
+
+    .. note::
+        This is largely to support format discovery in classic. In the NG
+        canonical record, this should all be explicit.
+
     """
     for ext, formats in DISSEMINATION_FORMATS_BY_SOURCE_EXT:
         if filename.endswith(ext):

@@ -36,8 +36,15 @@ class IStorableEntry(Protocol):
     """Name of the entry."""  # pylint: disable=pointless-string-statement; this is a docstring.
 
     @property
+    def checksum(self) -> str:
+        """URL-safe b64-encoded md5 hash."""
+
+    @property
     def record(self) -> R.RecordEntry:
         """Reference to a :class:`.RecordEntry`."""
+
+    def update_checksum(self) -> None:
+        """Update the integrity checksum for this entry."""
 
 
 class IManifestStorage(Protocol):
@@ -66,7 +73,13 @@ class ICanonicalStorage(ICanonicalSource, IManifestStorage, Protocol):
         """List all of the subkeys for ``key`` in the record."""
 
     def store_entry(self, ri: IStorableEntry) -> None:  # pylint: disable=unused-argument; this is a stub.
-        """Store an entry in the record."""
+        """
+        Store an entry in the record.
+
+        This method MUST decompress the content of the entry if it is gzipped
+        (as is sometimes the case in the classic system) and update the
+        ``CanonicalFile`` (``ri.record.stream.domain``).
+        """
 
 
 _Name = TypeVar('_Name')

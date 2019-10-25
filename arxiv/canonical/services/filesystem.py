@@ -1,3 +1,4 @@
+import gzip
 import io
 import json
 import logging
@@ -97,25 +98,47 @@ class CanonicalFilesystem(Filesystem, ICanonicalStorage):
         if not self.can_store(ri.record.key) or not ri.record.stream.content:
             logger.error(f'Cannot store: {ri.record.key}')
             raise RuntimeError(f'Cannot store: {ri.record.key}')
+
         path = self._make_path(ri.record.key)
+        # Make sure that we have a place to put the file.
         parent, _ = os.path.split(path)
         if not os.path.exists(parent):
-            os.makedirs(parent)   # Pave the way!
+            os.makedirs(parent)
 
+        # Ensure that we are starting from the beginning of the stream.
         logger.debug('Ready to write to %s from %s', path, ri.record.stream)
         if ri.record.stream.content.seekable():
             ri.record.stream.content.seek(0)
 
+        # Write the content to the target file, being sure to decompress if
+        # necessary.
+        content: Union[IO[bytes], gzip.GzipFile]
+        if ri.record.stream.domain.is_gzipped:
+            content = gzip.GzipFile(fileobj=ri.record.stream.content)
+        else:
+            content = ri.record.stream.content
         with open(path, 'wb') as f:
             while True:
-                chunk = ri.record.stream.content.read(4096)
+                chunk = content.read(4096)
                 if not chunk:
                     break
                 f.write(chunk)
 
-        logger.debug('Wrote %i bytes to %s', os.path.getsize(path), path)
-        if os.path.getsize(path) == 0:
-            raise IOError(f'Wrote {os.path.getsize(path)} bytes to {path}')
+        # Sanity check.
+        size_bytes = os.path.getsize(path)
+        logger.debug('Wrote %i bytes to %s', size_bytes, path)
+        if size_bytes == 0:
+            raise IOError(f'Wrote {size_bytes} bytes to {path}')
+
+        # Update the CanonicalFile to reflect the fact that we decompressed
+        # the content.
+        if ri.record.stream.domain.is_gzipped:
+            ri.record.stream.domain.is_gzipped = False
+            ri.record.stream.domain.size_bytes = size_bytes
+            ri.record.stream = ri.record.stream._replace(
+                content=self.load_deferred(ri.record.key)
+            )
+            ri.update_checksum()
 
     def store_manifest(self, key: D.Key, manifest: Manifest) -> None:
         """Store an integrity manifest."""

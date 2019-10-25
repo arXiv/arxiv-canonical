@@ -63,24 +63,37 @@ class CanonicalFile(CanonicalBase):
     """Represents a file in the canonical record, e.g. a source package."""
 
     modified: datetime
-    size_bytes: int
-    content_type: ContentType
-    filename: Optional[str]
-    ref: URI
+    """Last time the file was modified."""
 
-    exclude_from_comparison = {'ref'}
+    size_bytes: int
+    """Size of the file in bytes."""
+
+    content_type: ContentType
+    """The content type of the file."""
+
+    filename: Optional[str]
+    """Filename in the canonical record."""
+
+    ref: URI
+    """A reference to the location of the content of the file."""
+
+    is_gzipped: bool
+    """Whether or not the content at ``ref`` is served in gzipped form."""
+
+    exclude_from_comparison = {'ref', 'is_gzipped'}
 
     def __init__(self, modified: datetime,
                  size_bytes: int,
                  content_type: ContentType,
                  ref: URI,
-                 filename: Optional[str] = None) -> None:
+                 filename: Optional[str] = None,
+                 is_gzipped: bool = False) -> None:
         self.modified = modified
         self.size_bytes = size_bytes
         self.content_type = content_type
         self.filename = filename
         self.ref = ref
-        # self.content = content
+        self.is_gzipped = is_gzipped
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CanonicalFile':
@@ -89,8 +102,8 @@ class CanonicalFile(CanonicalBase):
             size_bytes=data['size_bytes'],
             content_type=ContentType(data['content_type']),
             filename=data['filename'],
-            ref=URI(data['ref'])
-            # content=URI(data['content'])
+            ref=URI(data['ref']),
+            is_gzipped=data.get('is_gzipped', False)
         )
 
     @property
@@ -104,7 +117,7 @@ class CanonicalFile(CanonicalBase):
             'content_type': self.content_type.value,
             'filename': self.filename,
             'ref': self.ref,
-            # 'content': self.content
+            'is_gzipped': self.is_gzipped
         }
 
 

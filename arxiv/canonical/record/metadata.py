@@ -64,7 +64,7 @@ class RecordMetadata(RecordEntry[D.Version]):
 
     @classmethod
     def _encode(cls, version: D.Version) -> Tuple[IO[bytes], int]:
-        content = dumps(version.to_dict()).encode('utf-8')
+        content = dumps(version.to_dict(), indent=2).encode('utf-8')
         return BytesIO(content), len(content)
 
     @classmethod

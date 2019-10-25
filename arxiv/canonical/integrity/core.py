@@ -178,6 +178,9 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         """Set the checksum for this record."""
         self._checksum = self.calculate_checksum()
 
+    def set_record(self, record: _Record) -> None:
+        self._record = record
+
     def update_or_extend_manifest(self, member: _Member, checksum: str) \
             -> None:
         """Update the checksum on a manifest entry, or add a new entry."""

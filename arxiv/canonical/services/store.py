@@ -4,7 +4,7 @@ Persist changes to the canonical record.
 Provides a :class:`.CanonicalStore` that stores resources in S3, using
 :mod:`.serialize.record` to serialize and deserialize resources.
 """
-
+import gzip
 import io
 import logging
 import os
@@ -140,13 +140,35 @@ class CanonicalStore(ICanonicalStorage):
 
     def store_entry(self, ri: IStorableEntry) -> None:
         assert ri.record.stream.content is not None
+        # Make sure to decompress the content if necessary.
+        if ri.record.stream.domain.is_gzipped:
+            body = gzip.GzipFile(fileobj=ri.record.stream.content).read()
+            s3_checksum = _b64_to_hex(I.calculate_checksum(body))
+        else:
+            body = ri.record.stream.content.read()
+            s3_checksum = _b64_to_hex(ri.checksum)
+        size_bytes = len(body)
+
         self.client.put_object(Bucket=self._bucket,
                                Key=ri.record.key,
-                               Body=ri.record.stream.content.read(),
-                               ContentLength=ri.record.stream.size_bytes,
-                               ContentMD5=_b64_to_hex(ri.checksum),
-                               ContentType=ri.record.stream.content_type.mime_type,
-                               Metadata=metadata)
+                               Body=body,
+                               ContentLength=size_bytes,
+                               ContentMD5=s3_checksum,
+                               ContentType=ri.record.stream.content_type.mime_type)
+
+        # Update the CanonicalFile if necessary.
+        if ri.record.stream.domain.is_gzipped:
+            ri.record.stream.domain.size_bytes = size_bytes
+            ri.record.stream.domain.is_gzipped = False
+            # Use an in-memory buffer for the checksum, to cut down on
+            # unnecessary IO.
+            ri.record.stream = \
+                ri.record.stream._replace(content=io.BytesIO(body))
+            ri.update_checksum()
+            # Finally, replace the content IO with a deferred IO.
+            ri.record.stream = ri.record.stream._replace(
+                content=self.load_deferred(ri.record.key)
+            )
 
     def store_manifest(self, key: str, manifest: Manifest) -> None:
         body = dumps(manifest, cls=ManifestEncoder).encode('utf-8')
@@ -205,6 +227,13 @@ class InMemoryStorage(ICanonicalStorage):
 
     def store_entry(self, ri: IStorableEntry) -> None:
         assert ri.record.stream.content is not None
+        if ri.record.stream.domain.is_gzipped:
+            content = gzip.GzipFile(fileobj=ri.record.stream.content).read()
+            ri.record.stream.domain.size_bytes = len(content)
+            ri.record.stream.domain.is_gzipped = False
+            ri.record.stream = \
+                ri.record.stream._replace(content=io.BytesIO(content))
+            ri.update_checksum()
         self._streams[ri.record.key] = (ri.record.stream, ri.checksum)
         ri.record.stream.domain.ref = ri.record.key
 
