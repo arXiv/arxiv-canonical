@@ -31,6 +31,46 @@ Both the ``announcement/`` and ``repository/`` applications use the
 ``arxiv.canonical`` package (``arxiv/canonical/`` in this repo) to interact
 with the canonical record.
 
+### Implementation notes
+
+- ``arxiv.canonical.classic`` provides a CLI with ``backfill`` and
+  ``backfill_today`` commands.
+
+  - ``backfill` can be used to backfill the NG canonical record from the legacy
+    record.
+  - ``backfill_today`` can be used to update the NG canonical record from the
+    legacy record on a daily basis. This should be run after the announcement
+    process has completed.
+  - These commands should be extended with an option to also propagate events
+    once they are successfully backfilled. See that module docstring for
+    details.
+
+- ``repository/`` has a minimal integration with the updated
+  ``arxiv.canonical`` package. This could be a guide for a similar service
+  module in the ``browse`` application.
+
+### TODO
+
+- [ ] Consider removing entirely the ``render`` property throughout
+  ``arxiv.canonical``. In the initial implementation, only a source package
+  and a single rendered output (e.g. PDF) were stored. In the current
+  implementation, the source file plus all classic dissemination formats are
+  preserved. Thus ``render`` is more or less obviated.
+- [ ] Some attention to the semantics of exceptions throughout
+  ``arxiv.canonical``. In many places we are still using native Python
+  exceptions that may not provide the most meaningful information or be used
+  consistently.
+- [ ] Implementation of the daily preservation package. This will involve
+  implementing supporting structs in ``domain``, ``record``, and ``integrity``
+  modules, and probably something analagous to the ``register`` API for
+  constructing and storing the daily preservation package.
+- [ ] Integration in arxiv-browse. The recommended approach is to treat browse
+  as a flavor of the canonical repository (see
+  https://arxiv.github.io/arxiv-arxitecture/subsystems/announcement.html#primary-repository)
+  with an HTML interface. See ``repository/`` in this repo for how this
+  integration could look. The ``RegisterAPI`` may need to be extended to
+  support some of browse's requirements, such as listing events by week.
+
 ## Version 1: Orchestration of the Announcement Process
 
 Once several other dependencies are resolved in the legacy system, this project
