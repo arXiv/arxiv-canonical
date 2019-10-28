@@ -1,3 +1,9 @@
+"""
+Implementation of event consumer and producer.
+
+TODO: write tests for these implementations.
+"""
+
 from json import dumps
 from typing import Any, Callable, Dict, Optional
 
@@ -35,7 +41,8 @@ class ListenerEventStream(IEventStream):
 
 
 # TODO: arxiv.base.integration.kinesis should have a BaseKinesis class with
-# the bulk of the boto3 integration. This will be OK for now.
+# the bulk of the boto3 integration (rather than having it in BaseConsumer).
+# But this will be OK for now.
 class _Producer(BaseConsumer):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._last_sequence_number: Optional[str] \
@@ -43,7 +50,6 @@ class _Producer(BaseConsumer):
         super(_Producer, self).__init__(*args, **kwargs)
         self.client = self.new_client()
         self.get_or_create_stream()
-
 
     def emit(self, payload: bytes) -> None:
         # SequenceNumberForOrdering for must be the SequenceNumber of the
@@ -65,7 +71,6 @@ class _Producer(BaseConsumer):
 
 
 class ProducerEventStream(IEventStream):
-
     def __init__(self, config: Dict[str, Any]) -> None:
         self._producer = _Producer(**config)
 

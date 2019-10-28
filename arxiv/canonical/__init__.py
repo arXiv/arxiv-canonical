@@ -92,7 +92,7 @@ corresponding tombstones).
    announcement/<listing>.json
    e-prints/<arXiv ID>v<version>/
        <arXiv ID>v<version>.json      # Metadata record
-       <arXiv ID>v<version>.tar    # Source package
+       <arXiv ID>v<version>.tar       # Source package
        <arXiv ID>v<version>.pdf       # PDF
    Manifest: <arXiv ID>v<version>.manifest.json
    suppress/<arXiv ID>v<version>/tombstone

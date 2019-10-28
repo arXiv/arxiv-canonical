@@ -359,7 +359,7 @@ class EventIdentifier(str):
     """Timestamp of the event."""
 
     shard: str
-    """Shard ID for the event.""""
+    """Shard ID for the event."""
 
     def __init__(self, value: str) -> None:
         decoded = urlsafe_b64decode(value).decode('utf-8')

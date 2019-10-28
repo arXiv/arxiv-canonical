@@ -28,4 +28,3 @@ class CanonicalBase:
 
 class CanonicalBaseCollection(CanonicalBase):
     """Base class for domain classes that act as collections."""
-

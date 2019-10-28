@@ -1,4 +1,19 @@
-"""Command-line tools for the classic record."""
+"""
+Command-line tools for the classic record.
+
+Next step: propagating events during backfill
+=============================================
+In the current implementation, the legacy record is used to backfill the
+NG canonical record on a start-up and daily basis (after announcement for that
+day is complete). Especially for the daily update, it will be desirable to
+also propagate the backfilled events on the announcement event stream. Use
+the implementation in :mod:`arxiv.canonical.services.stream` to emit events
+as they are yielded by the backfill/backfill_today function.
+
+Note that this assumes that a minimal version of the NG canonical repository
+application is running and accessible to consumers, who will need to retrieve
+bitstreams identified by canonical URIs.
+"""
 
 import os
 from datetime import date, datetime

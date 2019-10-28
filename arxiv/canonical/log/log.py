@@ -1,4 +1,5 @@
 """Provides the write log for the canonical record."""
+
 import json
 import os
 from datetime import datetime

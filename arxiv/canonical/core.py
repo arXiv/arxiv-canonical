@@ -232,6 +232,17 @@ class IRegisterAPI(Protocol):
         """Load a :class:`.Listing` for a particulate date."""
 
 
+# TODO: implement me!
+class IPreservationAPI(Protocol):
+    """Interface for the daily preservation record API."""
+
+    def add_events(self, *events: D.Event) -> None:
+        """Add new events to the preservation record."""
+
+    def load_package(self, date: datetime.date) -> I.IntegrityEntry:
+        """Load the preservation package for a particular date."""
+
+
 # TODO: consider a semantically more meaningful exception for failure to
 # dereference the URI.
 def dereference(sources: Sequence[ICanonicalSource], uri: D.URI) -> IO[bytes]:
