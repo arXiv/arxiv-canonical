@@ -52,8 +52,8 @@ class ControllerTestCase(TestCase):
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.tar,
-                ref=D.URI('/fake/path.tar.gz'),
-                is_gzipped=True,
+                ref=D.URI('/fake/path.tar'),
+                is_gzipped=False,
             ),
             render=self.render
         )

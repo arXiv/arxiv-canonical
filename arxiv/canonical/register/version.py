@@ -171,7 +171,8 @@ class RegisterVersion(Base[D.VersionedIdentifier,
                 meta = member
             checksum = member.save(s)
             assert checksum is not None
-            self.integrity.update_or_extend_manifest(member, checksum)
+            self.integrity.update_or_extend_manifest(member.integrity,
+                                                     checksum)
 
         # We have deferred handling the metadata until the end, since it is
         # possible that some of the other members will have changed during the
@@ -182,6 +183,6 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         meta.integrity.set_record(meta.record)
         checksum = meta.save(s)
         assert checksum is not None
-        self.integrity.update_or_extend_manifest(meta, checksum)
+        self.integrity.update_or_extend_manifest(meta.integrity, checksum)
 
 

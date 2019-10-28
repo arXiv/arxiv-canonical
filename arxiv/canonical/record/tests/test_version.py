@@ -60,8 +60,8 @@ class TestRecordVersion(TestCase):
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.tar,
-                ref=D.URI('/fake/path.tar.gz'),
-                is_gzipped=True,
+                ref=D.URI('/fake/path.tar'),
+                is_gzipped=False,
             ),
             render=D.CanonicalFile(
                 filename='2901.00345v1.pdf',
@@ -101,11 +101,11 @@ class TestRecordVersion(TestCase):
         self.assertTrue(record.source.key.is_canonical)
         self.assertEqual(
             record.source.key,
-            'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.tar.gz',
+            'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.tar',
             'Key for source package is generated correctly'
         )
         self.assertEqual(record.source.stream.content.read(),
-                         b'fake content for file:///fake/path.tar.gz',
+                         b'fake content for file:///fake/path.tar',
                          'Source resource is dereferenced correctly')
 
     def test_schema(self):

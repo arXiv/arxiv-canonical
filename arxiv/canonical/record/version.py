@@ -30,7 +30,7 @@ class RecordVersion(RecordBase[D.VersionedIdentifier,
     Sub-keys are:
 
     - Metadata record: ``<arXiv ID>v<version>.json``
-    - Source package: ``<arXiv ID>v<version>.tar.gz``
+    - Source package: ``<arXiv ID>v<version>.tar``
     - PDF: ``<arXiv ID>v<version>.render``
     - Manifest: ``<arXiv ID>v<version>.manifest.json``
 

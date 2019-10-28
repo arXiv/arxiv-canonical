@@ -52,7 +52,7 @@ Where ``YYYY`` is the year and ``MM`` the month during which the first version
 of the e-print was announced. Sub-keys are:
 
 - Metadata record: ``<arXiv ID>v<version>.json``
-- Source package: ``<arXiv ID>v<version>.tar.gz``
+- Source package: ``<arXiv ID>v<version>.tar``
 - PDF: ``<arXiv ID>v<version>.pdf``
 - Manifest: ``<arXiv ID>v<version>.manifest.json``
 
@@ -92,7 +92,7 @@ corresponding tombstones).
    announcement/<listing>.json
    e-prints/<arXiv ID>v<version>/
        <arXiv ID>v<version>.json      # Metadata record
-       <arXiv ID>v<version>.tar.gz    # Source package
+       <arXiv ID>v<version>.tar    # Source package
        <arXiv ID>v<version>.pdf       # PDF
    Manifest: <arXiv ID>v<version>.manifest.json
    suppress/<arXiv ID>v<version>/tombstone

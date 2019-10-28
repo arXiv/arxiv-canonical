@@ -82,7 +82,9 @@ def get_formats(dpath: str,
 
         cache_key = (ident, content_type)
         if cf_cache is not None and cache_key in cf_cache:
-            yield cf_cache[cache_key]
+            cf = cf_cache[cache_key]
+            assert cf is not None
+            yield cf
             continue
 
         path: Optional[str] = None  # We hope to find the file on disk.
@@ -101,7 +103,22 @@ def get_formats(dpath: str,
                              ident, content_type.value, path)
                 break
             logger.debug('Tried source path for %s %s with ext %s',
-                            ident, content_type.value, _ext)
+                         ident, content_type.value, _ext)
+
+        # HTML is kind of a special case. The HTML source package is either a
+        # .html.gz or .tar.gz file, and the ps_cache content is a directory
+        # containing one or many files that get served up directly by the web
+        # server. .html.gz will have gotten picked up above, so we just want
+        # to make sure that if we have a multi-file HTML file we also check for
+        # a .tar.gz in the source directory.
+        if path is None \
+                and content_type == D.ContentType.html \
+                and source_type is not None and source_type.has_html:
+            path = (
+                _get_path(_orig_source, _latest_source, dpath, ident, 'tar')
+                or
+                _get_path(_orig_source, _latest_source, dpath, ident, 'tar.gz')
+            )
 
         # Otherwise look in the ps_cache.
         if path is None or not os.path.exists(path):
@@ -165,7 +182,7 @@ def _get_via_http(ident: D.VersionedIdentifier,
 
     cf = REMOTE.head(D.URI(f'https://arxiv.org/{path}'), content_type)
     if cf is not None:
-        cf.filename = content_type.make_filename(ident, cf.is_gzipped)
+        cf.filename = content_type.make_filename(ident)
     return cf
 
 

@@ -187,12 +187,12 @@ class IntegrityBase(Generic[_Name, _Record, _MemberName, _Member]):
         found = False
         for entry in self.manifest['entries']:
             # Update existing manifest entry.
-            if entry['key'] == member.integrity.manifest_name:
+            if entry['key'] == member.manifest_name:
                 entry['checksum'] = checksum
                 found = True
                 break
         if not found:   # New manifest entry.
-            self.extend_manifest(member.integrity)
+            self.extend_manifest(member)
 
 
 class IntegrityEntryBase(IntegrityBase[str, _Record, None, None]):

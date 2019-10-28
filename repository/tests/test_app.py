@@ -55,8 +55,8 @@ class AppTestCase(TestCase):
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.tar,
-                ref=D.URI('/fake/path.tar.gz'),
-                is_gzipped=True,
+                ref=D.URI('/fake/path.tar'),
+                is_gzipped=False,
             ),
             render=D.CanonicalFile(
                 filename='2901.00345v1.pdf',

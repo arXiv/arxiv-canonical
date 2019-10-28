@@ -56,7 +56,7 @@ class PreservationRecord(NamedTuple):
     announcement/<listing>.json
     e-prints/<arXiv ID>v<version>/
         <arXiv ID>v<version>.json         # Metadata record
-        <arXiv ID>v<version>.tar.gz           # Source package
+        <arXiv ID>v<version>.tar           # Source package
         <arXiv ID>v<version>.pdf              # First PDF
         <arXiv ID>v<version>.manifest.json    # Manifest.
     suppress/<arXiv ID>v<version>/tombstone

@@ -44,8 +44,8 @@ class TestIntegrityVersion(TestCase):
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.tar,
-                ref=D.URI('/fake/path.tar.gz'),
-                is_gzipped=True,
+                ref=D.URI('/fake/path.tar'),
+                is_gzipped=False,
             ),
             render=D.CanonicalFile(
                 filename='2901.00345v1.pdf',
@@ -72,10 +72,10 @@ class TestIntegrityVersion(TestCase):
              'size_bytes': 404,
              'mime_type': 'application/pdf'},
             {'key':
-                'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.tar.gz',
+                'arxiv:///e-prints/2029/01/2901.00345/v1/2901.00345v1.tar',
              'checksum': '1GR0xuZYavi6N04v3-1wIw==',
              'size_bytes': 4304,
-             'mime_type': 'application/gzip'}
+             'mime_type': 'application/x-tar'}
         ], key=lambda e: e['key'])
 
         manifest_entries = sorted(integrity.manifest['entries'],
@@ -134,7 +134,7 @@ class TestIntegrityEPrint(TestCase):
                 modified=created,
                 size_bytes=4_304,
                 content_type=D.ContentType.tar,
-                ref=D.URI('/fake/path.tar.gz'),
+                ref=D.URI('/fake/path.tar'),
                 is_gzipped=True
             ),
             render=D.CanonicalFile(

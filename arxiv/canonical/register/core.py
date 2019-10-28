@@ -239,8 +239,8 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
         for member in members:
             checksum = member.save(s)
             assert checksum is not None
-            self.integrity.update_or_extend_manifest(member, checksum)
-
+            self.integrity.update_or_extend_manifest(member.integrity,
+                                                     checksum)
 
     def _add_events(self, s: ICanonicalStorage,
                     sources: Sequence[ICanonicalSource],

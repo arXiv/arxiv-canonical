@@ -2,8 +2,11 @@
   "type": "string",
   "enum": [
     "pdf",
-    "targz",
+    "tar",
     "json",
-    "abs"
+    "abs",
+    "html",
+    "tex",
+    "ps"
   ]
 }

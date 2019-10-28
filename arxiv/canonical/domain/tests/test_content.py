@@ -14,7 +14,13 @@ class TestAvailableFormatsFromFilename(TestCase):
                              [ContentType.pdf, ContentType.ps])
         self.assertListEqual(available_formats_by_ext('abc.html.gz'),
                              [ContentType.html])
-        self.assertIsNone(available_formats_by_ext('baz.html'))
+
+        # This differs from the implementation in arxiv-browse. It's not clear
+        # why being gzipped or not should alter the way we handle an HTML
+        # source file.
+        self.assertListEqual(available_formats_by_ext('baz.html'),
+                             [ContentType.html])
+
         self.assertIsNone(available_formats_by_ext(''))
 
 

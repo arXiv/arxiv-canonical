@@ -116,7 +116,6 @@ class SourceType(str):
 class ContentType(Enum):
     pdf = 'pdf'
     tar = 'tar'
-    targz = 'targz'
     json = 'json'
     abs = 'abs'
     html = 'html'
@@ -135,7 +134,7 @@ class ContentType(Enum):
     @classmethod
     def from_filename(cls, filename: str) -> 'ContentType':
         for ctype, ext in _extensions.items():
-            if filename.endswith(ext):
+            if filename.endswith(ext) or filename.endswith(f'{ext}.gz'):
                 return ctype
         raise ValueError(f'Unrecognized extension: {filename}')
 
@@ -159,7 +158,6 @@ class ContentType(Enum):
 _mime_types = {
     ContentType.pdf: 'application/pdf',
     ContentType.tar: 'application/x-tar',
-    ContentType.targz: 'application/gzip',
     ContentType.json: 'application/json',
     ContentType.abs: 'text/plain',
     ContentType.html: 'text/html',
@@ -170,7 +168,6 @@ _mime_types = {
 
 _extensions = {
     ContentType.pdf: 'pdf',
-    ContentType.targz: 'tar',
     ContentType.tar: 'tar',
     ContentType.json: 'json',
     ContentType.abs: 'abs',

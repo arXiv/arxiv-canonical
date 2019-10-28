@@ -54,7 +54,7 @@
 #                 '3Vk4TQYzizLHjcyNL62x2w==',
 #             'e-prints/2019/01/1901.00123/v1/1901.00123v1.pdf':
 #                 'rL0Y20zC-Fzt72VPzMSk2A==',
-#             'e-prints/2019/01/1901.00123/v1/1901.00123v1.tar.gz':
+#             'e-prints/2019/01/1901.00123/v1/1901.00123v1.tar':
 #                 'rL0Y20zC-Fzt72VPzMSk2A==',
 #         }).encode('utf-8')
 
