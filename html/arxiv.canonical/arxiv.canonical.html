@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical package &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.classic package" href="arxiv.canonical.classic.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical">
+<span id="arxiv-canonical-package"></span><h1>arxiv.canonical package<a class="headerlink" href="#module-arxiv.canonical" title="Permalink to this headline">¶</a></h1>
+<p>Core abstractions and methods for the arXiv canonical record.</p>
+<div class="section" id="goals">
+<h2>Goals<a class="headerlink" href="#goals" title="Permalink to this headline">¶</a></h2>
+<p>In priority order:</p>
+<ol class="arabic simple">
+<li><p>Record article source and metadata</p></li>
+<li><p>Record announcement record (what articles were announced on what day)</p></li>
+<li><p>Long term durability: low risk of corruption, easy to secure, easy to
+verify, easy to repair</p></li>
+<li><p>Changes to articles are only though the publication system and are recorded
+in the publication records. Write access to the canonical record will be
+limited to the announcement process.</p></li>
+<li><p>Works with with Legacy and seamless transition from Legacy to NG</p></li>
+<li><p>Testable</p></li>
+<li><p>Easy to backup, replicate, mirror, share</p></li>
+<li><p>Minimal dependencies</p></li>
+<li><p>Conceptually as simple as possible</p></li>
+<li><p>Complete public readability of data</p></li>
+</ol>
+</div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The canonical record can be stored on any system that supports a key-binary
+data structure, such as a filesystem or an object store. The two core data
+structures in the record are:</p>
+<ul class="simple">
+<li><p>E-prints, comprised of metadata(<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.EPrint" title="arxiv.canonical.domain.EPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.EPrint</span></code></a>), submitted
+content, and the first rendering of the PDF.</p></li>
+<li><p>Announcement records, representing a single announcement-related event, such
+as a new version, a withdrawal, or a cross-list; these records are:</p>
+<ul>
+<li><p>organized into daily announcement listing files and</p></li>
+<li><p>emitted via a notification broker in real time, to trigger updates to
+downstream services and data stores.</p></li>
+</ul>
+</li>
+</ul>
+<div class="section" id="e-prints">
+<h3>E-prints<a class="headerlink" href="#e-prints" title="Permalink to this headline">¶</a></h3>
+<p>An e-print is comprised of (1) a metadata record, (2) a source package,
+containing the original content provided by the submitter, and (3) a canonical
+rendering of the e-print in PDF format. A manifest is also stored for each
+e-print, containing the keys for the resources above and a base-64 encoded MD5
+hash of their binary content. The key prefix structure for an e-print record
+is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">e</span><span class="o">-</span><span class="n">prints</span><span class="o">/&lt;</span><span class="n">YYYY</span><span class="o">&gt;/&lt;</span><span class="n">MM</span><span class="o">&gt;/&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;/</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;/</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">YYYY</span></code> is the year and <code class="docutils literal notranslate"><span class="pre">MM</span></code> the month during which the first version
+of the e-print was announced. Sub-keys are:</p>
+<ul class="simple">
+<li><p>Metadata record: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.json</span></code></p></li>
+<li><p>Source package: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.tar</span></code></p></li>
+<li><p>PDF: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.pdf</span></code></p></li>
+<li><p>Manifest: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.manifest.json</span></code></p></li>
+</ul>
+<p>The purpose of the e-print record is to provide the ultimate source of truth
+regarding a particular e-print, and facilitate ease of access to all of the
+versions of an e-print.</p>
+</div>
+<div class="section" id="announcement-listings">
+<h3>Announcement listings<a class="headerlink" href="#announcement-listings" title="Permalink to this headline">¶</a></h3>
+<p>The announcement listings commemorate the announcement-related events that
+occur on a given day. This includes new e-prints/versions, withdrawals,
+cross-lists, etc.</p>
+<p>The key prefix structure for an announcement listing file is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">announcement</span><span class="o">/&lt;</span><span class="n">YYYY</span><span class="o">&gt;/&lt;</span><span class="n">MM</span><span class="o">&gt;/&lt;</span><span class="n">DD</span><span class="o">&gt;/</span>
+</pre></div>
+</div>
+<p>Each daily key prefix may contain one or more sub-keys. Each sub-key ending in
+<code class="docutils literal notranslate"><span class="pre">.json</span></code> is treated as a listing file. This allows for the possibility of
+sharded/multi-threaded announcement processes that write separate listing
+files, e.g. for specific classification domains.</p>
+<p><code class="docutils literal notranslate"><span class="pre">YYYY</span></code> is the year, <code class="docutils literal notranslate"><span class="pre">MM</span></code> the month, and <code class="docutils literal notranslate"><span class="pre">DD</span></code> the day on which the
+announcement events encoded therein occurred and on which the subordinate
+listing files were generated.</p>
+</div>
+<div class="section" id="preservation-record">
+<h3>Preservation record<a class="headerlink" href="#preservation-record" title="Permalink to this headline">¶</a></h3>
+<p>The preservation record is a daily digest containing e-print content,
+announcement listings, and any suppress or remove directives (with
+corresponding tombstones).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">announcement</span><span class="o">/&lt;</span><span class="n">listing</span><span class="o">&gt;.</span><span class="n">json</span>
+<span class="n">e</span><span class="o">-</span><span class="n">prints</span><span class="o">/&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;/</span>
+    <span class="o">&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span><span class="n">json</span>      <span class="c1"># Metadata record</span>
+    <span class="o">&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span><span class="n">tar</span>       <span class="c1"># Source package</span>
+    <span class="o">&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span><span class="n">pdf</span>       <span class="c1"># PDF</span>
+<span class="n">Manifest</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span><span class="n">manifest</span><span class="o">.</span><span class="n">json</span>
+<span class="n">suppress</span><span class="o">/&lt;</span><span class="n">arXiv</span> <span class="n">ID</span><span class="o">&gt;</span><span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;/</span><span class="n">tombstone</span>
+<span class="n">preservation</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">preservation.manifest.json</span></code> record is similar to the e-print manifest
+record; it contains all of the keys and corresponding checksums for the items
+in the preservation record.</p>
+</div>
+</div>
+<div class="section" id="differences-from-legacy-arxiv">
+<h2>Differences from legacy arXiv<a class="headerlink" href="#differences-from-legacy-arxiv" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="metadata">
+<h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Legacy metadata records use an arcane, non-standard serialization format.
+The NG metadata record is serialized as JSON and stored as UTF-8 encoded text
+files.</p></li>
+<li><p>Legacy metadata records contain information not suitable for uncontrolled
+public distribution (such as submitter e-mail addresses), which limits
+replication options and increases complexity. NG metadata records contain
+only metadata suitable for public consumption, and can be distributed without
+further processing.</p></li>
+<li><p>In the legacy system, if the whole record of changes to an article is needed,
+many listings files have to be visited. The NG metadata record includes
+history/changes element to the metadata record, the elements of which are
+announcement records, i.e. updates to that particular version (timestamp +
+description).</p></li>
+</ul>
+</div>
+<div class="section" id="id1">
+<h3>Announcement listings<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Legacy arXiv uses monthly listing records, whereas NG listing records are
+created on a daily basis. This cuts down on the number of secondary
+indices/files that must be consistent to provide daily and weekly listings on
+the public site.</p></li>
+<li><p>The legacy system splits listings out by classification archive/category.
+This bakes the arXiv classification taxonomy into the structure of the data.
+The NG listing record decouples classification concerns from data structure;
+no assumptions are made about the classification of the e-prints described in
+an announcement listing record.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.classic.html">arxiv.canonical.classic package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.classic.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.tests.html">arxiv.canonical.classic.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.classic.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.classic.tests.test_abs.html">arxiv.canonical.classic.tests.test_abs module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.classic.tests.test_backfill.html">arxiv.canonical.classic.tests.test_backfill module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.classic.tests.test_content.html">arxiv.canonical.classic.tests.test_content module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.classic.tests.test_daily.html">arxiv.canonical.classic.tests.test_daily module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.classic.tests.test_serialize_classic.html">arxiv.canonical.classic.tests.test_serialize_classic module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.classic.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.abs.html">arxiv.canonical.classic.abs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.backfill.html">arxiv.canonical.classic.backfill module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.classic.backfill.html#what-version-is-this">What version is this?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.cli.html">arxiv.canonical.classic.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.classic.cli.html#next-step-propagating-events-during-backfill">Next step: propagating events during backfill</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.content.html">arxiv.canonical.classic.content module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.daily.html">arxiv.canonical.classic.daily module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.classic.util.html">arxiv.canonical.classic.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.html">arxiv.canonical.domain package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.domain.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.tests.html">arxiv.canonical.domain.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.domain.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.domain.tests.test_content.html">arxiv.canonical.domain.tests.test_content module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.domain.tests.test_file.html">arxiv.canonical.domain.tests.test_file module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.domain.tests.test_identifier.html">arxiv.canonical.domain.tests.test_identifier module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.domain.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.base.html">arxiv.canonical.domain.base module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.block.html">arxiv.canonical.domain.block module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.content.html">arxiv.canonical.domain.content module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.eprint.html">arxiv.canonical.domain.eprint module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.file.html">arxiv.canonical.domain.file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.identifier.html">arxiv.canonical.domain.identifier module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.license.html">arxiv.canonical.domain.license module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.listing.html">arxiv.canonical.domain.listing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.person.html">arxiv.canonical.domain.person module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.preservation.html">arxiv.canonical.domain.preservation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.util.html">arxiv.canonical.domain.util module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.version.html">arxiv.canonical.domain.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.integrity.html">arxiv.canonical.integrity package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.integrity.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.tests.html">arxiv.canonical.integrity.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.integrity.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.integrity.tests.test_version.html">arxiv.canonical.integrity.tests.test_version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.integrity.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.checksum.html">arxiv.canonical.integrity.checksum module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.core.html">arxiv.canonical.integrity.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.exceptions.html">arxiv.canonical.integrity.exceptions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.listing.html">arxiv.canonical.integrity.listing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.metadata.html">arxiv.canonical.integrity.metadata module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.preservation.html">arxiv.canonical.integrity.preservation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.integrity.version.html">arxiv.canonical.integrity.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.log.html">arxiv.canonical.log package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.log.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.log.log.html">arxiv.canonical.log.log module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.log.tests.html">arxiv.canonical.log.tests module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.html">arxiv.canonical.record package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.record.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.tests.html">arxiv.canonical.record.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.record.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.record.tests.test_listing.html">arxiv.canonical.record.tests.test_listing module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.record.tests.test_version.html">arxiv.canonical.record.tests.test_version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.record.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.core.html">arxiv.canonical.record.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.file.html">arxiv.canonical.record.file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.listing.html">arxiv.canonical.record.listing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.metadata.html">arxiv.canonical.record.metadata module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.preservation.html">arxiv.canonical.record.preservation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.version.html">arxiv.canonical.record.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.register.html">arxiv.canonical.register package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.register.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.tests.html">arxiv.canonical.register.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.register.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.register.tests.test_api.html">arxiv.canonical.register.tests.test_api module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.register.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.api.html">arxiv.canonical.register.api module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.core.html">arxiv.canonical.register.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.eprint.html">arxiv.canonical.register.eprint module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.exceptions.html">arxiv.canonical.register.exceptions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.file.html">arxiv.canonical.register.file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.listing.html">arxiv.canonical.register.listing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.metadata.html">arxiv.canonical.register.metadata module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.methods.html">arxiv.canonical.register.methods module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.util.html">arxiv.canonical.register.util module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.register.version.html">arxiv.canonical.register.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.role.html">arxiv.canonical.role package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.role.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.role.tests.html">arxiv.canonical.role.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.role.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.role.tests.test_register.html">arxiv.canonical.role.tests.test_register module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.role.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.role.proxy.html">arxiv.canonical.role.proxy module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.role.register.html">arxiv.canonical.role.register module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.role.role.html">arxiv.canonical.role.role module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.role.stream.html">arxiv.canonical.role.stream module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.serialize.html">arxiv.canonical.serialize package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.serialize.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.serialize.tests.html">arxiv.canonical.serialize.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.serialize.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.serialize.tests.test_serialize.html">arxiv.canonical.serialize.tests.test_serialize module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.serialize.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.serialize.decoder.html">arxiv.canonical.serialize.decoder module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.serialize.encoder.html">arxiv.canonical.serialize.encoder module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.serialize.record.html">arxiv.canonical.serialize.record module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.services.html">arxiv.canonical.services package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.services.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.tests.html">arxiv.canonical.services.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arxiv.canonical.services.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.services.tests.test_filesystem.html">arxiv.canonical.services.tests.test_filesystem module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.services.tests.test_readable.html">arxiv.canonical.services.tests.test_readable module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.services.tests.test_remote.html">arxiv.canonical.services.tests.test_remote module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.services.tests.test_repository.html">arxiv.canonical.services.tests.test_repository module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="arxiv.canonical.services.tests.test_store.html">arxiv.canonical.services.tests.test_store module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.services.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.cache.html">arxiv.canonical.services.cache module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.filesystem.html">arxiv.canonical.services.filesystem module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.readable.html">arxiv.canonical.services.readable module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.remote.html">arxiv.canonical.services.remote module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.repository.html">arxiv.canonical.services.repository module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.store.html">arxiv.canonical.services.store module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.services.stream.html">arxiv.canonical.services.stream module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.tests.html">arxiv.canonical.tests package</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.core.html">arxiv.canonical.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.manifest.html">arxiv.canonical.manifest module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.preservation.html">arxiv.canonical.preservation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.util.html">arxiv.canonical.util module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">arxiv.canonical package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">&lt;no title&gt;</a></li>
+      <li>Next: <a href="arxiv.canonical.classic.html" title="next chapter">arxiv.canonical.classic package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

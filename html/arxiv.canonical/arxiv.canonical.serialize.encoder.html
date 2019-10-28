@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.serialize.encoder module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.serialize.record module" href="arxiv.canonical.serialize.record.html" />
+    <link rel="prev" title="arxiv.canonical.serialize.decoder module" href="arxiv.canonical.serialize.decoder.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.serialize.encoder">
+<span id="arxiv-canonical-serialize-encoder-module"></span><h1>arxiv.canonical.serialize.encoder module<a class="headerlink" href="#module-arxiv.canonical.serialize.encoder" title="Permalink to this headline">¶</a></h1>
+<p>Provides a <a class="reference internal" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder" title="arxiv.canonical.serialize.encoder.CanonicalEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalEncoder</span></code></a> for domain objects.</p>
+<dl class="class">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.serialize.encoder.</code><code class="sig-name descname">CanonicalEncoder</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">skipkeys=False</em>, <em class="sig-param">ensure_ascii=True</em>, <em class="sig-param">check_circular=True</em>, <em class="sig-param">allow_nan=True</em>, <em class="sig-param">sort_keys=False</em>, <em class="sig-param">indent=None</em>, <em class="sig-param">separators=None</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">json.encoder.JSONEncoder</span></code></p>
+<p>Encodes domain objects in this package for serialization.</p>
+<dl class="method">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder.encode">
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder.encode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize objects in this application domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack">
+<code class="sig-name descname">unpack</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder.unpack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively search for domain objects, and unpack them to dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_canonical_file">
+<code class="sig-name descname">unpack_canonical_file</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder.unpack_canonical_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_canonical_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpack a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.File</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_default">
+<code class="sig-name descname">unpack_default</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder.unpack_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fallback unpack method for any domain object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_uuid">
+<code class="sig-name descname">unpack_uuid</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/serialize/encoder.html#CanonicalEncoder.unpack_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.serialize.encoder.CanonicalEncoder.unpack_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.serialize.html">arxiv.canonical.serialize package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.serialize.decoder.html" title="previous chapter">arxiv.canonical.serialize.decoder module</a></li>
+      <li>Next: <a href="arxiv.canonical.serialize.record.html" title="next chapter">arxiv.canonical.serialize.record module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.serialize.encoder.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

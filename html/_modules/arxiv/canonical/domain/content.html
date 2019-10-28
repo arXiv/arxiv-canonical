@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.content &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.domain.content</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Core concepts for characterizing bitstream/version content.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">.identifier</span> <span class="k">import</span> <span class="n">VersionedIdentifier</span>
+
+
+<div class="viewcode-block" id="SourceFileType"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.SourceFileType">[docs]</a><span class="k">class</span> <span class="nc">SourceFileType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Source file types are represented by single-character codes.&quot;&quot;&quot;</span>
+
+    <span class="n">Ignore</span> <span class="o">=</span> <span class="s1">&#39;I&#39;</span>
+    <span class="sd">&quot;&quot;&quot;All files auto ignore. No paper available.&quot;&quot;&quot;</span>
+
+    <span class="n">SourceEncrypted</span> <span class="o">=</span> <span class="s1">&#39;S&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Source is encrypted and should not be made available.&quot;&quot;&quot;</span>
+
+    <span class="n">PostscriptOnly</span> <span class="o">=</span> <span class="s1">&#39;P&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-file PS submission.</span>
+
+<span class="sd">    It is not necessary to indicate P with single file PS since in this case</span>
+<span class="sd">    the source file has .ps.gz extension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">PDFLaTeX</span> <span class="o">=</span> <span class="s1">&#39;D&#39;</span>
+    <span class="sd">&quot;&quot;&quot;A TeX submission that must be processed with PDFlatex.&quot;&quot;&quot;</span>
+
+    <span class="n">HTML</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Multi-file HTML submission.&quot;&quot;&quot;</span>
+
+    <span class="n">Ancillary</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Submission includes ancillary files in the /anc directory.&quot;&quot;&quot;</span>
+
+    <span class="n">DCPilot</span> <span class="o">=</span> <span class="s1">&#39;B&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Submission has associated data in the DC pilot system.&quot;&quot;&quot;</span>
+
+    <span class="n">DOCX</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Submission in Microsoft DOCX (Office Open XML) format.&quot;&quot;&quot;</span>
+
+    <span class="n">ODF</span> <span class="o">=</span> <span class="s1">&#39;O&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Submission in Open Document Format.&quot;&quot;&quot;</span>
+
+    <span class="n">PDFOnly</span> <span class="o">=</span> <span class="s1">&#39;F&#39;</span>
+    <span class="sd">&quot;&quot;&quot;PDF-only with .tar.gz package (likely because of anc files).&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SourceType"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.SourceType">[docs]</a><span class="k">class</span> <span class="nc">SourceType</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Characterizes a version source package.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with source file type codes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">SourceFileType</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">())]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_docx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source has DOCX content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">DOCX</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_encrypted_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source is encryped.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">SourceEncrypted</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_html</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source has HTML content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">HTML</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_ignore</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source content should be ignored.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">Ignore</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_odf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source has ODF content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">ODF</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_pdf_only</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source contains only a PDF.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">PDFOnly</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_pdflatex</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source has PDFLaTeX content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">PDFLaTeX</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_ps_only</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the source has postcript content only.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">SourceFileType</span><span class="o">.</span><span class="n">PostscriptOnly</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_types</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">available_formats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;ContentType&#39;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List the available dissemination formats for this source type.</span>
+
+<span class="sd">        Depending on the original source type, we may not be able to provide</span>
+<span class="sd">        all supported formats.</span>
+
+<span class="sd">        This does not include the source format. Note also that this does</span>
+<span class="sd">        **not** enforce rules about what should be displayed as an option</span>
+<span class="sd">        or provided to end users.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">formats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_ignore</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_encrypted_source</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_ps_only</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdf_only</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_html</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_docx</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_odf</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">formats</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                <span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span>
+                <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">,</span>
+                <span class="n">ContentType</span><span class="o">.</span><span class="n">dvi</span><span class="p">,</span>
+            <span class="p">])</span>
+        <span class="k">return</span> <span class="n">formats</span></div>
+
+
+<div class="viewcode-block" id="ContentType"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.ContentType">[docs]</a><span class="k">class</span> <span class="nc">ContentType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Characterization of the content type of an individual bitstream.&quot;&quot;&quot;</span>
+
+    <span class="n">pdf</span> <span class="o">=</span> <span class="s1">&#39;pdf&#39;</span>
+    <span class="n">tar</span> <span class="o">=</span> <span class="s1">&#39;tar&#39;</span>
+    <span class="n">json</span> <span class="o">=</span> <span class="s1">&#39;json&#39;</span>
+    <span class="nb">abs</span> <span class="o">=</span> <span class="s1">&#39;abs&#39;</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;html&#39;</span>
+    <span class="n">dvi</span> <span class="o">=</span> <span class="s1">&#39;dvi&#39;</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="s1">&#39;ps&#39;</span>
+    <span class="n">tex</span> <span class="o">=</span> <span class="s1">&#39;tex&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mime_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The MIME content type for this :class:`.ContentType`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_mime_types</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ext</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The preferred filename extension for this :class:`.ContentType`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_extensions</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ContentType.from_filename"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.ContentType.from_filename">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_filename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ContentType&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Infer the :class:`.ContentType` of a file from its filename.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ctype</span><span class="p">,</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">_extensions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span> <span class="ow">or</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{ext}</span><span class="s1">.gz&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ctype</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Unrecognized extension: </span><span class="si">{filename}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ContentType.from_mimetype"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.ContentType.from_mimetype">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_mimetype</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mime</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ContentType&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Infer the :class:`.ContentType` of a file from its MIME type.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_mime_types</span><span class="o">.</span><span class="n">items</span><span class="p">()}[</span><span class="n">mime</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ContentType.make_filename"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.ContentType.make_filename">[docs]</a>    <span class="k">def</span> <span class="nf">make_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                      <span class="n">is_gzipped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Make a filename for a bitstream with this :class:`.ContentType`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{identifier.numeric_part}</span><span class="s1">v</span><span class="si">{identifier.version}</span><span class="s1">.</span><span class="si">{self.ext}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{identifier}</span><span class="s1">.</span><span class="si">{self.ext}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">is_gzipped</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{fn}</span><span class="s1">.gz&#39;</span>
+        <span class="k">return</span> <span class="n">fn</span></div></div>
+
+
+<span class="n">_mime_types</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">:</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">tar</span><span class="p">:</span> <span class="s1">&#39;application/x-tar&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">json</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">abs</span><span class="p">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">html</span><span class="p">:</span> <span class="s1">&#39;text/html&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">dvi</span><span class="p">:</span> <span class="s1">&#39;application/x-dvi&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">:</span> <span class="s1">&#39;application/postscript&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">tex</span><span class="p">:</span> <span class="s1">&#39;application/x-tex&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">_extensions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">:</span> <span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">tar</span><span class="p">:</span> <span class="s1">&#39;tar&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">json</span><span class="p">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">abs</span><span class="p">:</span> <span class="s1">&#39;abs&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">html</span><span class="p">:</span> <span class="s1">&#39;html&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">dvi</span><span class="p">:</span> <span class="s1">&#39;dvi&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">:</span> <span class="s1">&#39;ps&#39;</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="o">.</span><span class="n">tex</span><span class="p">:</span> <span class="s1">&#39;tex&#39;</span>
+<span class="p">}</span>
+
+
+<span class="n">DISSEMINATION_FORMATS_BY_SOURCE_EXT</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;.tar.gz&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;.tar&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;.dvi.gz&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;.dvi&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;.pdf&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;.ps.gz&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;.ps&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">ps</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;.html.gz&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">ContentType</span><span class="o">.</span><span class="n">html</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;.html&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">ContentType</span><span class="o">.</span><span class="n">html</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dissemination formats that can be inferred from source file extension.</span>
+
+<span class="sd">.. note::</span>
+<span class="sd">    This is largely to support format discovery in classic. In the NG</span>
+<span class="sd">    canonical record, this should all be explicit.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="available_formats_by_ext"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.available_formats_by_ext">[docs]</a><span class="k">def</span> <span class="nf">available_formats_by_ext</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ContentType</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attempt to determine the available dissemination formats by file extension.</span>
+
+<span class="sd">    It sometimes (but not always) possible to infer the available dissemination</span>
+<span class="sd">    formats based on the filename extension of the source package.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        This is largely to support format discovery in classic. In the NG</span>
+<span class="sd">        canonical record, this should all be explicit.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">ext</span><span class="p">,</span> <span class="n">formats</span> <span class="ow">in</span> <span class="n">DISSEMINATION_FORMATS_BY_SOURCE_EXT</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ext</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">formats</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="list_source_extensions"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.content.html#arxiv.canonical.domain.list_source_extensions">[docs]</a><span class="k">def</span> <span class="nf">list_source_extensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;List all of the known filename extensions for source files.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">ext</span> <span class="k">for</span> <span class="n">ext</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">DISSEMINATION_FORMATS_BY_SOURCE_EXT</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../domain.html">arxiv.canonical.domain</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

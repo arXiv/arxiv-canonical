@@ -1,0 +1,455 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.abs module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.classic.backfill module" href="arxiv.canonical.classic.backfill.html" />
+    <link rel="prev" title="arxiv.canonical.classic.tests.test_serialize_classic module" href="arxiv.canonical.classic.tests.test_serialize_classic.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.classic.abs">
+<span id="arxiv-canonical-classic-abs-module"></span><h1>arxiv.canonical.classic.abs module<a class="headerlink" href="#module-arxiv.canonical.classic.abs" title="Permalink to this headline">¶</a></h1>
+<p>Parse fields from a single arXiv abstract (.abs) file.</p>
+<dl class="class">
+<dt id="arxiv.canonical.classic.abs.AbsData">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">AbsData</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">submitter</em>, <em class="sig-param">submitted_date</em>, <em class="sig-param">announced_month</em>, <em class="sig-param">updated_date</em>, <em class="sig-param">license</em>, <em class="sig-param">primary_classification</em>, <em class="sig-param">title</em>, <em class="sig-param">abstract</em>, <em class="sig-param">authors</em>, <em class="sig-param">size_kilobytes</em>, <em class="sig-param">submission_type</em>, <em class="sig-param">secondary_classification</em>, <em class="sig-param">source_type</em>, <em class="sig-param">journal_ref</em>, <em class="sig-param">report_num</em>, <em class="sig-param">doi</em>, <em class="sig-param">msc_class</em>, <em class="sig-param">acm_class</em>, <em class="sig-param">proxy</em>, <em class="sig-param">comments</em>, <em class="sig-param">previous_versions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#AbsData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.abstract">
+<em class="property">property </em><code class="sig-name descname">abstract</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.abstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 8</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.acm_class">
+<em class="property">property </em><code class="sig-name descname">acm_class</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.acm_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 18</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.announced_month">
+<em class="property">property </em><code class="sig-name descname">announced_month</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.announced_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.authors">
+<em class="property">property </em><code class="sig-name descname">authors</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.authors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 9</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.comments">
+<em class="property">property </em><code class="sig-name descname">comments</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.comments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 20</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.doi">
+<em class="property">property </em><code class="sig-name descname">doi</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 16</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.identifier">
+<em class="property">property </em><code class="sig-name descname">identifier</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.journal_ref">
+<em class="property">property </em><code class="sig-name descname">journal_ref</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.journal_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 14</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.license">
+<em class="property">property </em><code class="sig-name descname">license</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.license" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 5</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.msc_class">
+<em class="property">property </em><code class="sig-name descname">msc_class</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.msc_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 17</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.previous_versions">
+<em class="property">property </em><code class="sig-name descname">previous_versions</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.previous_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 21</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.primary_classification">
+<em class="property">property </em><code class="sig-name descname">primary_classification</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.primary_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 6</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.proxy">
+<em class="property">property </em><code class="sig-name descname">proxy</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 19</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.report_num">
+<em class="property">property </em><code class="sig-name descname">report_num</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.report_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 15</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.secondary_classification">
+<em class="property">property </em><code class="sig-name descname">secondary_classification</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.secondary_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 12</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.size_kilobytes">
+<em class="property">property </em><code class="sig-name descname">size_kilobytes</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.size_kilobytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 10</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.source_type">
+<em class="property">property </em><code class="sig-name descname">source_type</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.source_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 13</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.submission_type">
+<em class="property">property </em><code class="sig-name descname">submission_type</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.submission_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 11</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.submitted_date">
+<em class="property">property </em><code class="sig-name descname">submitted_date</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.submitter">
+<em class="property">property </em><code class="sig-name descname">submitter</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.submitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.title">
+<em class="property">property </em><code class="sig-name descname">title</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 7</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsData.updated_date">
+<em class="property">property </em><code class="sig-name descname">updated_date</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsData.updated_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.classic.abs.AbsRef">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">AbsRef</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">submitted_date</em>, <em class="sig-param">announced_month</em>, <em class="sig-param">source_type</em>, <em class="sig-param">size_kilobytes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#AbsRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsRef.announced_month">
+<em class="property">property </em><code class="sig-name descname">announced_month</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef.announced_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsRef.identifier">
+<em class="property">property </em><code class="sig-name descname">identifier</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsRef.size_kilobytes">
+<em class="property">property </em><code class="sig-name descname">size_kilobytes</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef.size_kilobytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsRef.source_type">
+<em class="property">property </em><code class="sig-name descname">source_type</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef.source_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.abs.AbsRef.submitted_date">
+<em class="property">property </em><code class="sig-name descname">submitted_date</code><a class="headerlink" href="#arxiv.canonical.classic.abs.AbsRef.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.abs.NAMED_FIELDS">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">NAMED_FIELDS</code><em class="property"> = ['Title', 'Authors', 'Categories', 'Comments', 'Proxy', 'Report-no', 'ACM-class', 'MSC-class', 'Journal-ref', 'DOI', 'License']</em><a class="headerlink" href="#arxiv.canonical.classic.abs.NAMED_FIELDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fields that may be parsed from the key-value pairs in second
+major component of .abs string. Field names are not normalized.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.canonical.classic.abs.NoSuchAbs">
+<em class="property">exception </em><code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">NoSuchAbs</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#NoSuchAbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.NoSuchAbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.abs.REQUIRED_FIELDS">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">REQUIRED_FIELDS</code><em class="property"> = ['title', 'authors', 'abstract']</em><a class="headerlink" href="#arxiv.canonical.classic.abs.REQUIRED_FIELDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required parsed fields with normalized field names.</p>
+<p>Note the absense of ‘categories’ as a required field. A subset of version-
+affixed .abs files with the old identifiers predate the introduction of
+categories and therefore do not have a “Categories:” line; only the (higher-
+level) archive and group can be be inferred, and this must be done via the
+identifier itself.</p>
+<p>The latest versions of these papers should always have the “Categories:” line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.get_path">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">get_path</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#get_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.get_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.iter_all">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">iter_all</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">from_id=None</em>, <em class="sig-param">to_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#iter_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.iter_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the identifiers for which we have abs files.</p>
+<p>The “latest” section will have an abs file for every e-print, so that’s the
+only place we need look.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.latest_base_path">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">latest_base_path</code><span class="sig-paren">(</span><em class="sig-param">data_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#latest_base_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.latest_base_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.latest_path">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">latest_path</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#latest_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.latest_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.latest_path_month">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">latest_path_month</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#latest_path_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.latest_path_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the base path for the month block containing the “latest” e-prints.</p>
+<p>This is where the most recent version of each e-print always lives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.list_versions">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">list_versions</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#list_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.list_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the versions for an identifier from abs files.</p>
+<p>This works by looking at the presence of abs files in both the “latest”
+and “original” locations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.VersionedIdentifier" title="arxiv.canonical.domain.identifier.VersionedIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionedIdentifier</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.original_base_path">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">original_base_path</code><span class="sig-paren">(</span><em class="sig-param">data_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#original_base_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.original_base_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.original_path">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">original_path</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#original_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.original_path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.original_path_month">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">original_path_month</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#original_path_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.original_path_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the main base path for an abs file.</p>
+<p>This is where all of the versions except for the most recent one live.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.parse">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.parse" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.classic.abs.AbsData" title="arxiv.canonical.classic.abs.AbsData"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbsData</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.parse_first">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">parse_first</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#parse_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.parse_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the abs for the first version of an e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.classic.abs.AbsData" title="arxiv.canonical.classic.abs.AbsData"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbsData</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.parse_latest">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">parse_latest</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#parse_latest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.parse_latest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the abs for the latest version of an e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.classic.abs.AbsData" title="arxiv.canonical.classic.abs.AbsData"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbsData</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.abs.parse_versions">
+<code class="sig-prename descclassname">arxiv.canonical.classic.abs.</code><code class="sig-name descname">parse_versions</code><span class="sig-paren">(</span><em class="sig-param">data_path</em>, <em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/abs.html#parse_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.abs.parse_versions" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.abs.AbsData" title="arxiv.canonical.classic.abs.AbsData"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbsData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.classic.html">arxiv.canonical.classic package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.classic.tests.test_serialize_classic.html" title="previous chapter">arxiv.canonical.classic.tests.test_serialize_classic module</a></li>
+      <li>Next: <a href="arxiv.canonical.classic.backfill.html" title="next chapter">arxiv.canonical.classic.backfill module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.classic.abs.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.services.store &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.services.store</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Persist changes to the canonical record.</span>
+
+<span class="sd">Provides a :class:`.CanonicalStore` that stores resources in S3, using</span>
+<span class="sd">:mod:`.serialize.record` to serialize and deserialize resources.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">base64</span> <span class="k">import</span> <span class="n">urlsafe_b64decode</span><span class="p">,</span> <span class="n">urlsafe_b64encode</span>
+<span class="kn">from</span> <span class="nn">binascii</span> <span class="k">import</span> <span class="n">hexlify</span><span class="p">,</span> <span class="n">unhexlify</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="k">import</span> <span class="n">md5</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="k">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span><span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span>
+                    <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">import</span> <span class="nn">botocore</span>
+<span class="kn">from</span> <span class="nn">backports.datetime_fromisoformat</span> <span class="k">import</span> <span class="n">MonkeyPatch</span>
+<span class="kn">from</span> <span class="nn">botocore.config</span> <span class="k">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="k">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">integrity</span> <span class="k">as</span> <span class="n">I</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">record</span> <span class="k">as</span> <span class="n">R</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">domain</span> <span class="k">as</span> <span class="n">D</span>
+<span class="kn">from</span> <span class="nn">..manifest</span> <span class="k">import</span> <span class="p">(</span><span class="n">Manifest</span><span class="p">,</span> <span class="n">ManifestDecoder</span><span class="p">,</span> <span class="n">ManifestEntry</span><span class="p">,</span>
+                        <span class="n">ManifestEncoder</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..register</span> <span class="k">import</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">IStorableEntry</span>
+<span class="kn">from</span> <span class="nn">..serialize.decoder</span> <span class="k">import</span> <span class="n">CanonicalDecoder</span>
+<span class="kn">from</span> <span class="nn">..serialize.encoder</span> <span class="k">import</span> <span class="n">CanonicalEncoder</span>
+<span class="kn">from</span> <span class="nn">.readable</span> <span class="k">import</span> <span class="n">BytesIOProxy</span>
+
+
+<span class="n">MonkeyPatch</span><span class="o">.</span><span class="n">patch_fromisoformat</span><span class="p">()</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LOGLEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;40&#39;</span><span class="p">)))</span>
+
+<span class="n">_I</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;_I&#39;</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityMetadata</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityListing</span><span class="p">,</span>
+             <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">Checksum</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<div class="viewcode-block" id="DoesNotExist"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.DoesNotExist">[docs]</a><span class="k">class</span> <span class="nc">DoesNotExist</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The requested resource does not exist.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="CanonicalStore"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore">[docs]</a><span class="k">class</span> <span class="nc">CanonicalStore</span><span class="p">(</span><span class="n">ICanonicalStorage</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Persists the canonical record in S3.</span>
+
+<span class="sd">    The intended pattern for working with the canonical record is to use the</span>
+<span class="sd">    :class:`.domain.CanonicalRecord` as the primary entrypoint for all</span>
+<span class="sd">    operations. Consequently, this service offers only a single public instance</span>
+<span class="sd">    method, :fund:`.load_record`.</span>
+
+<span class="sd">    Persistence is achieved by attaching members to</span>
+<span class="sd">    :class:`.domain.CanonicalRecord`, :class`.domain.Month`, and</span>
+<span class="sd">    :class:`.domain.Listing` instances that implement reads/writes to S3. In</span>
+<span class="sd">    this way, consumers of ``arxiv.canonical.domain`` can largely work directly</span>
+<span class="sd">    with :class:`.domain.CanonicalRecord`, and persistence is handled</span>
+<span class="sd">    transparently.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">region_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">endpoint_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">aws_access_key_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">aws_secret_access_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with connection config parameters.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span> <span class="o">=</span> <span class="n">bucket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_region_name</span> <span class="o">=</span> <span class="n">region_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint_url</span> <span class="o">=</span> <span class="n">endpoint_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verify</span> <span class="o">=</span> <span class="n">verify</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aws_access_key_id</span> <span class="o">=</span> <span class="n">aws_access_key_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aws_secret_access_key</span> <span class="o">=</span> <span class="n">aws_secret_access_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_only</span> <span class="o">=</span> <span class="n">read_only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_client</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">read_only</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine whether or not this is a read-only session.</span>
+
+<span class="sd">        This is read-only property to discourage users of this class to mess</span>
+<span class="sd">        with it in runtime code. Should only be set via application</span>
+<span class="sd">        configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_only</span>
+
+<div class="viewcode-block" id="CanonicalStore.can_resolve"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.can_resolve">[docs]</a>    <span class="k">def</span> <span class="nf">can_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uri</span><span class="o">.</span><span class="n">is_canonical</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.inititalize"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.inititalize">[docs]</a>    <span class="k">def</span> <span class="nf">inititalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">create_bucket</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.is_available"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">read_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                     <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determine whether or not we can read from/write to the store.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Implement me!&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_load_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">body</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CanonicalStore.load"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+        <span class="n">load</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_load_key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BytesIOProxy</span><span class="p">(</span><span class="n">load</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.load_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.load_entry">[docs]</a>    <span class="k">def</span> <span class="nf">load_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">RecordStream</span><span class="p">,</span> <span class="n">Checksum</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Load entry at </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordStream</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">(</span>
+                <span class="n">modified</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;LastModified&#39;</span><span class="p">],</span>
+                <span class="n">filename</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                <span class="n">size_bytes</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;ContentLength&#39;</span><span class="p">],</span>
+                <span class="n">content_type</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">from_mimetype</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;ContentType&#39;</span><span class="p">]),</span>
+                <span class="n">ref</span><span class="o">=</span><span class="n">key</span>
+                <span class="c1"># content=BytesIOProxy(response[&#39;Body&#39;].read),</span>
+            <span class="p">),</span>
+            <span class="n">content</span><span class="o">=</span><span class="n">BytesIOProxy</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">),</span>
+            <span class="n">content_type</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">from_mimetype</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;ContentType&#39;</span><span class="p">]),</span>
+            <span class="n">size_bytes</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;ContentLength&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">stream</span><span class="p">,</span> <span class="n">_hex_to_b64</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;ETag&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.list_subkeys"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.list_subkeys">[docs]</a>    <span class="k">def</span> <span class="nf">list_subkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">list_objects_v2</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span> <span class="n">Prefix</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">subs</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;Key&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;Contents&#39;</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">sub</span> <span class="k">else</span> <span class="n">sub</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.store_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.store_entry">[docs]</a>    <span class="k">def</span> <span class="nf">store_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ri</span><span class="p">:</span> <span class="n">IStorableEntry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="c1"># Make sure to decompress the content if necessary.</span>
+        <span class="k">if</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_gzipped</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">s3_checksum</span> <span class="o">=</span> <span class="n">_b64_to_hex</span><span class="p">(</span><span class="n">I</span><span class="o">.</span><span class="n">calculate_checksum</span><span class="p">(</span><span class="n">body</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">s3_checksum</span> <span class="o">=</span> <span class="n">_b64_to_hex</span><span class="p">(</span><span class="n">ri</span><span class="o">.</span><span class="n">checksum</span><span class="p">)</span>
+        <span class="n">size_bytes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span>
+                               <span class="n">Key</span><span class="o">=</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+                               <span class="n">Body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+                               <span class="n">ContentLength</span><span class="o">=</span><span class="n">size_bytes</span><span class="p">,</span>
+                               <span class="n">ContentMD5</span><span class="o">=</span><span class="n">s3_checksum</span><span class="p">,</span>
+                               <span class="n">ContentType</span><span class="o">=</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">mime_type</span><span class="p">)</span>
+
+        <span class="c1"># Update the CanonicalFile if necessary.</span>
+        <span class="k">if</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_gzipped</span><span class="p">:</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size_bytes</span> <span class="o">=</span> <span class="n">size_bytes</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_gzipped</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># Use an in-memory buffer for the checksum, to cut down on</span>
+            <span class="c1"># unnecessary IO.</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> \
+                <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">body</span><span class="p">))</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">update_checksum</span><span class="p">()</span>
+            <span class="c1"># Finally, replace the content IO with a deferred IO.</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">content</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.store_manifest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.store_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">store_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">manifest</span><span class="p">:</span> <span class="n">Manifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">ManifestEncoder</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span>
+                               <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                               <span class="n">Body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+                               <span class="n">ContentLength</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">),</span>
+                               <span class="n">ContentMD5</span><span class="o">=</span><span class="n">I</span><span class="o">.</span><span class="n">checksum</span><span class="o">.</span><span class="n">checksum_raw</span><span class="p">(</span><span class="n">body</span><span class="p">),</span>
+                               <span class="n">ContentType</span><span class="o">=</span><span class="s1">&#39;application/json&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanonicalStore.load_manifest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.CanonicalStore.load_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">load_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Manifest</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">manifest</span><span class="p">:</span> <span class="n">Manifest</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">],</span> <span class="bp">cls</span><span class="o">=</span><span class="n">ManifestDecoder</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">manifest</span></div>
+
+    <span class="k">def</span> <span class="nf">_handle_client_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="n">ClientError</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;NoSuchBucket&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DoesNotExist</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self._bucket}</span><span class="s1"> does not exist&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;NoSuchKey&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DoesNotExist</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No such object in </span><span class="si">{self._bucket}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unhandled ClientError&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+    <span class="k">def</span> <span class="nf">_new_client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">:</span>
+        <span class="c1"># Only add credentials to the client if they are explicitly set.</span>
+        <span class="c1"># If they are not set, boto3 falls back to environment variables and</span>
+        <span class="c1"># credentials files.</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;region_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_region_name</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aws_access_key_id</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aws_secret_access_key</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;aws_access_key_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aws_access_key_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;aws_secret_access_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aws_secret_access_key</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint_url</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;endpoint_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint_url</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verify&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verify</span>
+        <span class="k">return</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;s3&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InMemoryStorage"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage">[docs]</a><span class="k">class</span> <span class="nc">InMemoryStorage</span><span class="p">(</span><span class="n">ICanonicalStorage</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">RecordStream</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_manifests</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Manifest</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="InMemoryStorage.can_resolve"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.can_resolve">[docs]</a>    <span class="k">def</span> <span class="nf">can_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">uri</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.load"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">content</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.load_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.load_entry">[docs]</a>    <span class="k">def</span> <span class="nf">load_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">RecordStream</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.list_subkeys"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.list_subkeys">[docs]</a>    <span class="k">def</span> <span class="nf">list_subkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">key</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.store_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.store_entry">[docs]</a>    <span class="k">def</span> <span class="nf">store_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ri</span><span class="p">:</span> <span class="n">IStorableEntry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_gzipped</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size_bytes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_gzipped</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> \
+                <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+            <span class="n">ri</span><span class="o">.</span><span class="n">update_checksum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_streams</span><span class="p">[</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">ri</span><span class="o">.</span><span class="n">checksum</span><span class="p">)</span>
+        <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ri</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">key</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.store_manifest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.store_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">store_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">manifest</span><span class="p">:</span> <span class="n">Manifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_manifests</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest</span></div>
+
+<div class="viewcode-block" id="InMemoryStorage.load_manifest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.services.store.html#arxiv.canonical.services.store.InMemoryStorage.load_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">load_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Manifest</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manifests</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_b64_to_hex</span><span class="p">(</span><span class="n">checksum</span><span class="p">:</span> <span class="n">Checksum</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">hexlify</span><span class="p">(</span><span class="n">urlsafe_b64decode</span><span class="p">(</span><span class="n">checksum</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_hex_to_b64</span><span class="p">(</span><span class="n">etag</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Checksum</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert an hexdigest of an MD5 to a URL-safe base64-encoded digest.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">urlsafe_b64encode</span><span class="p">(</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">etag</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,1687 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain package &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.domain.tests package" href="arxiv.canonical.domain.tests.html" />
+    <link rel="prev" title="arxiv.canonical.classic.util module" href="arxiv.canonical.classic.util.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.domain">
+<span id="arxiv-canonical-domain-package"></span><h1>arxiv.canonical.domain package<a class="headerlink" href="#module-arxiv.canonical.domain" title="Permalink to this headline">¶</a></h1>
+<p>Core data structures and concepts used to describe arXiv e-prints.</p>
+<p>The structures in this module capture the central ideas and semantics of
+e-prints, their versions, and their content. It does not address things like
+how the canonical record is encoded in a key-value system, nor mechanisms for
+verifying completeness or integrity.</p>
+<dl class="class">
+<dt id="arxiv.canonical.domain.AllEPrints">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">AllEPrints</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">years</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/block.html#AllEPrints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.AllEPrints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents the complete set of announced e-prints.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.AllListings">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">AllListings</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">years</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#AllListings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.AllListings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>All listings in the canonical record.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.CanonicalFile">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">CanonicalFile</code><span class="sig-paren">(</span><em class="sig-param">modified</em>, <em class="sig-param">size_bytes</em>, <em class="sig-param">content_type</em>, <em class="sig-param">ref</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">is_gzipped=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/file.html#CanonicalFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents a file in the canonical record, e.g. a source package.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.content_type">
+<code class="sig-name descname">content_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The content type of the file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.exclude_from_comparison">
+<code class="sig-name descname">exclude_from_comparison</code><em class="property"> = {'is_gzipped', 'ref'}</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.exclude_from_comparison" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.filename">
+<code class="sig-name descname">filename</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filename in the canonical record.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.CanonicalFile.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/file.html#CanonicalFile.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute a <a class="reference internal" href="#arxiv.canonical.domain.CanonicalFile" title="arxiv.canonical.domain.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a> from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.CanonicalFile" title="arxiv.canonical.domain.file.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.is_gzipped">
+<code class="sig-name descname">is_gzipped</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.is_gzipped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the content at <code class="docutils literal notranslate"><span class="pre">ref</span></code> is served in gzipped form.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.CanonicalFile.mime_type">
+<em class="property">property </em><code class="sig-name descname">mime_type</code><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.mime_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience accessor for the MIME type of the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.modified">
+<code class="sig-name descname">modified</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Last time the file was modified.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.ref">
+<code class="sig-name descname">ref</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>A reference to the location of the content of the file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalFile.size_bytes">
+<code class="sig-name descname">size_bytes</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.size_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the file in bytes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.CanonicalFile.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/file.html#CanonicalFile.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.CanonicalFile.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict from this <a class="reference internal" href="#arxiv.canonical.domain.CanonicalFile" title="arxiv.canonical.domain.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Category">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Category</code><a class="reference internal" href="../_modules/arxiv/taxonomy/category.html#Category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Represents an arXiv category.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.Category.canonical">
+<em class="property">property </em><code class="sig-name descname">canonical</code><a class="headerlink" href="#arxiv.canonical.domain.Category.canonical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the canonicalized category, if there is one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://arxiv.github.io/arxiv-base/arxiv/arxiv.taxonomy.category.html#arxiv.taxonomy.category.Category" title="(in arXiv base v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Category</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Category.display">
+<em class="property">property </em><code class="sig-name descname">display</code><a class="headerlink" href="#arxiv.canonical.domain.Category.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>String to use in display of a category.</p>
+<p class="rubric">Examples</p>
+<p>Earth and Planetary Astrophysics (astro-ph.EP)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Category.id">
+<em class="property">property </em><code class="sig-name descname">id</code><a class="headerlink" href="#arxiv.canonical.domain.Category.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short name for category ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Category.lookup">
+<code class="sig-name descname">lookup</code><em class="property"> = {'acc-phys': {'in_archive': 'acc-phys', 'is_active': False, 'is_general': False, 'name': 'Accelerator Physics'}, 'adap-org': {'in_archive': 'adap-org', 'is_active': False, 'is_general': False, 'name': 'Adaptation, Noise, and Self-Organizing Systems'}, 'alg-geom': {'in_archive': 'alg-geom', 'is_active': False, 'is_general': False, 'name': 'Algebraic Geometry'}, 'ao-sci': {'in_archive': 'ao-sci', 'is_active': False, 'is_general': False, 'name': 'Atmospheric-Oceanic Sciences'}, 'astro-ph': {'in_archive': 'astro-ph', 'is_active': False, 'is_general': False, 'name': 'Astrophysics'}, 'astro-ph.CO': {'description': 'Phenomenology of early universe, cosmic microwave background, cosmological parameters, primordial element abundances, extragalactic distance scale, large-scale structure of the universe. Groups, superclusters, voids, intergalactic medium. Particle astrophysics: dark energy, dark matter, baryogenesis, leptogenesis, inflationary models, reheating, monopoles, WIMPs, cosmic strings, primordial black holes, cosmological gravitational radiation', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'Cosmology and Nongalactic Astrophysics'}, 'astro-ph.EP': {'description': 'Interplanetary medium, planetary physics, planetary astrobiology, extrasolar planets, comets, asteroids, meteorites. Structure and formation of the solar system', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'Earth and Planetary Astrophysics'}, 'astro-ph.GA': {'description': 'Phenomena pertaining to galaxies or the Milky Way. Star clusters, HII regions and planetary nebulae, the interstellar medium, atomic and molecular clouds, dust. Stellar populations. Galactic structure, formation, dynamics. Galactic nuclei, bulges, disks, halo. Active Galactic Nuclei, supermassive black holes, quasars. Gravitational lens systems. The Milky Way and its contents', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'Astrophysics of Galaxies'}, 'astro-ph.HE': {'description': 'Cosmic ray production, acceleration, propagation, detection. Gamma ray astronomy and bursts, X-rays, charged particles, supernovae and other explosive phenomena, stellar remnants and accretion systems, jets, microquasars, neutron stars, pulsars, black holes', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'High Energy Astrophysical Phenomena'}, 'astro-ph.IM': {'description': 'Detector and telescope design, experiment proposals. Laboratory Astrophysics. Methods for data analysis, statistical methods. Software, database design', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'Instrumentation and Methods for Astrophysics'}, 'astro-ph.SR': {'description': 'White dwarfs, brown dwarfs, cataclysmic variables. Star formation and protostellar systems, stellar astrobiology, binary and multiple systems of stars, stellar evolution and structure, coronas. Central stars of planetary nebulae. Helioseismology, solar neutrinos, production and detection of gravitational radiation from stellar systems', 'in_archive': 'astro-ph', 'is_active': True, 'is_general': False, 'name': 'Solar and Stellar Astrophysics'}, 'atom-ph': {'in_archive': 'atom-ph', 'is_active': False, 'is_general': False, 'name': 'Atomic, Molecular and Optical Physics'}, 'bayes-an': {'in_archive': 'bayes-an', 'is_active': False, 'is_general': False, 'name': 'Bayesian Analysis'}, 'chao-dyn': {'in_archive': 'chao-dyn', 'is_active': False, 'is_general': False, 'name': 'Chaotic Dynamics'}, 'chem-ph': {'in_archive': 'chem-ph', 'is_active': False, 'is_general': False, 'name': 'Chemical Physics'}, 'cmp-lg': {'in_archive': 'cmp-lg', 'is_active': False, 'is_general': False, 'name': 'Computation and Language'}, 'comp-gas': {'in_archive': 'comp-gas', 'is_active': False, 'is_general': False, 'name': 'Cellular Automata and Lattice Gases'}, 'cond-mat': {'in_archive': 'cond-mat', 'is_active': False, 'is_general': False, 'name': 'Condensed Matter'}, 'cond-mat.dis-nn': {'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Disordered Systems and Neural Networks'}, 'cond-mat.mes-hall': {'description': 'Semiconducting nanostructures: quantum dots, wires, and wells. Single electronics, spintronics, 2d electron gases, quantum Hall effect, nanotubes, graphene, plasmonic nanostructures', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Mesoscale and Nanoscale Physics'}, 'cond-mat.mtrl-sci': {'description': 'Techniques, synthesis, characterization, structure.  Structural phase transitions, mechanical properties, phonons. Defects, adsorbates, interfaces', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Materials Science'}, 'cond-mat.other': {'description': 'Work in condensed matter that does not fit into the other cond-mat classifications', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Other Condensed Matter'}, 'cond-mat.quant-gas': {'description': 'Ultracold atomic and molecular gases, Bose-Einstein condensation, Feshbach resonances, spinor condensates, optical lattices, quantum simulation with cold atoms and molecules, macroscopic interference phenomena', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Quantum Gases'}, 'cond-mat.soft': {'description': 'Membranes, polymers, liquid crystals, glasses, colloids, granular matter', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Soft Condensed Matter'}, 'cond-mat.stat-mech': {'description': 'Phase transitions, thermodynamics, field theory, non-equilibrium phenomena, renormalization group and scaling, integrable models, turbulence', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Statistical Mechanics'}, 'cond-mat.str-el': {'description': 'Quantum magnetism, non-Fermi liquids, spin liquids, quantum criticality, charge density waves, metal-insulator transitions', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Strongly Correlated Electrons'}, 'cond-mat.supr-con': {'description': 'Superconductivity: theory, models, experiment.  Superflow in helium', 'in_archive': 'cond-mat', 'is_active': True, 'is_general': False, 'name': 'Superconductivity'}, 'cs.AI': {'description': 'Covers all areas of AI except Vision, Robotics, Machine Learning, Multiagent Systems, and Computation and Language (Natural Language Processing), which have separate subject areas. In particular, includes Expert Systems, Theorem Proving (although this may overlap with Logic in Computer Science), Knowledge Representation, Planning, and Uncertainty in AI. Roughly includes material in ACM Subject Classes I.2.0, I.2.1, I.2.3, I.2.4, I.2.8, and I.2.11.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Artificial Intelligence'}, 'cs.AR': {'description': 'Covers systems organization and hardware architecture. Roughly includes material in ACM Subject Classes C.0, C.1, and C.5.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Hardware Architecture'}, 'cs.CC': {'description': 'Covers models of computation, complexity classes, structural complexity, complexity tradeoffs, upper and lower bounds. Roughly includes material in ACM Subject Classes F.1 (computation by abstract devices), F.2.3 (tradeoffs among complexity measures), and F.4.3 (formal languages), although some material in formal languages may be more appropriate for Logic in Computer Science. Some material in F.2.1 and F.2.2, may also be appropriate here, but is more likely to have Data Structures and Algorithms as the primary subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computational Complexity'}, 'cs.CE': {'description': 'Covers applications of computer science to the mathematical modeling of complex systems in the fields of science, engineering, and finance. Papers here are interdisciplinary and applications-oriented, focusing on techniques and tools that enable challenging computational simulations to be performed, for which the use of supercomputers or distributed computing platforms is often required. Includes material in ACM Subject Classes J.2, J.3, and J.4 (economics).', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computational Engineering, Finance, and Science'}, 'cs.CG': {'description': 'Roughly includes material in ACM Subject Classes I.3.5 and F.2.2.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computational Geometry'}, 'cs.CL': {'description': 'Covers natural language processing. Roughly includes material in ACM Subject Class I.2.7. Note that work on artificial languages (programming languages, logics, formal systems) that does not explicitly address natural-language issues broadly construed (natural-language processing, computational linguistics, speech, text retrieval, etc.) is not appropriate for this area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computation and Language'}, 'cs.CR': {'description': 'Covers all areas of cryptography and security including authentication, public key cryptosytems, proof-carrying code, etc. Roughly includes material in ACM Subject Classes D.4.6 and E.3.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Cryptography and Security'}, 'cs.CV': {'description': 'Covers image processing, computer vision, pattern recognition, and scene understanding. Roughly includes material in ACM Subject Classes I.2.10, I.4, and I.5.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computer Vision and Pattern Recognition'}, 'cs.CY': {'description': 'Covers impact of computers on society, computer ethics, information technology and public policy, legal aspects of computing, computers and education. Roughly includes material in ACM Subject Classes K.0, K.2, K.3, K.4, K.5, and K.7.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computers and Society'}, 'cs.DB': {'description': 'Covers database management, datamining, and data processing. Roughly includes material in ACM Subject Classes E.2, E.5, H.0, H.2, and J.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Databases'}, 'cs.DC': {'description': 'Covers fault-tolerance, distributed algorithms, stabilility, parallel computation, and cluster computing. Roughly includes material in ACM Subject Classes C.1.2, C.1.4, C.2.4, D.1.3, D.4.5, D.4.7, E.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Distributed, Parallel, and Cluster Computing'}, 'cs.DL': {'description': 'Covers all aspects of the digital library design and document and text creation. Note that there will be some overlap with Information Retrieval (which is a separate subject area). Roughly includes material in ACM Subject Classes H.3.5, H.3.6, H.3.7, I.7.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Digital Libraries'}, 'cs.DM': {'description': 'Covers combinatorics, graph theory, applications of probability. Roughly includes material in ACM Subject Classes G.2 and G.3.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Discrete Mathematics'}, 'cs.DS': {'description': 'Covers data structures and analysis of algorithms. Roughly includes material in ACM Subject Classes E.1, E.2, F.2.1, and F.2.2.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Data Structures and Algorithms'}, 'cs.ET': {'description': 'Covers approaches to information processing (computing, communication, sensing) and bio-chemical analysis based on alternatives to silicon CMOS-based technologies, such as nanoscale electronic, photonic, spin-based, superconducting, mechanical, bio-chemical and quantum technologies (this list is not exclusive). Topics of interest include (1) building blocks for emerging technologies, their scalability and adoption in larger systems, including integration with traditional technologies, (2) modeling, design and optimization of novel devices and systems, (3) models of computation, algorithm design and programming for emerging technologies.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Emerging Technologies'}, 'cs.FL': {'description': 'Covers automata theory, formal language theory, grammars, and combinatorics on words. This roughly corresponds to ACM Subject Classes F.1.1, and F.4.3. Papers dealing with computational complexity should go to cs.CC; papers dealing with logic should go to cs.LO.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Formal Languages and Automata Theory'}, 'cs.GL': {'description': 'Covers introductory material, survey material, predictions of future trends, biographies, and miscellaneous computer-science related material. Roughly includes all of ACM Subject Class A, except it does not include conference proceedings (which will be listed in the appropriate subject area).', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'General Literature'}, 'cs.GR': {'description': 'Covers all aspects of computer graphics. Roughly includes material in all of ACM Subject Class I.3, except that I.3.5 is is likely to have Computational Geometry as the primary subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Graphics'}, 'cs.GT': {'description': 'Covers all theoretical and applied aspects at the intersection of computer science and game theory, including work in mechanism design, learning in games (which may overlap with Learning), foundations of agent modeling in games (which may overlap with Multiagent systems), coordination, specification and formal methods for non-cooperative computational environments. The area also deals with applications of game theory to areas such as electronic commerce.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Computer Science and Game Theory'}, 'cs.HC': {'description': 'Covers human factors, user interfaces, and collaborative computing. Roughly includes material in ACM Subject Classes H.1.2 and all of H.5, except for H.5.1, which is more likely to have Multimedia as the primary subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Human-Computer Interaction'}, 'cs.IR': {'description': 'Covers indexing, dictionaries, retrieval, content and analysis. Roughly includes material in ACM Subject Classes H.3.0, H.3.1, H.3.2, H.3.3, and H.3.4.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Information Retrieval'}, 'cs.IT': {'description': 'Covers theoretical and experimental aspects of information theory and coding. Includes material in ACM Subject Class E.4 and intersects with H.1.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Information Theory'}, 'cs.LG': {'description': 'Covers machine learning and computational (PAC) learning. Roughly includes material in ACM Subject Class I.2.6.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Machine Learning'}, 'cs.LO': {'description': 'Covers all aspects of logic in computer science, including finite model theory, logics of programs, modal logic, and program verification. Programming language semantics should have Programming Languages as the primary subject area. Roughly includes material in ACM Subject Classes D.2.4, F.3.1, F.4.0, F.4.1, and F.4.2; some material in F.4.3 (formal languages) may also be appropriate here, although Computational Complexity is typically the more appropriate subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Logic in Computer Science'}, 'cs.MA': {'description': 'Covers multiagent systems, distributed artificial intelligence, intelligent agents, coordinated interactions. and practical applications. Roughly covers ACM Subject Class I.2.11.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Multiagent Systems'}, 'cs.MM': {'description': 'Roughly includes material in ACM Subject Class H.5.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Multimedia'}, 'cs.MS': {'description': 'Roughly includes material in ACM Subject Class G.4.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Mathematical Software'}, 'cs.NA': {'description': 'cs.NA is an alias for math.NA. Roughly includes material in ACM Subject Class G.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Numerical Analysis'}, 'cs.NE': {'description': 'Covers neural networks, connectionism, genetic algorithms, artificial life, adaptive behavior. Roughly includes some material in ACM Subject Class C.1.3, I.2.6, I.5.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Neural and Evolutionary Computing'}, 'cs.NI': {'description': 'Covers all aspects of computer communication networks, including network architecture and design, network protocols, and internetwork standards (like TCP/IP). Also includes topics, such as web caching, that are directly relevant to Internet architecture and performance. Roughly includes all of ACM Subject Class C.2 except C.2.4, which is more likely to have Distributed, Parallel, and Cluster Computing as the primary subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Networking and Internet Architecture'}, 'cs.OH': {'description': 'This is the classification to use for documents that do not fit anywhere else.', 'in_archive': 'cs', 'is_active': True, 'is_general': True, 'name': 'Other Computer Science'}, 'cs.OS': {'description': 'Roughly includes material in ACM Subject Classes D.4.1, D.4.2., D.4.3, D.4.4, D.4.5, D.4.7, and D.4.9.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Operating Systems'}, 'cs.PF': {'description': 'Covers performance measurement and evaluation, queueing, and simulation. Roughly includes material in ACM Subject Classes D.4.8 and K.6.2.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Performance'}, 'cs.PL': {'description': 'Covers programming language semantics, language features, programming approaches (such as object-oriented programming, functional programming, logic programming). Also includes material on compilers oriented towards programming languages; other material on compilers may be more appropriate in Architecture (AR). Roughly includes material in ACM Subject Classes D.1 and D.3.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Programming Languages'}, 'cs.RO': {'description': 'Roughly includes material in ACM Subject Class I.2.9.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Robotics'}, 'cs.SC': {'description': 'Roughly includes material in ACM Subject Class I.1.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Symbolic Computation'}, 'cs.SD': {'description': 'Covers all aspects of computing with sound, and sound as an information channel. Includes models of sound, analysis and synthesis, audio user interfaces, sonification of data, computer music, and sound signal processing. Includes ACM Subject Class H.5.5, and intersects with H.1.2, H.5.1, H.5.2, I.2.7, I.5.4, I.6.3, J.5, K.4.2.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Sound'}, 'cs.SE': {'description': 'Covers design tools, software metrics, testing and debugging, programming environments, etc. Roughly includes material in all of ACM Subject Classes D.2, except that D.2.4 (program verification) should probably have Logics in Computer Science as the primary subject area.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Software Engineering'}, 'cs.SI': {'description': 'Covers the design, analysis, and modeling of social and information networks, including their applications for on-line information access, communication, and interaction, and their roles as datasets in the exploration of questions in these and other domains, including connections to the social and biological sciences. Analysis and modeling of such networks includes topics in ACM Subject classes F.2, G.2, G.3, H.2, and I.2; applications in computing include topics in H.3, H.4, and H.5; and applications at the interface of computing and other disciplines include topics in J.1--J.7. Papers on computer communication systems and network protocols (e.g. TCP/IP) are generally a closer fit to the Networking and Internet Architecture (cs.NI) category.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Social and Information Networks'}, 'cs.SY': {'description': 'cs.SY is an alias for eess.SY. This section includes theoretical and experimental research covering all facets of automatic control systems. The section is focused on methods of control system analysis and design using tools of modeling, simulation and optimization. Specific areas of research include nonlinear, distributed, adaptive, stochastic and robust control in addition to hybrid and discrete event systems. Application areas include automotive and aerospace control systems, network control, biological systems, multiagent and cooperative control, robotics, reinforcement learning, sensor networks, control of cyber-physical and energy-related systems, and control of computing systems.', 'in_archive': 'cs', 'is_active': True, 'is_general': False, 'name': 'Systems and Control'}, 'dg-ga': {'in_archive': 'dg-ga', 'is_active': False, 'is_general': False, 'name': 'Differential Geometry'}, 'econ.EM': {'description': 'Econometric Theory, Micro-Econometrics, Macro-Econometrics, Empirical Content of Economic Relations discovered via New Methods, Methodological Aspects of the Application of Statistical Inference to Economic Data.', 'in_archive': 'econ', 'is_active': True, 'is_general': False, 'name': 'Econometrics'}, 'econ.GN': {'description': 'General methodological and applied contributions to economics.', 'in_archive': 'econ', 'is_active': True, 'is_general': False, 'name': 'General Economics'}, 'econ.TH': {'description': 'Includes theoretical contributions to Contract Theory, Decision Theory, Game Theory, General Equilibrium, Growth, Learning and Evolution, Macroeconomics, Market and Mechanism Design, and Social Choice.', 'in_archive': 'econ', 'is_active': True, 'is_general': False, 'name': 'Theoretical Economics'}, 'eess.AS': {'description': 'Theory and methods for processing signals representing audio, speech, and language, and their applications. This includes analysis, synthesis, enhancement, transformation, classification and interpretation of such signals as well as the design, development, and evaluation of associated signal processing systems. Machine learning and pattern analysis applied to any of the above areas is also welcome.  Specific topics of interest include: auditory modeling and hearing aids; acoustic beamforming and source localization; classification of acoustic scenes; speaker separation; active noise control and echo cancellation; enhancement; de-reverberation; bioacoustics; music signals analysis, synthesis and modification; music information retrieval;  audio for multimedia and joint audio-video processing; spoken and written language modeling, segmentation, tagging, parsing, understanding, and translation; text mining; speech production, perception, and psychoacoustics; speech analysis, synthesis, and perceptual modeling and coding; robust speech recognition; speaker recognition and characterization; deep learning, online learning, and graphical models applied to speech, audio, and language signals; and implementation aspects ranging from system architecture to fast algorithms.', 'in_archive': 'eess', 'is_active': True, 'is_general': False, 'name': 'Audio and Speech Processing'}, 'eess.IV': {'description': 'Theory, algorithms, and architectures for the formation, capture, processing, communication, analysis, and display of images, video, and multidimensional signals in a wide variety of applications. Topics of interest include: mathematical, statistical, and perceptual image and video modeling and representation; linear and nonlinear filtering, de-blurring, enhancement, restoration, and reconstruction from degraded, low-resolution or tomographic data; lossless and lossy compression and coding; segmentation, alignment, and recognition; image rendering, visualization, and printing; computational imaging, including ultrasound, tomographic and magnetic resonance imaging; and image and video analysis, synthesis, storage, search and retrieval.', 'in_archive': 'eess', 'is_active': True, 'is_general': False, 'name': 'Image and Video Processing'}, 'eess.SP': {'description': 'Theory, algorithms, performance analysis and applications of signal and data analysis, including physical modeling, processing, detection and parameter estimation, learning, mining, retrieval, and information extraction. The term &quot;signal&quot; includes speech, audio, sonar, radar, geophysical, physiological, (bio-) medical, image, video, and multimodal natural and man-made signals, including communication signals and data. Topics of interest include: statistical signal processing, spectral estimation and system identification; filter design, adaptive filtering / stochastic learning; (compressive) sampling, sensing, and transform-domain methods including fast algorithms; signal processing for machine learning and machine learning for signal processing applications; in-network and graph signal processing; convex and nonconvex optimization methods for signal processing applications; radar, sonar, and sensor array beamforming and direction finding; communications signal processing; low power, multi-core and system-on-chip signal processing; sensing, communication, analysis and optimization for cyber-physical systems such as power grids and the Internet of Things.', 'in_archive': 'eess', 'is_active': True, 'is_general': False, 'name': 'Signal Processing'}, 'eess.SY': {'description': 'This section includes theoretical and experimental research covering all facets of automatic control systems. The section is focused on methods of control system analysis and design using tools of modeling, simulation and optimization. Specific areas of research include nonlinear, distributed, adaptive, stochastic and robust control in addition to hybrid and discrete event systems. Application areas include automotive and aerospace control systems, network control, biological systems, multiagent and cooperative control, robotics, reinforcement learning, sensor networks, control of cyber-physical and energy-related systems, and control of computing systems.', 'in_archive': 'eess', 'is_active': True, 'is_general': False, 'name': 'Systems and Control'}, 'funct-an': {'in_archive': 'funct-an', 'is_active': False, 'is_general': False, 'name': 'Functional Analysis'}, 'gr-qc': {'in_archive': 'gr-qc', 'is_active': True, 'is_general': False, 'name': 'General Relativity and Quantum Cosmology'}, 'hep-ex': {'in_archive': 'hep-ex', 'is_active': True, 'is_general': False, 'name': 'High Energy Physics - Experiment'}, 'hep-lat': {'in_archive': 'hep-lat', 'is_active': True, 'is_general': False, 'name': 'High Energy Physics - Lattice'}, 'hep-ph': {'in_archive': 'hep-ph', 'is_active': True, 'is_general': False, 'name': 'High Energy Physics - Phenomenology'}, 'hep-th': {'in_archive': 'hep-th', 'is_active': True, 'is_general': False, 'name': 'High Energy Physics - Theory'}, 'math-ph': {'in_archive': 'math-ph', 'is_active': True, 'is_general': False, 'name': 'Mathematical Physics'}, 'math.AC': {'description': 'Commutative rings, modules, ideals, homological algebra, computational aspects, invariant theory, connections to algebraic geometry and combinatorics', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Commutative Algebra'}, 'math.AG': {'description': 'Algebraic varieties, stacks, sheaves, schemes, moduli spaces, complex geometry, quantum cohomology', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Algebraic Geometry'}, 'math.AP': {'description': &quot;Existence and uniqueness, boundary conditions, linear and non-linear operators, stability, soliton theory, integrable PDE's, conservation laws, qualitative dynamics&quot;, 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Analysis of PDEs'}, 'math.AT': {'description': 'Homotopy theory, homological algebra, algebraic treatments of manifolds', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Algebraic Topology'}, 'math.CA': {'description': &quot;Special functions, orthogonal polynomials, harmonic analysis, ODE's, differential relations, calculus of variations, approximations, expansions, asymptotics&quot;, 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Classical Analysis and ODEs'}, 'math.CO': {'description': 'Discrete mathematics, graph theory, enumeration, combinatorial optimization, Ramsey theory, combinatorial game theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Combinatorics'}, 'math.CT': {'description': 'Enriched categories, topoi, abelian categories, monoidal categories, homological algebra', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Category Theory'}, 'math.CV': {'description': 'Holomorphic functions, automorphic group actions and forms, pseudoconvexity, complex geometry, analytic spaces, analytic sheaves', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Complex Variables'}, 'math.DG': {'description': 'Complex, contact, Riemannian, pseudo-Riemannian and Finsler geometry, relativity, gauge theory, global analysis', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Differential Geometry'}, 'math.DS': {'description': 'Dynamics of differential equations and flows, mechanics, classical few-body problems, iterations, complex dynamics, delayed differential equations', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Dynamical Systems'}, 'math.FA': {'description': 'Banach spaces, function spaces, real functions, integral transforms, theory of distributions, measure theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Functional Analysis'}, 'math.GM': {'description': 'Mathematical material of general interest, topics not covered elsewhere', 'in_archive': 'math', 'is_active': True, 'is_general': True, 'name': 'General Mathematics'}, 'math.GN': {'description': 'Continuum theory, point-set topology, spaces with algebraic structure, foundations, dimension theory, local and global properties', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'General Topology'}, 'math.GR': {'description': 'Finite groups, topological groups, representation theory, cohomology, classification and structure', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Group Theory'}, 'math.GT': {'description': 'Manifolds, orbifolds, polyhedra, cell complexes, foliations, geometric structures', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Geometric Topology'}, 'math.HO': {'description': 'Biographies, philosophy of mathematics, mathematics education, recreational mathematics, communication of mathematics', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'History and Overview'}, 'math.IT': {'description': 'math.IT is an alias for cs.IT. Covers theoretical and experimental aspects of information theory and coding.', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Information Theory'}, 'math.KT': {'description': 'Algebraic and topological K-theory, relations with topology, commutative algebra, and operator algebras', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'K-Theory and Homology'}, 'math.LO': {'description': 'Logic, set theory, point-set topology, formal mathematics', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Logic'}, 'math.MG': {'description': 'Euclidean, hyperbolic, discrete, convex, coarse geometry, comparisons in Riemannian geometry, symmetric spaces', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Metric Geometry'}, 'math.MP': {'description': 'math.MP is an alias for math-ph. Mathematical methods in quantum field theory, quantum mechanics, statistical mechanics, condensed matter, nuclear and atomic physics.', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Mathematical Physics'}, 'math.NA': {'description': 'Numerical algorithms for problems in analysis and algebra, scientific computation', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Numerical Analysis'}, 'math.NT': {'description': 'Prime numbers, diophantine equations, analytic number theory, algebraic number theory, arithmetic geometry, Galois theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Number Theory'}, 'math.OA': {'description': 'Algebras of operators on Hilbert space, C^*-algebras, von Neumann algebras, non-commutative geometry', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Operator Algebras'}, 'math.OC': {'description': 'Operations research, linear programming, control theory, systems theory, optimal control, game theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Optimization and Control'}, 'math.PR': {'description': 'Theory and applications of probability and stochastic processes: e.g. central limit theorems, large deviations, stochastic differential equations, models from statistical mechanics, queuing theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Probability'}, 'math.QA': {'description': 'Quantum groups, skein theories, operadic and diagrammatic algebra, quantum field theory', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Quantum Algebra'}, 'math.RA': {'description': 'Non-commutative rings and algebras, non-associative algebras, universal algebra and lattice theory, linear algebra, semigroups', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Rings and Algebras'}, 'math.RT': {'description': 'Linear representations of algebras and groups, Lie theory, associative algebras, multilinear algebra', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Representation Theory'}, 'math.SG': {'description': 'Hamiltonian systems, symplectic flows, classical integrable systems', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Symplectic Geometry'}, 'math.SP': {'description': 'Schrodinger operators, operators on manifolds, general differential operators, numerical studies, integral operators, discrete models, resonances, non-self-adjoint operators, random operators/matrices', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Spectral Theory'}, 'math.ST': {'description': 'Applied, computational and theoretical statistics: e.g. statistical inference, regression, time series, multivariate analysis, data analysis, Markov chain Monte Carlo, design of experiments, case studies', 'in_archive': 'math', 'is_active': True, 'is_general': False, 'name': 'Statistics Theory'}, 'mtrl-th': {'in_archive': 'mtrl-th', 'is_active': False, 'is_general': False, 'name': 'Materials Theory'}, 'nlin.AO': {'description': 'adaptation, self-organizing systems, statistical physics, fluctuating systems, stochastic processes, interacting particle systems, machine learning', 'in_archive': 'nlin', 'is_active': True, 'is_general': False, 'name': 'Adaptation and Self-Organizing Systems'}, 'nlin.CD': {'description': 'dynamical systems, chaos, quantum chaos, topological dynamics, cycle expansions, turbulence, propagation', 'in_archive': 'nlin', 'is_active': True, 'is_general': False, 'name': 'Chaotic Dynamics'}, 'nlin.CG': {'description': 'computational methods, time series analysis, signal processing, wavelets, lattice gases', 'in_archive': 'nlin', 'is_active': True, 'is_general': False, 'name': 'Cellular Automata and Lattice Gases'}, 'nlin.PS': {'description': 'pattern formation, coherent structures, solitons', 'in_archive': 'nlin', 'is_active': True, 'is_general': False, 'name': 'Pattern Formation and Solitons'}, 'nlin.SI': {'description': 'exactly solvable systems, integrable PDEs, integrable ODEs, Painleve analysis, integrable discrete maps, solvable lattice models, integrable quantum systems', 'in_archive': 'nlin', 'is_active': True, 'is_general': False, 'name': 'Exactly Solvable and Integrable Systems'}, 'nucl-ex': {'in_archive': 'nucl-ex', 'is_active': True, 'is_general': False, 'name': 'Nuclear Experiment'}, 'nucl-th': {'in_archive': 'nucl-th', 'is_active': True, 'is_general': False, 'name': 'Nuclear Theory'}, 'patt-sol': {'in_archive': 'patt-sol', 'is_active': False, 'is_general': False, 'name': 'Pattern Formation and Solitons'}, 'physics.acc-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Accelerator Physics'}, 'physics.ao-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Atmospheric and Oceanic Physics'}, 'physics.app-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Applied Physics'}, 'physics.atm-clus': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Atomic and Molecular Clusters'}, 'physics.atom-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Atomic Physics'}, 'physics.bio-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Biological Physics'}, 'physics.chem-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Chemical Physics'}, 'physics.class-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Classical Physics'}, 'physics.comp-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Computational Physics'}, 'physics.data-an': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Data Analysis, Statistics and Probability'}, 'physics.ed-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Physics Education'}, 'physics.flu-dyn': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Fluid Dynamics'}, 'physics.gen-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': True, 'name': 'General Physics'}, 'physics.geo-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Geophysics'}, 'physics.hist-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'History and Philosophy of Physics'}, 'physics.ins-det': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Instrumentation and Detectors'}, 'physics.med-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Medical Physics'}, 'physics.optics': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Optics'}, 'physics.plasm-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Plasma Physics'}, 'physics.pop-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Popular Physics'}, 'physics.soc-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Physics and Society'}, 'physics.space-ph': {'in_archive': 'physics', 'is_active': True, 'is_general': False, 'name': 'Space Physics'}, 'plasm-ph': {'in_archive': 'plasm-ph', 'is_active': False, 'is_general': False, 'name': 'Plasma Physics'}, 'q-alg': {'in_archive': 'q-alg', 'is_active': False, 'is_general': False, 'name': 'Quantum Algebra and Topology'}, 'q-bio': {'in_archive': 'q-bio', 'is_active': False, 'is_general': False, 'name': 'Quantitative Biology'}, 'q-bio.BM': {'description': 'DNA, RNA, proteins, lipids, etc.; molecular structures and folding kinetics; molecular interactions; single-molecule manipulation.', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Biomolecules'}, 'q-bio.CB': {'description': 'Cell-cell signaling and interaction; morphogenesis and development; apoptosis; bacterial conjugation; viral-host interaction; immunology', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Cell Behavior'}, 'q-bio.GN': {'description': 'DNA sequencing and assembly; gene and motif finding; RNA editing and alternative splicing; genomic structure and processes (replication, transcription, methylation, etc); mutational processes.', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Genomics'}, 'q-bio.MN': {'description': 'Gene regulation, signal transduction, proteomics, metabolomics, gene and enzymatic networks', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Molecular Networks'}, 'q-bio.NC': {'description': 'Synapse, cortex, neuronal dynamics, neural network, sensorimotor control, behavior, attention', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Neurons and Cognition'}, 'q-bio.OT': {'description': 'Work in quantitative biology that does not fit into the other q-bio classifications', 'in_archive': 'q-bio', 'is_active': True, 'is_general': True, 'name': 'Other Quantitative Biology'}, 'q-bio.PE': {'description': 'Population dynamics, spatio-temporal and epidemiological models, dynamic speciation, co-evolution, biodiversity, foodwebs, aging; molecular evolution and phylogeny; directed evolution; origin of life', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Populations and Evolution'}, 'q-bio.QM': {'description': 'All experimental, numerical, statistical and mathematical contributions of value to biology', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Quantitative Methods'}, 'q-bio.SC': {'description': 'Assembly and control of subcellular structures (channels, organelles, cytoskeletons, capsules, etc.); molecular motors, transport, subcellular localization; mitosis and meiosis', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Subcellular Processes'}, 'q-bio.TO': {'description': 'Blood flow in vessels, biomechanics of bones, electrical waves, endocrine system, tumor growth', 'in_archive': 'q-bio', 'is_active': True, 'is_general': False, 'name': 'Tissues and Organs'}, 'q-fin.CP': {'description': 'Computational methods, including Monte Carlo, PDE, lattice and other numerical methods with applications to financial modeling', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Computational Finance'}, 'q-fin.EC': {'description': 'q-fin.EC is an alias for econ.GN. Economics, including micro and macro economics, international economics, theory of the firm, labor economics, and other economic topics outside finance', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Economics'}, 'q-fin.GN': {'description': 'Development of general quantitative methodologies with applications in finance', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'General Finance'}, 'q-fin.MF': {'description': 'Mathematical and analytical methods of finance, including stochastic, probabilistic and functional analysis, algebraic, geometric and other methods', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Mathematical Finance'}, 'q-fin.PM': {'description': 'Security selection and optimization, capital allocation, investment strategies and performance measurement', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Portfolio Management'}, 'q-fin.PR': {'description': 'Valuation and hedging of financial securities, their derivatives, and structured products', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Pricing of Securities'}, 'q-fin.RM': {'description': 'Measurement and management of financial risks in trading, banking, insurance, corporate and other applications', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Risk Management'}, 'q-fin.ST': {'description': 'Statistical, econometric and econophysics analyses with applications to financial markets and economic data', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Statistical Finance'}, 'q-fin.TR': {'description': 'Market microstructure, liquidity, exchange and auction design, automated trading, agent-based modeling and market-making', 'in_archive': 'q-fin', 'is_active': True, 'is_general': False, 'name': 'Trading and Market Microstructure'}, 'quant-ph': {'in_archive': 'quant-ph', 'is_active': True, 'is_general': False, 'name': 'Quantum Physics'}, 'solv-int': {'in_archive': 'solv-int', 'is_active': False, 'is_general': False, 'name': 'Exactly Solvable and Integrable Systems'}, 'stat.AP': {'description': 'Biology, Education, Epidemiology, Engineering, Environmental Sciences, Medical, Physical Sciences, Quality Control, Social Sciences', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Applications'}, 'stat.CO': {'description': 'Algorithms, Simulation, Visualization', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Computation'}, 'stat.ME': {'description': 'Design, Surveys, Model Selection, Multiple Testing, Multivariate Methods, Signal and Image Processing, Time Series, Smoothing, Spatial Statistics, Survival Analysis, Nonparametric and Semiparametric Methods', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Methodology'}, 'stat.ML': {'description': 'Classification, Graphical Models, High Dimensional Inference', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Machine Learning'}, 'stat.OT': {'description': 'Work in statistics that does not fit into the other stat classifications', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Other Statistics'}, 'stat.TH': {'description': 'stat.TH is an alias for math.ST. Asymptotics, Bayesian Inference, Decision Theory, Estimation, Foundations, Inference, Testing.', 'in_archive': 'stat', 'is_active': True, 'is_general': False, 'name': 'Statistics Theory'}, 'supr-con': {'in_archive': 'supr-con', 'is_active': False, 'is_general': False, 'name': 'Superconductivity'}, 'test': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test'}, 'test.dis-nn': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Disruptive Networks'}, 'test.mes-hall': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Hall'}, 'test.mtrl-sci': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Mtrl-Sci'}, 'test.soft': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Soft'}, 'test.stat-mech': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Mechanics'}, 'test.str-el': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Electrons'}, 'test.supr-con': {'in_archive': 'test', 'is_active': False, 'is_general': False, 'name': 'Test Superconductivity'}}</em><a class="headerlink" href="#arxiv.canonical.domain.Category.lookup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Category.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#arxiv.canonical.domain.Category.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the full category name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Category.unalias">
+<code class="sig-name descname">unalias</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/taxonomy/category.html#Category.unalias"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Category.unalias" title="Permalink to this definition">¶</a></dt>
+<dd><p>Follow any EQUIV or SUBSUMED to get the current category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://arxiv.github.io/arxiv-base/arxiv/arxiv.taxonomy.category.html#arxiv.taxonomy.category.Category" title="(in arXiv base v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Category</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.CanonicalBase">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">CanonicalBase</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/base.html#CanonicalBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.CanonicalBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for all canonical domain classes.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.CanonicalBase.exclude_from_comparison">
+<code class="sig-name descname">exclude_from_comparison</code><em class="property"> = {}</em><a class="headerlink" href="#arxiv.canonical.domain.CanonicalBase.exclude_from_comparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Names of attributes not to be used in __eq__ comparisons.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.CanonicalBaseCollection">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">CanonicalBaseCollection</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/base.html#CanonicalBaseCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.CanonicalBaseCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Base class for domain classes that act as collections.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.ContentType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">ContentType</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ContentType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Characterization of the content type of an individual bitstream.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.abs">
+<code class="sig-name descname">abs</code><em class="property"> = 'abs'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.dvi">
+<code class="sig-name descname">dvi</code><em class="property"> = 'dvi'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.dvi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.ContentType.ext">
+<em class="property">property </em><code class="sig-name descname">ext</code><a class="headerlink" href="#arxiv.canonical.domain.ContentType.ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The preferred filename extension for this <a class="reference internal" href="#arxiv.canonical.domain.ContentType" title="arxiv.canonical.domain.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.from_filename">
+<code class="sig-name descname">from_filename</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><em class="property"> = &lt;bound method ContentType.from_filename of &lt;enum 'ContentType'&gt;&gt;</em><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ContentType.from_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.from_mimetype">
+<code class="sig-name descname">from_mimetype</code><span class="sig-paren">(</span><em class="sig-param">mime</em><span class="sig-paren">)</span><em class="property"> = &lt;bound method ContentType.from_mimetype of &lt;enum 'ContentType'&gt;&gt;</em><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.from_mimetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ContentType.from_mimetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.html">
+<code class="sig-name descname">html</code><em class="property"> = 'html'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.json">
+<code class="sig-name descname">json</code><em class="property"> = 'json'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.ContentType.make_filename">
+<code class="sig-name descname">make_filename</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">is_gzipped=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.make_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ContentType.make_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a filename for a bitstream with this <a class="reference internal" href="#arxiv.canonical.domain.ContentType" title="arxiv.canonical.domain.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.ContentType.mime_type">
+<em class="property">property </em><code class="sig-name descname">mime_type</code><a class="headerlink" href="#arxiv.canonical.domain.ContentType.mime_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MIME content type for this <a class="reference internal" href="#arxiv.canonical.domain.ContentType" title="arxiv.canonical.domain.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.pdf">
+<code class="sig-name descname">pdf</code><em class="property"> = 'pdf'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.ps">
+<code class="sig-name descname">ps</code><em class="property"> = 'ps'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.ps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.tar">
+<code class="sig-name descname">tar</code><em class="property"> = 'tar'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.tar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ContentType.tex">
+<code class="sig-name descname">tex</code><em class="property"> = 'tex'</em><a class="headerlink" href="#arxiv.canonical.domain.ContentType.tex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EPrint">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EPrint</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">versions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/eprint.html#EPrint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EPrint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Core concept of an e-print in the canonical record.</p>
+<p>An e-print is a collection of one or more sequential :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Version`s,
+generally representing projections of a single scholarly work over time.</p>
+<p>E-prints are identified by :class:<a href="#id3"><span class="problematic" id="id4">`</span></a>.Identifier`s.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.EPrint.announced_date">
+<em class="property">property </em><code class="sig-name descname">announced_date</code><a class="headerlink" href="#arxiv.canonical.domain.EPrint.announced_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the first version of this e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.date" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EPrint.is_withdrawn">
+<em class="property">property </em><code class="sig-name descname">is_withdrawn</code><a class="headerlink" href="#arxiv.canonical.domain.EPrint.is_withdrawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether this e-print has been withdrawn.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EPrint.size_kilobytes">
+<em class="property">property </em><code class="sig-name descname">size_kilobytes</code><a class="headerlink" href="#arxiv.canonical.domain.EPrint.size_kilobytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate the size of the current version of this e-print in kb.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EPrintDay">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EPrintDay</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">eprints</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/block.html#EPrintDay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EPrintDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>E-prints originally announced on a specific day.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EPrintMonth">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EPrintMonth</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">days</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/block.html#EPrintMonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EPrintMonth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>E-prints originally announced in a particular calendar month.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.EPrintMonth.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.EPrintMonth.month" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EPrintMonth.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.EPrintMonth.year" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EPrintYear">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EPrintYear</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">months</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/block.html#EPrintYear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EPrintYear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>E-prints originally announced in a particular calendar year.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Event">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Event</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">event_type</em>, <em class="sig-param">version</em>, <em class="sig-param">categories=None</em>, <em class="sig-param">description=''</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">event_agent=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.version._EventBase</span></code></p>
+<p>An announcement-related event.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.event_id">
+<em class="property">property </em><code class="sig-name descname">event_id</code><a class="headerlink" href="#arxiv.canonical.domain.Event.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unique identifier for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventIdentifier" title="arxiv.canonical.domain.version.EventIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Event.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.get_default_shard">
+<em class="property">classmethod </em><code class="sig-name descname">get_default_shard</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.get_default_shard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Event.get_default_shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default listing shard for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.shard">
+<em class="property">property </em><code class="sig-name descname">shard</code><a class="headerlink" href="#arxiv.canonical.domain.Event.shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shard name for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.summary">
+<em class="property">property </em><code class="sig-name descname">summary</code><a class="headerlink" href="#arxiv.canonical.domain.Event.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>A summary of this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventSummary" title="arxiv.canonical.domain.version.EventSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSummary</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Event.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Event.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Event.version">
+<code class="sig-name descname">version</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Event.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current state of the version (i.e. after the event).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EventIdentifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EventIdentifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Unique identifier for an <a class="reference internal" href="#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventIdentifier.event_date">
+<code class="sig-name descname">event_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.EventIdentifier.event_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp of the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EventIdentifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">shard</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventIdentifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventIdentifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a event identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventIdentifier" title="arxiv.canonical.domain.version.EventIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventIdentifier.shard">
+<code class="sig-name descname">shard</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.EventIdentifier.shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shard ID for the event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventIdentifier.version_id">
+<code class="sig-name descname">version_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.EventIdentifier.version_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the <a class="reference internal" href="#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a> to which the event pertains.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EventSummary">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EventSummary</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">event_type</em>, <em class="sig-param">event_id</em>, <em class="sig-param">categories=None</em>, <em class="sig-param">description=''</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">event_agent=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.version._EventBase</span></code></p>
+<p>A lightweight description of an event.</p>
+<p>This has all of the data of the original <a class="reference internal" href="#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> except for the
+state of the e-print version.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventSummary.event_id">
+<code class="sig-name descname">event_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.EventSummary.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique identifier for the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EventSummary.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventSummary.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventSummary" title="arxiv.canonical.domain.version.EventSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSummary</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EventSummary.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventSummary.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.EventType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">EventType</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.EventType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported event types.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.CROSSLIST">
+<code class="sig-name descname">CROSSLIST</code><em class="property"> = 'cross'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.CROSSLIST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.JREF">
+<code class="sig-name descname">JREF</code><em class="property"> = 'jref'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.JREF" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.MIGRATE">
+<code class="sig-name descname">MIGRATE</code><em class="property"> = 'migrate'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.MIGRATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.MIGRATE_METADATA">
+<code class="sig-name descname">MIGRATE_METADATA</code><em class="property"> = 'migrate_metadata'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.MIGRATE_METADATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.NEW">
+<code class="sig-name descname">NEW</code><em class="property"> = 'new'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.NEW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.REPLACED">
+<code class="sig-name descname">REPLACED</code><em class="property"> = 'replace'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.REPLACED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.UPDATED">
+<code class="sig-name descname">UPDATED</code><em class="property"> = 'update'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.UPDATED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.UPDATED_METADATA">
+<code class="sig-name descname">UPDATED_METADATA</code><em class="property"> = 'update_metadata'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.UPDATED_METADATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.EventType.WITHDRAWN">
+<code class="sig-name descname">WITHDRAWN</code><em class="property"> = 'withdraw'</em><a class="headerlink" href="#arxiv.canonical.domain.EventType.WITHDRAWN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.EventType.is_new_version">
+<em class="property">property </em><code class="sig-name descname">is_new_version</code><a class="headerlink" href="#arxiv.canonical.domain.EventType.is_new_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not this event type results in a new version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Identifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Identifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#Identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>An arXiv e-print identifier.</p>
+<p>Supports both old-style (<code class="docutils literal notranslate"><span class="pre">archive.category/YYMMNNN</span></code>) and new-style
+(<code class="docutils literal notranslate"><span class="pre">YYMM.NNNNN</span></code>) identifiers.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.category_part">
+<em class="property">property </em><code class="sig-name descname">category_part</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.category_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>For old-style identifiers, conveys the primary category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">month</em>, <em class="sig-param">inc</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#Identifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Identifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new-style identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.incremental_part">
+<em class="property">property </em><code class="sig-name descname">incremental_part</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.incremental_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part of the identifier that is incremental.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Month in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.numeric_part">
+<em class="property">property </em><code class="sig-name descname">numeric_part</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.numeric_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The entire numeric component of the identifier.</p>
+<p>For new-style identifiers, this is the entire identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Year in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Identifier.yymm">
+<em class="property">property </em><code class="sig-name descname">yymm</code><a class="headerlink" href="#arxiv.canonical.domain.Identifier.yymm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric part conveying the original announcement year and month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.canonical.domain.InvalidIdentifier">
+<em class="property">exception </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">InvalidIdentifier</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#InvalidIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.InvalidIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<p>A value was encountered that is not a valid arXiv identifier.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Key">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Key</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/file.html#Key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.URI" title="arxiv.canonical.domain.file.URI"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.file.URI</span></code></a></p>
+<p>The unique identifier for a bitstream in the canonical record.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.License">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">License</code><span class="sig-paren">(</span><em class="sig-param">href</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/license.html#License"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.License" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>License under which the e-print was provided to arXiv.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.License.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/license.html#License.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.License.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.license.html#arxiv.canonical.domain.license.License" title="arxiv.canonical.domain.license.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.License.href">
+<code class="sig-name descname">href</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.License.href" title="Permalink to this definition">¶</a></dt>
+<dd><p>URI of the license resource.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.License.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/license.html#License.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.License.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Listing">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Listing</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">events</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#Listing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Listing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>A collection of announcement-related events on a particular day.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.date">
+<em class="property">property </em><code class="sig-name descname">date</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The date of this listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.date" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.end_datetime">
+<em class="property">property </em><code class="sig-name descname">end_datetime</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.end_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp of the most recent event in this listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.datetime" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Listing.events">
+<code class="sig-name descname">events</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Listing.events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Events in this listing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#Listing.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Listing.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.listing.html#arxiv.canonical.domain.listing.Listing" title="arxiv.canonical.domain.listing.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Listing.identifier">
+<code class="sig-name descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Listing.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique identifier for this listing, based on the date and name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.number_of_events">
+<em class="property">property </em><code class="sig-name descname">number_of_events</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.number_of_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of events in this listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.number_of_events_by_type">
+<em class="property">property </em><code class="sig-name descname">number_of_events_by_type</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.number_of_events_by_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of events in this listing by event type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.number_of_versions">
+<em class="property">property </em><code class="sig-name descname">number_of_versions</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.number_of_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of :class:<a href="#id5"><span class="problematic" id="id6">`</span></a>.Version`s represented in this listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.start_datetime">
+<em class="property">property </em><code class="sig-name descname">start_datetime</code><a class="headerlink" href="#arxiv.canonical.domain.Listing.start_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp of the earliest event in this listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.datetime" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Listing.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#Listing.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Listing.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.ListingDay">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">ListingDay</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">listings</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#ListingDay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ListingDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents all of the listings for a particular day.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingDay.date">
+<code class="sig-name descname">date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingDay.date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the events occurred.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingDay.listings">
+<code class="sig-name descname">listings</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingDay.listings" title="Permalink to this definition">¶</a></dt>
+<dd><p>All of the listings on this date.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.ListingIdentifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">ListingIdentifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#ListingIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ListingIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Unique identifier for a <a class="reference internal" href="#arxiv.canonical.domain.Listing" title="arxiv.canonical.domain.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a>.</p>
+<p>Comprised of an ISO-8601 date and a name string.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.ListingIdentifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#ListingIdentifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ListingIdentifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate from date and name parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.listing.html#arxiv.canonical.domain.listing.ListingIdentifier" title="arxiv.canonical.domain.listing.ListingIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListingIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.ListingYear">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">ListingYear</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">months</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#ListingYear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ListingYear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>A collection of listings over a year.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingYear.months">
+<code class="sig-name descname">months</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingYear.months" title="Permalink to this definition">¶</a></dt>
+<dd><p>All of the listings in this year.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingYear.year">
+<code class="sig-name descname">year</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingYear.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>The year of this collection.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.ListingMonth">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">ListingMonth</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">listings</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/listing.html#ListingMonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.ListingMonth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>A collection of listings over a month.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingMonth.listings">
+<code class="sig-name descname">listings</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingMonth.listings" title="Permalink to this definition">¶</a></dt>
+<dd><p>All of the listings in this month.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.ListingMonth.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.ListingMonth.month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Month represented by this block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.ListingMonth.name">
+<code class="sig-name descname">name</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.ListingMonth.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The year and month of this collection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.ListingMonth.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.ListingMonth.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Year represented by this block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Metadata">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Metadata</code><span class="sig-paren">(</span><em class="sig-param">primary_classification</em>, <em class="sig-param">secondary_classification</em>, <em class="sig-param">title</em>, <em class="sig-param">abstract</em>, <em class="sig-param">authors</em>, <em class="sig-param">license</em>, <em class="sig-param">comments=None</em>, <em class="sig-param">journal_ref=None</em>, <em class="sig-param">report_num=None</em>, <em class="sig-param">doi=None</em>, <em class="sig-param">msc_class=None</em>, <em class="sig-param">acm_class=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Submitter-provided descriptive metadata for a version.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.Metadata.add_secondaries">
+<code class="sig-name descname">add_secondaries</code><span class="sig-paren">(</span><em class="sig-param">*new_secondaries</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.add_secondaries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Metadata.add_secondaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add cross-list categories for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Metadata.all_categories">
+<em class="property">property </em><code class="sig-name descname">all_categories</code><a class="headerlink" href="#arxiv.canonical.domain.Metadata.all_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>All classification categories for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Metadata.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Metadata.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Metadata" title="arxiv.canonical.domain.version.Metadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Metadata.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Metadata.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Person">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Person</code><span class="sig-paren">(</span><em class="sig-param">full_name</em>, <em class="sig-param">last_name=None</em>, <em class="sig-param">first_name=None</em>, <em class="sig-param">suffix=None</em>, <em class="sig-param">orcid=None</em>, <em class="sig-param">author_id=None</em>, <em class="sig-param">affiliation=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/person.html#Person"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Person" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents an human person in the canonical record.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.affiliation">
+<code class="sig-name descname">affiliation</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.affiliation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.author_id">
+<code class="sig-name descname">author_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.author_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.first_name">
+<code class="sig-name descname">first_name</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Person.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/person.html#Person.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Person.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.person.html#arxiv.canonical.domain.person.Person" title="arxiv.canonical.domain.person.Person"><code class="xref py py-class docutils literal notranslate"><span class="pre">Person</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.last_name">
+<code class="sig-name descname">last_name</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.orcid">
+<code class="sig-name descname">orcid</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.orcid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Person.suffix">
+<code class="sig-name descname">suffix</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Person.suffix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Person.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/person.html#Person.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Person.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.SourceType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">SourceType</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#SourceType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.SourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Characterizes a version source package.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.available_formats">
+<em class="property">property </em><code class="sig-name descname">available_formats</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.available_formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the available dissemination formats for this source type.</p>
+<p>Depending on the original source type, we may not be able to provide
+all supported formats.</p>
+<p>This does not include the source format. Note also that this does
+<strong>not</strong> enforce rules about what should be displayed as an option
+or provided to end users.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.content.html#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_docx">
+<em class="property">property </em><code class="sig-name descname">has_docx</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_docx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has DOCX content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_encrypted_source">
+<em class="property">property </em><code class="sig-name descname">has_encrypted_source</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_encrypted_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source is encryped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_html">
+<em class="property">property </em><code class="sig-name descname">has_html</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has HTML content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_ignore">
+<em class="property">property </em><code class="sig-name descname">has_ignore</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_ignore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source content should be ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_odf">
+<em class="property">property </em><code class="sig-name descname">has_odf</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_odf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has ODF content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_pdf_only">
+<em class="property">property </em><code class="sig-name descname">has_pdf_only</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_pdf_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source contains only a PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_pdflatex">
+<em class="property">property </em><code class="sig-name descname">has_pdflatex</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_pdflatex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has PDFLaTeX content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.SourceType.has_ps_only">
+<em class="property">property </em><code class="sig-name descname">has_ps_only</code><a class="headerlink" href="#arxiv.canonical.domain.SourceType.has_ps_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has postcript content only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.URI">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">URI</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/file.html#URI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.URI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>A unique identifier for bitstream content.</p>
+<p>Bitstream content may be located in a variety of places prior to
+canonicalization. For example, it may be located on a local filesystem,
+or at a remote location accessible via HTTP.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.URI.is_canonical">
+<em class="property">property </em><code class="sig-name descname">is_canonical</code><a class="headerlink" href="#arxiv.canonical.domain.URI.is_canonical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the URI is a key in the canonical record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.URI.is_file">
+<em class="property">property </em><code class="sig-name descname">is_file</code><a class="headerlink" href="#arxiv.canonical.domain.URI.is_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the URI is a path to a local file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.URI.is_http_url">
+<em class="property">property </em><code class="sig-name descname">is_http_url</code><a class="headerlink" href="#arxiv.canonical.domain.URI.is_http_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the URI is an HTTP URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.Version">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">Version</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">announced_date</em>, <em class="sig-param">announced_date_first</em>, <em class="sig-param">submitted_date</em>, <em class="sig-param">updated_date</em>, <em class="sig-param">metadata</em>, <em class="sig-param">source</em>, <em class="sig-param">events=None</em>, <em class="sig-param">previous_versions=None</em>, <em class="sig-param">submitter=None</em>, <em class="sig-param">proxy=None</em>, <em class="sig-param">is_announced=False</em>, <em class="sig-param">is_withdrawn=False</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">reason_for_withdrawal=None</em>, <em class="sig-param">source_type=None</em>, <em class="sig-param">render=None</em>, <em class="sig-param">formats={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents a single version of an arXiv e-print in the record.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.announced_date">
+<code class="sig-name descname">announced_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.announced_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Day on which this version was announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.announced_date_first">
+<code class="sig-name descname">announced_date_first</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.announced_date_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Day on which the first version of the e-print was announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.events">
+<code class="sig-name descname">events</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Events that are specific to this version of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.formats">
+<code class="sig-name descname">formats</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dissemination formats for this version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Version.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.get_format">
+<code class="sig-name descname">get_format</code><span class="sig-paren">(</span><em class="sig-param">desired_format</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.get_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Version.get_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a particular dissemination format for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.CanonicalFile" title="arxiv.canonical.domain.file.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.identifier">
+<code class="sig-name descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique arXiv identifier for the version.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.is_announced">
+<code class="sig-name descname">is_announced</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.is_announced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the version is announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.is_legacy">
+<code class="sig-name descname">is_legacy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.is_legacy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether this record was populated from the legacy system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.is_withdrawn">
+<code class="sig-name descname">is_withdrawn</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.is_withdrawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the version is withdrawn.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.metadata">
+<code class="sig-name descname">metadata</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter-provided descriptive metadata for the version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.number_of_events">
+<em class="property">property </em><code class="sig-name descname">number_of_events</code><a class="headerlink" href="#arxiv.canonical.domain.Version.number_of_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numer of events described by this object (0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[0]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.number_of_versions">
+<em class="property">property </em><code class="sig-name descname">number_of_versions</code><a class="headerlink" href="#arxiv.canonical.domain.Version.number_of_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of versions described by this object (1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.previous_versions">
+<code class="sig-name descname">previous_versions</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.previous_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>References to previous versions of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.proxy">
+<code class="sig-name descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The proxy that deposited the version on behalf of the submitter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.reason_for_withdrawal">
+<code class="sig-name descname">reason_for_withdrawal</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.reason_for_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>The reason for the withdrawal of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.render">
+<code class="sig-name descname">render</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human-readable representation of the e-print.</p>
+<p>Usually a PDF generated from the source, but may also be a user-provided
+PDF.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.size_kilobytes">
+<em class="property">property </em><code class="sig-name descname">size_kilobytes</code><a class="headerlink" href="#arxiv.canonical.domain.Version.size_kilobytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the source package in kb.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.source">
+<code class="sig-name descname">source</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original user-submitted source package.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.source_type">
+<code class="sig-name descname">source_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.source_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal code for the source type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.submitted_date">
+<code class="sig-name descname">submitted_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp when this version was submitted to arXiv.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.submitter">
+<code class="sig-name descname">submitter</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.submitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Person responsible for submitting this version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.Version.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.Version.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.Version.updated_date">
+<code class="sig-name descname">updated_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.Version.updated_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last time the record for this version was changed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.VersionedIdentifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">VersionedIdentifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#VersionedIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>An arXiv identifier for a specific <a class="reference internal" href="#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a>.</p>
+<p>This is an <a class="reference internal" href="#arxiv.canonical.domain.Identifier" title="arxiv.canonical.domain.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a> with a version (<code class="docutils literal notranslate"><span class="pre">v{N}</span></code>) affix.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.category_part">
+<em class="property">property </em><code class="sig-name descname">category_part</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.category_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>For old-style identifiers, conveys the primary category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">arxiv_id</em>, <em class="sig-param">version</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#VersionedIdentifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new-style versioned identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.VersionedIdentifier" title="arxiv.canonical.domain.identifier.VersionedIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionedIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.incremental_part">
+<em class="property">property </em><code class="sig-name descname">incremental_part</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.incremental_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part of the identifier that is incremental.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.is_old_style">
+<em class="property">property </em><code class="sig-name descname">is_old_style</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.is_old_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether this is an old-style identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Month in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.numeric_part">
+<em class="property">property </em><code class="sig-name descname">numeric_part</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.numeric_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The entire numeric component of the identifier.</p>
+<p>For new-style identifiers, this is the entire identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Year in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionedIdentifier.yymm">
+<em class="property">property </em><code class="sig-name descname">yymm</code><a class="headerlink" href="#arxiv.canonical.domain.VersionedIdentifier.yymm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric part conveying the original announcement year and month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.VersionReference">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">VersionReference</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">announced_date</em>, <em class="sig-param">submitted_date</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.VersionReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>An abridged reference to a particular <a class="reference internal" href="#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a>.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.VersionReference.announced_date">
+<code class="sig-name descname">announced_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.VersionReference.announced_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the version was announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionReference.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.VersionReference.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.VersionReference" title="arxiv.canonical.domain.version.VersionReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionReference</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.VersionReference.identifier">
+<code class="sig-name descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.VersionReference.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the version.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.VersionReference.submitted_date">
+<code class="sig-name descname">submitted_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.VersionReference.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the version was submitted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.VersionReference.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.VersionReference.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.domain.available_formats_by_ext">
+<code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">available_formats_by_ext</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#available_formats_by_ext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.available_formats_by_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to determine the available dissemination formats by file extension.</p>
+<p>It sometimes (but not always) possible to infer the available dissemination
+formats based on the filename extension of the source package.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is largely to support format discovery in classic. In the NG
+canonical record, this should all be explicit.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.content.html#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.domain.list_source_extensions">
+<code class="sig-prename descclassname">arxiv.canonical.domain.</code><code class="sig-name descname">list_source_extensions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#list_source_extensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.list_source_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the known filename extensions for source files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.tests.html">arxiv.canonical.domain.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.domain.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.tests.test_content.html">arxiv.canonical.domain.tests.test_content module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.tests.test_file.html">arxiv.canonical.domain.tests.test_file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.domain.tests.test_identifier.html">arxiv.canonical.domain.tests.test_identifier module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.base.html">arxiv.canonical.domain.base module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.block.html">arxiv.canonical.domain.block module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.content.html">arxiv.canonical.domain.content module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.eprint.html">arxiv.canonical.domain.eprint module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.file.html">arxiv.canonical.domain.file module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.identifier.html">arxiv.canonical.domain.identifier module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.license.html">arxiv.canonical.domain.license module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.listing.html">arxiv.canonical.domain.listing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.person.html">arxiv.canonical.domain.person module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.preservation.html">arxiv.canonical.domain.preservation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.util.html">arxiv.canonical.domain.util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.domain.version.html">arxiv.canonical.domain.version module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.classic.util.html" title="previous chapter">arxiv.canonical.classic.util module</a></li>
+      <li>Next: <a href="arxiv.canonical.domain.tests.html" title="next chapter">arxiv.canonical.domain.tests package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.domain.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

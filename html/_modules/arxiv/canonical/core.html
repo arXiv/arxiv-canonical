@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.core &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Core interfaces for the canonical record.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> \
+    <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Protocol</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">domain</span> <span class="k">as</span> <span class="n">D</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">integrity</span> <span class="k">as</span> <span class="n">I</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">record</span> <span class="k">as</span> <span class="n">R</span>
+<span class="kn">from</span> <span class="nn">.manifest</span> <span class="k">import</span> <span class="n">Manifest</span>
+
+
+<div class="viewcode-block" id="IEventStream"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IEventStream">[docs]</a><span class="k">class</span> <span class="nc">IEventStream</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for the canonical event stream.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IEventStream.emit"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IEventStream.emit">[docs]</a>    <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Emit an :class:`Event` on the stream.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event : :class:`Event`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IEventStream.listen"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IEventStream.listen">[docs]</a>    <span class="k">def</span> <span class="nf">listen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on_event</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Listen for :class:`Event`s on the stream.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        on_event : callable</span>
+<span class="sd">            This object will be called for every event that is received. It</span>
+<span class="sd">            should accept a single argument, an :class:`.Event`, and is</span>
+<span class="sd">            expected to return ``None``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="ICanonicalSource"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalSource">[docs]</a><span class="k">class</span> <span class="nc">ICanonicalSource</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for source services, used to dereference URIs.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ICanonicalSource.can_resolve"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalSource.can_resolve">[docs]</a>    <span class="k">def</span> <span class="nf">can_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicate whether or not the implementation can resolve an URI.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        uri : :class:`.D.URI`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ICanonicalSource.load"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalSource.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make an IO that waits to load from the record until it is read().</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : :class:`D.URI`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        IO</span>
+<span class="sd">            Yields bytes when read. This may be a lazy IO object, so that</span>
+<span class="sd">            reading is deferred until the latest possible time.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="IStorableEntry"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IStorableEntry">[docs]</a><span class="k">class</span> <span class="nc">IStorableEntry</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Minimal interface for a bitstream interface that can be stored.</span>
+
+<span class="sd">    Services that implement :class:`.ICanonicalStorage` can assume that the</span>
+<span class="sd">    attributes of this interface are available on objects passed for storing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;Name of the entry.&quot;&quot;&quot;</span>  <span class="c1"># pylint: disable=pointless-string-statement; this is a docstring.</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;URL-safe b64-encoded md5 hash.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordEntry</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reference to a :class:`.RecordEntry`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IStorableEntry.update_checksum"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IStorableEntry.update_checksum">[docs]</a>    <span class="k">def</span> <span class="nf">update_checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update the integrity checksum for this entry.&quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="IManifestStorage"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IManifestStorage">[docs]</a><span class="k">class</span> <span class="nc">IManifestStorage</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manifest protocol.</span>
+
+<span class="sd">    This could conceivably be stored separately from the canonical record</span>
+<span class="sd">    content, so it is defined separately.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IManifestStorage.store_manifest"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IManifestStorage.store_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">store_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">manifest</span><span class="p">:</span> <span class="n">Manifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store an integrity manifest.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : :class:`.Key`</span>
+<span class="sd">            Key used to identify ``manifest`` in storage.</span>
+<span class="sd">        manifest : :class:`.Manifest`</span>
+<span class="sd">            The manifest record to store.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IManifestStorage.load_manifest"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IManifestStorage.load_manifest">[docs]</a>    <span class="k">def</span> <span class="nf">load_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Manifest</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load an integrity manifest.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : :class:`.Key`</span>
+<span class="sd">            Key used to identify ``manifest`` in storage.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`.Manifest`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<span class="n">_I</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;_I&#39;</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityMetadata</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityListing</span><span class="p">,</span>
+             <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ICanonicalStorage"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalStorage">[docs]</a><span class="k">class</span> <span class="nc">ICanonicalStorage</span><span class="p">(</span><span class="n">ICanonicalSource</span><span class="p">,</span> <span class="n">IManifestStorage</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for services that store the canonical record.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ICanonicalStorage.list_subkeys"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalStorage.list_subkeys">[docs]</a>    <span class="k">def</span> <span class="nf">list_subkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List all of the subkeys (direct descendants) of ``key`` in the record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : :class:`.URI`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Items are the relative names of the descendants of ``key``. For</span>
+<span class="sd">            filesystem-based storage, this may be equivalent to ``os.listdir``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ICanonicalStorage.store_entry"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalStorage.store_entry">[docs]</a>    <span class="k">def</span> <span class="nf">store_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ri</span><span class="p">:</span> <span class="n">IStorableEntry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store a bitstream entry in the record.</span>
+
+<span class="sd">        This method MUST decompress the content of the entry if it is gzipped</span>
+<span class="sd">        (as is sometimes the case in the classic system) and update the</span>
+<span class="sd">        ``CanonicalFile`` (``ri.record.stream.domain``).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ri : :class:`.IStorableEntry`</span>
+<span class="sd">            A storable bitstream.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ICanonicalStorage.load_entry"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.ICanonicalStorage.load_entry">[docs]</a>    <span class="k">def</span> <span class="nf">load_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">RecordStream</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a bitstream entry.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : :class:`.URI`</span>
+<span class="sd">            Key that identifies the bitsream in the record.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`.RecordStream`</span>
+<span class="sd">            The bitstream resource.</span>
+<span class="sd">        str</span>
+<span class="sd">            Checksum of the bitstream (URL-safe base64-encoded md5 hash).ß</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<span class="n">Year</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="sd">&quot;&quot;&quot;Years are represented as four-digit integers.&quot;&quot;&quot;</span>
+
+<span class="n">Month</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="sd">&quot;&quot;&quot;Months are represented as integers.&quot;&quot;&quot;</span>
+
+<span class="n">YearMonth</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;A month in a particular year is represented as a 2-tuple of integers.&quot;&quot;&quot;</span>
+
+<span class="n">Selector</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span> <span class="n">YearMonth</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;A selector can refer to a year, month, or a specific date.&quot;&quot;&quot;</span>
+
+<span class="n">_ID</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="IRegisterAPI"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI">[docs]</a><span class="k">class</span> <span class="nc">IRegisterAPI</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for the canonical register API.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IRegisterAPI.add_events"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.add_events">[docs]</a>    <span class="k">def</span> <span class="nf">add_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add new events to the register.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_version"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_version">[docs]</a>    <span class="k">def</span> <span class="nf">load_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;Load an e-print :class:`.Version` from the record.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_eprint"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_eprint">[docs]</a>    <span class="k">def</span> <span class="nf">load_eprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrint</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;Load an :class:`.EPrint` from the record.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_history"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_history">[docs]</a>    <span class="k">def</span> <span class="nf">load_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">_ID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">EventSummary</span><span class="p">]:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;Load the event history of an :class:`.EPrint`.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_event"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_event">[docs]</a>    <span class="k">def</span> <span class="nf">load_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;Load an :class:`.Event` by identifier.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_events"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_events">[docs]</a>    <span class="k">def</span> <span class="nf">load_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Selector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>  <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+        <span class="sd">&quot;&quot;&quot;Load all :class:`.Event`s for a day, month, or year.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IRegisterAPI.load_listing"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.register.html#arxiv.canonical.core.IRegisterAPI.load_listing">[docs]</a>    <span class="k">def</span> <span class="nf">load_listing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>   <span class="c1"># pylint: disable=unused-argument; this is a stub.</span>
+                     <span class="n">shard</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="o">.</span><span class="n">get_default_shard</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-member, unused-argument</span>
+        <span class="sd">&quot;&quot;&quot;Load a :class:`.Listing` for a particulate date.&quot;&quot;&quot;</span></div></div>
+
+
+<span class="c1"># TODO: implement me!</span>
+<div class="viewcode-block" id="IPreservationAPI"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IPreservationAPI">[docs]</a><span class="k">class</span> <span class="nc">IPreservationAPI</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for the daily preservation record API.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IPreservationAPI.add_events"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IPreservationAPI.add_events">[docs]</a>    <span class="k">def</span> <span class="nf">add_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add new events to the preservation record.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="IPreservationAPI.load_package"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.IPreservationAPI.load_package">[docs]</a>    <span class="k">def</span> <span class="nf">load_package</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEntry</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load the preservation package for a particular date.&quot;&quot;&quot;</span></div></div>
+
+
+<span class="c1"># TODO: consider a semantically more meaningful exception for failure to</span>
+<span class="c1"># dereference the URI.</span>
+<div class="viewcode-block" id="dereference"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.core.html#arxiv.canonical.core.dereference">[docs]</a><span class="k">def</span> <span class="nf">dereference</span><span class="p">(</span><span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span> <span class="n">uri</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dereference an URI using a set of available sources.</span>
+
+<span class="sd">    Sources are checked one at a time for ability to resolve the URI. When one</span>
+<span class="sd">    is found, the URI is loaded.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sources : sequence</span>
+<span class="sd">        Items are content sources that should conform to</span>
+<span class="sd">        :class:`.ICanonicalSource`. They will be tried in the order provided.</span>
+<span class="sd">    uri : :class:`.URI`</span>
+<span class="sd">        URI to dereference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    io</span>
+<span class="sd">        BytesIO object.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`RuntimeError`</span>
+<span class="sd">        Raised when the URI cannot be resolved.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">can_resolve</span><span class="p">(</span><span class="n">uri</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot resolve URI: </span><span class="si">{uri}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.abs &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.classic.abs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Parse fields from a single arXiv abstract (.abs) file.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> \
+    <span class="n">NamedTuple</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">dateutil</span> <span class="k">import</span> <span class="n">parser</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">timezone</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span> <span class="nn">dateutil.tz</span> <span class="k">import</span> <span class="n">tzutc</span><span class="p">,</span> <span class="n">gettz</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">domain</span> <span class="k">as</span> <span class="n">D</span>
+
+<span class="n">AnyIdentifier</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]</span>
+
+<span class="n">EASTERN</span> <span class="o">=</span> <span class="n">gettz</span><span class="p">(</span><span class="s1">&#39;US/Eastern&#39;</span><span class="p">)</span>
+
+<span class="n">RE_ABS_COMPONENTS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^</span><span class="se">\\\\</span><span class="s1">\n&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+<span class="n">RE_FROM_FIELD</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;(?P&lt;from&gt;From:\s*)(?P&lt;name&gt;[^&lt;]+)?\s+(&lt;(?P&lt;email&gt;.*)&gt;)?&#39;</span><span class="p">)</span>
+<span class="n">RE_DATE_COMPONENTS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^Date\s*(?::|\(revised\s*(?P&lt;version&gt;.*?)\):)\s*(?P&lt;date&gt;.*?)&#39;</span>
+    <span class="sa">r</span><span class="s1">&#39;(?:\s+\((?P&lt;size_kilobytes&gt;\d+)kb,?(?P&lt;source_type&gt;.*)\))?$&#39;</span><span class="p">)</span>
+<span class="n">RE_FIELD_COMPONENTS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^(?P&lt;field&gt;[-a-z\)\(]+\s*):\s*(?P&lt;value&gt;.*)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<span class="n">RE_ARXIV_ID_FROM_PREHISTORY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;(Paper:\s+|arXiv:)(?P&lt;arxiv_id&gt;\S+)&#39;</span><span class="p">)</span>
+
+<span class="n">NAMED_FIELDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">,</span> <span class="s1">&#39;Authors&#39;</span><span class="p">,</span> <span class="s1">&#39;Categories&#39;</span><span class="p">,</span> <span class="s1">&#39;Comments&#39;</span><span class="p">,</span> <span class="s1">&#39;Proxy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Report-no&#39;</span><span class="p">,</span> <span class="s1">&#39;ACM-class&#39;</span><span class="p">,</span> <span class="s1">&#39;MSC-class&#39;</span><span class="p">,</span> <span class="s1">&#39;Journal-ref&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;DOI&#39;</span><span class="p">,</span> <span class="s1">&#39;License&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fields that may be parsed from the key-value pairs in second</span>
+<span class="sd">major component of .abs string. Field names are not normalized.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">REQUIRED_FIELDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="s1">&#39;abstract&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Required parsed fields with normalized field names.</span>
+
+<span class="sd">Note the absense of &#39;categories&#39; as a required field. A subset of version-</span>
+<span class="sd">affixed .abs files with the old identifiers predate the introduction of</span>
+<span class="sd">categories and therefore do not have a &quot;Categories:&quot; line; only the (higher-</span>
+<span class="sd">level) archive and group can be be inferred, and this must be done via the</span>
+<span class="sd">identifier itself.</span>
+
+<span class="sd">The latest versions of these papers should always have the &quot;Categories:&quot; line.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># arXiv ID format used from 1991 to 2007-03</span>
+<span class="n">RE_ARXIV_OLD_ID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^(?P&lt;archive&gt;[a-z]{1,}(\-[a-z]{2,})?)(\.([a-zA-Z\-]{2,}))?\/&#39;</span>
+    <span class="sa">r</span><span class="s1">&#39;(?P&lt;yymm&gt;(?P&lt;yy&gt;\d\d)(?P&lt;mm&gt;\d\d))(?P&lt;num&gt;\d\d\d)&#39;</span>
+    <span class="sa">r</span><span class="s1">&#39;(v(?P&lt;version&gt;[1-9]\d*))?([#\/].*)?$&#39;</span><span class="p">)</span>
+
+<span class="c1"># arXiv ID format used from 2007-04 to present</span>
+<span class="n">RE_ARXIV_NEW_ID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^(?P&lt;yymm&gt;(?P&lt;yy&gt;\d\d)(?P&lt;mm&gt;\d\d))\.(?P&lt;num&gt;\d{4,5})&#39;</span>
+    <span class="sa">r</span><span class="s1">&#39;(v(?P&lt;version&gt;[1-9]\d*))?([#\/].*)?$&#39;</span>
+<span class="p">)</span>
+
+<span class="n">ASSUMED_LICENSE</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">License</span><span class="p">(</span>
+    <span class="n">href</span><span class="o">=</span><span class="s1">&#39;http://arxiv.org/licenses/nonexclusive-distrib/1.0/&#39;</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="AbsRef"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.AbsRef">[docs]</a><span class="k">class</span> <span class="nc">AbsRef</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span>
+    <span class="n">submitted_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">announced_month</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">source_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">SourceType</span>
+    <span class="n">size_kilobytes</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="AbsData"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.AbsData">[docs]</a><span class="k">class</span> <span class="nc">AbsData</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span>
+    <span class="n">submitter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Person</span><span class="p">]</span>
+    <span class="n">submitted_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">announced_month</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">updated_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">license</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">License</span>
+    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Category</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">abstract</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">size_kilobytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">submission_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">EventType</span>
+    <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Category</span><span class="p">]</span>
+    <span class="n">source_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">SourceType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">journal_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">report_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">doi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">msc_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">acm_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">comments</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">previous_versions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">AbsRef</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="NoSuchAbs"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.NoSuchAbs">[docs]</a><span class="k">class</span> <span class="nc">NoSuchAbs</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="original_base_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.original_base_path">[docs]</a><span class="k">def</span> <span class="nf">original_base_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;orig&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="latest_base_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.latest_base_path">[docs]</a><span class="k">def</span> <span class="nf">latest_base_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;ftp&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="latest_path_month"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.latest_path_month">[docs]</a><span class="k">def</span> <span class="nf">latest_path_month</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">AnyIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the base path for the month block containing the &quot;latest&quot; e-prints.</span>
+
+<span class="sd">    This is where the most recent version of each e-print always lives.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">latest_base_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">),</span>
+        <span class="n">identifier</span><span class="o">.</span><span class="n">category_part</span> <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">is_old_style</span> <span class="k">else</span> <span class="s1">&#39;arxiv&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;papers&#39;</span><span class="p">,</span>
+        <span class="n">identifier</span><span class="o">.</span><span class="n">yymm</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="original_path_month"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.original_path_month">[docs]</a><span class="k">def</span> <span class="nf">original_path_month</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">AnyIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the main base path for an abs file.</span>
+
+<span class="sd">    This is where all of the versions except for the most recent one live.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">original_base_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">),</span>
+        <span class="n">identifier</span><span class="o">.</span><span class="n">category_part</span> <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">is_old_style</span> <span class="k">else</span> <span class="s1">&#39;arxiv&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;papers&#39;</span><span class="p">,</span>
+        <span class="n">identifier</span><span class="o">.</span><span class="n">yymm</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="latest_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.latest_path">[docs]</a><span class="k">def</span> <span class="nf">latest_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">AnyIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">latest_path_month</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">),</span>
+                        <span class="n">f</span><span class="s1">&#39;</span><span class="si">{identifier.numeric_part}</span><span class="s1">.abs&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="original_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.original_path">[docs]</a><span class="k">def</span> <span class="nf">original_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">original_path_month</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">),</span>
+                        <span class="n">f</span><span class="s1">&#39;</span><span class="si">{identifier.numeric_part}</span><span class="s1">v</span><span class="si">{identifier.version}</span><span class="s1">.abs&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.get_path">[docs]</a><span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="c1"># We look first for an &quot;original&quot; abs file that is explicitly identified</span>
+    <span class="c1"># as the version we are looking for.</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">original_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">path</span>
+    <span class="c1"># If we are asking for the first version and haven&#39;t found it already, the</span>
+    <span class="c1"># only possibility is that there is one version and its abs file is located</span>
+    <span class="c1"># in the &quot;latest&quot; section.</span>
+    <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">latest_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NoSuchAbs</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot find abs record for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span>
+    <span class="c1"># The only remaining possibility is that the version we are looking for</span>
+    <span class="c1"># is indeed the &quot;latest&quot; version, in which case we must be able to find</span>
+    <span class="c1"># an abs record for the previous version in the &quot;original&quot; section.</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
+                                                <span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">original_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">previous</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">latest_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>   <span class="c1"># Voila!</span>
+    <span class="k">raise</span> <span class="n">NoSuchAbs</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot find abs record for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_versions"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.parse_versions">[docs]</a><span class="k">def</span> <span class="nf">parse_versions</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AbsData</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">parse</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">list_versions</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="parse_latest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.parse_latest">[docs]</a><span class="k">def</span> <span class="nf">parse_latest</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbsData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Parse the abs for the latest version of an e-print.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_parse</span><span class="p">(</span><span class="n">latest_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="parse_first"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.parse_first">[docs]</a><span class="k">def</span> <span class="nf">parse_first</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbsData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Parse the abs for the first version of an e-print.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_parse</span><span class="p">(</span><span class="n">get_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span>
+                           <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="iter_all"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.iter_all">[docs]</a><span class="k">def</span> <span class="nf">iter_all</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">from_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">to_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all of the identifiers for which we have abs files.</span>
+
+<span class="sd">    The &quot;latest&quot; section will have an abs file for every e-print, so that&#39;s the</span>
+<span class="sd">    only place we need look.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">latest_root</span> <span class="o">=</span> <span class="n">latest_base_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dirpath</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">latest_root</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abs&#39;</span><span class="p">):</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="n">dirpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">latest_root</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">numeric_part</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">prefix</span> <span class="o">==</span> <span class="s1">&#39;arxiv&#39;</span><span class="p">:</span>
+                    <span class="n">identifier</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="n">numeric_part</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">identifier</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{prefix}</span><span class="s1">/</span><span class="si">{numeric_part}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">from_id</span> <span class="ow">and</span> <span class="n">identifier</span> <span class="o">&lt;</span> <span class="n">from_id</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">to_id</span> <span class="ow">and</span> <span class="n">identifier</span> <span class="o">&gt;=</span> <span class="n">to_id</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">yield</span> <span class="n">identifier</span></div>
+
+
+<div class="viewcode-block" id="list_versions"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.list_versions">[docs]</a><span class="k">def</span> <span class="nf">list_versions</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all of the versions for an identifier from abs files.</span>
+
+<span class="sd">    This works by looking at the presence of abs files in both the &quot;latest&quot;</span>
+<span class="sd">    and &quot;original&quot; locations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">identifiers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># We look first at &quot;original&quot; versions, as they will be explicitly named</span>
+    <span class="c1"># with their numeric version affix.</span>
+    <span class="n">old_versions_exist</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">orig_month_root</span> <span class="o">=</span> <span class="n">original_path_month</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+    <span class="n">category</span> <span class="o">=</span> <span class="n">orig_month_root</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">dpath</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">fnames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">orig_month_root</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fnames</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abs&#39;</span><span class="p">)</span> \
+                    <span class="ow">and</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">identifier</span><span class="o">.</span><span class="n">numeric_part</span><span class="p">):</span>
+                <span class="n">numeric_part_v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+                    <span class="n">vid</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{category}</span><span class="s1">/</span><span class="si">{numeric_part_v}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">vid</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">numeric_part_v</span><span class="p">)</span>
+                <span class="n">old_versions_exist</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">old_versions_exist</span><span class="p">:</span>
+        <span class="c1"># We are looking only at past versions above; the most recent version</span>
+        <span class="c1"># lives somewhere else. We can infer its existence.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">numeric_part_v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+        <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">latest_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)):</span>
+        <span class="c1"># There is only one version, the first version, and it is the</span>
+        <span class="c1"># latest version.</span>
+        <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">identifiers</span></div>
+
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.abs.html#arxiv.canonical.classic.abs.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbsData</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_parse</span><span class="p">(</span><span class="n">get_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbsData</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="c1"># The best we can do to infer when the last update was made was to examine</span>
+    <span class="c1"># the modification time of the abs file itself.</span>
+    <span class="n">mtime</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">modified</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">mtime</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">EASTERN</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">tz</span><span class="o">=</span><span class="n">tzutc</span><span class="p">())</span>
+
+    <span class="c1"># There are two main components to an .abs file that contain data,</span>
+    <span class="c1"># but the split must always return four components.</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="n">RE_ABS_COMPONENTS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Unexpected number of components parsed from </span><span class="si">{path}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Everything else is in the second main component.</span>
+    <span class="n">prehistory</span><span class="p">,</span> <span class="n">misc_fields</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\n\n&#39;</span><span class="p">,</span> <span class="n">components</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">fields</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">_parse_metadata</span><span class="p">(</span><span class="n">key_value_block</span><span class="o">=</span><span class="n">misc_fields</span><span class="p">)</span>
+    <span class="c1"># Abstract is the first main component.</span>
+    <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">id_match</span> <span class="o">=</span> <span class="n">RE_ARXIV_ID_FROM_PREHISTORY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">prehistory</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">id_match</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Could not extract arXiv ID from prehistory component.&#39;</span><span class="p">)</span>
+
+    <span class="n">arxiv_id</span> <span class="o">=</span> <span class="n">id_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;arxiv_id&#39;</span><span class="p">)</span>
+    <span class="n">prehistory</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^.*\n&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">prehistory</span><span class="p">)</span>
+    <span class="n">parsed_version_entries</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\n&#39;</span><span class="p">,</span> <span class="n">prehistory</span><span class="p">)</span>
+
+    <span class="c1"># Submitter data.</span>
+    <span class="n">from_match</span> <span class="o">=</span> <span class="n">RE_FROM_FIELD</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">parsed_version_entries</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">from_match</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Could not extract submitter data.&#39;</span><span class="p">)</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">from_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+
+    <span class="c1"># Get the version history for this particular version of the document.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_version_entries</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;At least one version entry expected.&#39;</span><span class="p">)</span>
+
+    <span class="n">versions</span> <span class="o">=</span> <span class="n">_parse_versions</span><span class="p">(</span><span class="n">arxiv_id</span><span class="o">=</span><span class="n">arxiv_id</span><span class="p">,</span>
+                               <span class="n">version_entry_list</span><span class="o">=</span><span class="n">parsed_version_entries</span><span class="p">)</span>
+
+    <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;categories&#39;</span> <span class="ow">in</span> <span class="n">fields</span> <span class="ow">and</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]:</span>
+        <span class="n">classifications</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">primary_classification</span> <span class="o">=</span> <span class="n">classifications</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">secondary_classification</span> <span class="o">=</span> <span class="n">classifications</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">RE_ARXIV_OLD_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Could not determine primary classification&#39;</span><span class="p">)</span>
+        <span class="n">primary_classification</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;archive&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;license&#39;</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="n">license</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">license</span> <span class="o">=</span> <span class="n">ASSUMED_LICENSE</span>
+
+    <span class="k">if</span> <span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">submission_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span>
+    <span class="k">elif</span> <span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size_kilobytes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">submission_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EventType</span><span class="o">.</span><span class="n">WITHDRAWN</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">submission_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span>
+
+    <span class="k">return</span> <span class="n">AbsData</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+        <span class="n">submitter</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">Person</span><span class="p">(</span><span class="n">full_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">submitted_date</span><span class="o">=</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">submitted_date</span><span class="p">,</span>
+        <span class="n">announced_month</span><span class="o">=</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">announced_month</span><span class="p">,</span>
+        <span class="n">updated_date</span><span class="o">=</span><span class="n">modified</span><span class="p">,</span>
+        <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+        <span class="n">primary_classification</span><span class="o">=</span><span class="n">primary_classification</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+        <span class="n">abstract</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">],</span>
+        <span class="n">authors</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;authors&#39;</span><span class="p">],</span>
+        <span class="n">source_type</span><span class="o">=</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">source_type</span><span class="p">,</span>
+        <span class="n">size_kilobytes</span><span class="o">=</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size_kilobytes</span><span class="p">,</span>
+        <span class="n">submission_type</span><span class="o">=</span><span class="n">submission_type</span><span class="p">,</span>
+        <span class="n">secondary_classification</span><span class="o">=</span><span class="n">secondary_classification</span><span class="p">,</span>
+        <span class="n">journal_ref</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">),</span>
+        <span class="n">report_num</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;report_num&#39;</span><span class="p">),</span>
+        <span class="n">doi</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;doi&#39;</span><span class="p">),</span>
+        <span class="n">msc_class</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;msc_class&#39;</span><span class="p">),</span>
+        <span class="n">acm_class</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;acm_class&#39;</span><span class="p">),</span>
+        <span class="n">proxy</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">),</span>
+        <span class="n">comments</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;comments&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+        <span class="n">previous_versions</span><span class="o">=</span><span class="n">versions</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_metadata</span><span class="p">(</span><span class="n">key_value_block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Parse the key-value block from the arXiv .abs string.&quot;&quot;&quot;</span>
+    <span class="n">key_value_block</span> <span class="o">=</span> <span class="n">key_value_block</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+    <span class="n">field_lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\n&#39;</span><span class="p">,</span> <span class="n">key_value_block</span><span class="p">)</span>
+    <span class="n">field_name</span> <span class="o">=</span> <span class="s1">&#39;unknown&#39;</span>
+    <span class="n">fields_builder</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">field_line</span> <span class="ow">in</span> <span class="n">field_lines</span><span class="p">:</span>
+        <span class="n">field_match</span> <span class="o">=</span> <span class="n">RE_FIELD_COMPONENTS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">field_line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">field_match</span> <span class="ow">and</span> <span class="n">field_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;field&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NAMED_FIELDS</span><span class="p">:</span>
+            <span class="n">field_name</span> <span class="o">=</span> <span class="n">field_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;field&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">field_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_no$&#39;</span><span class="p">,</span> <span class="s1">&#39;_num&#39;</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
+            <span class="n">fields_builder</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">field_name</span> <span class="o">!=</span> <span class="s1">&#39;unknown&#39;</span><span class="p">:</span>
+            <span class="c1"># we have a line with leading spaces</span>
+            <span class="n">fields_builder</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">field_line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fields_builder</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_announced</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">RE_ARXIV_OLD_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">RE_ARXIV_NEW_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Not a valid arXiv ID&#39;</span><span class="p">)</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;yy&#39;</span><span class="p">))</span>
+    <span class="n">mm</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;mm&#39;</span><span class="p">))</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;19</span><span class="si">{yy}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">yy</span> <span class="o">&gt;</span> <span class="mi">90</span> <span class="k">else</span> <span class="n">f</span><span class="s1">&#39;20</span><span class="si">{yy}</span><span class="s1">&#39;</span>
+    <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{year}</span><span class="s1">-</span><span class="si">{mm}</span><span class="s1">&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_versions</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version_entry_list</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">AbsRef</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Parse the version entries from the arXiv .abs file.&quot;&quot;&quot;</span>
+    <span class="n">version_entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AbsRef</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">parsed_version_entry</span> <span class="ow">in</span> <span class="n">version_entry_list</span><span class="p">:</span>
+        <span class="n">date_match</span> <span class="o">=</span> <span class="n">RE_DATE_COMPONENTS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">parsed_version_entry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">date_match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Could not extract date components from date line.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sd</span> <span class="o">=</span> <span class="n">date_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span>
+            <span class="n">submitted_date</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">date_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Could not parse submitted date </span><span class="si">{sd}</span><span class="s1"> as datetime&#39;</span><span class="p">)</span>
+
+        <span class="n">source_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">SourceType</span><span class="p">(</span><span class="n">date_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;source_type&#39;</span><span class="p">))</span>
+        <span class="n">size_kilobytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">date_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;size_kilobytes&#39;</span><span class="p">))</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">version_entries</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">identifier</span> <span class="o">=</span> \
+            <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{D.Identifier(arxiv_id)}v</span><span class="si">{V}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">version_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">AbsRef</span><span class="p">(</span>
+                <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                <span class="n">submitted_date</span><span class="o">=</span><span class="n">submitted_date</span><span class="p">,</span>
+                <span class="n">announced_month</span><span class="o">=</span><span class="n">_parse_announced</span><span class="p">(</span><span class="n">arxiv_id</span><span class="p">),</span>
+                <span class="n">source_type</span><span class="o">=</span><span class="n">source_type</span><span class="p">,</span>
+                <span class="n">size_kilobytes</span><span class="o">=</span><span class="n">size_kilobytes</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">version_entries</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

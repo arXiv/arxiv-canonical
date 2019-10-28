@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.integrity &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.integrity</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Integrity structs and collections for the canonical record.</span>
+
+<span class="sd">This module provides a class hierarchy for integrity and consistency-related</span>
+<span class="sd">concerns pertaining to the canonical record. The classes herein generate</span>
+<span class="sd">and validate checksums, and generate manifests.</span>
+
+<span class="sd">In order to efficiently verify the completeness and integrity of the record (or</span>
+<span class="sd">a replica of the record), and to identify the source of inconsistencies,</span>
+<span class="sd">consistency checks are performed at several levels of granularity (e.g. entry,</span>
+<span class="sd">day, month, year, global). The completeness and integrity of all or a part of</span>
+<span class="sd">the arXiv collection can be verified by comparing the checksum values at the</span>
+<span class="sd">corresponding level of granularity.</span>
+
+<span class="sd">The way in which checksum values are calculated for each level is described</span>
+<span class="sd">below. This is inspired by the strategy for checksum validation of large</span>
+<span class="sd">chunked uploads to Amazon S3. All checksum values are md5 hashes, stored and</span>
+<span class="sd">transmitted as URL-safe base64-encoded strings.</span>
+
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| Level   | Contents                | Completeness     | Integrity            |</span>
+<span class="sd">+=========+=========================+==================+======================+</span>
+<span class="sd">| File    | Binary data.            | Presence/absence | Hash of binary file  |</span>
+<span class="sd">|         |                         | of descriptor.   | content.             |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| Version | Collection of metadata, | Presence         | Hash of concatenated |</span>
+<span class="sd">|         | source, and render      | of files.        | (sorted by name)     |</span>
+<span class="sd">|         | files.                  |                  | file hashes.         |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| E-Print | One or more sequential  | Presence of      | Hash of concatenated |</span>
+<span class="sd">|         | versions                | version records. | (sorted) version     |</span>
+<span class="sd">|         |                         |                  | hashes.              |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| Day     | All e-prints the first  | Presence of      | Hash of concatenated |</span>
+<span class="sd">|         | version of which was    | e-print records. | (sorted) e-print     |</span>
+<span class="sd">|         | announced on this day.  |                  | hashes.              |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| Month   | All e-prints the first  | Presence of day  | Hash of concatenated |</span>
+<span class="sd">|         | version of which was    | records.         | (sorted) day hashes. |</span>
+<span class="sd">|         | announced in this       |                  |                      |</span>
+<span class="sd">|         | month.                  |                  |                      |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| Year    | All e-prints the first  | Presence of      | Hash of concatenated |</span>
+<span class="sd">|         | version of which was    | month records.   | (sorted) month       |</span>
+<span class="sd">|         | announced in this       |                  | hashes.              |</span>
+<span class="sd">|         | year.                   |                  |                      |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+<span class="sd">| All     | All e-prints.           | Presence of year | Hash of concatenated |</span>
+<span class="sd">|         |                         | records.         | (sorted) year        |</span>
+<span class="sd">|         |                         |                  | hashes.              |</span>
+<span class="sd">+---------+-------------------------+------------------+----------------------+</span>
+
+<span class="sd">The same hierarchy is used for listing files, where the terminal bitstream</span>
+<span class="sd">is the binary serialized manifest.</span>
+
+<span class="sd">A global integrity collection, :class:`.Integrity` draws together the</span>
+<span class="sd">e-print and listing hierarchies into a final, composite level.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">..util</span> <span class="k">import</span> <span class="n">GenericMonoDict</span>
+
+<span class="kn">from</span> <span class="nn">.checksum</span> <span class="k">import</span> <span class="n">calculate_checksum</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="p">(</span><span class="n">IntegrityBase</span><span class="p">,</span> <span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">IntegrityEntryBase</span><span class="p">,</span>
+                   <span class="n">IntegrityEntryMembers</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.listing</span> <span class="k">import</span> <span class="p">(</span><span class="n">IntegrityListing</span><span class="p">,</span> <span class="n">IntegrityListingDay</span><span class="p">,</span>
+                      <span class="n">IntegrityListingMonth</span><span class="p">,</span> <span class="n">IntegrityListingYear</span><span class="p">,</span>
+                      <span class="n">IntegrityListings</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">IntegrityMetadata</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="p">(</span><span class="n">IntegrityVersion</span><span class="p">,</span> <span class="n">IntegrityEPrint</span><span class="p">,</span> <span class="n">IntegrityDay</span><span class="p">,</span>
+                      <span class="n">IntegrityMonth</span><span class="p">,</span> <span class="n">IntegrityYear</span><span class="p">,</span> <span class="n">IntegrityEPrints</span><span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;Integrity&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityBase&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityDay&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityEntryBase&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityEntryMembers&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityEPrint&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityEPrints&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityListing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityListingDay&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityListingMonth&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityListingYear&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityListings&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityMetadata&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityMonth&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityVersion&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegrityYear&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">TopLevelCollection</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">IntegrityEPrints</span><span class="p">,</span> <span class="n">IntegrityListings</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">TopLevelMembers</span><span class="p">(</span><span class="n">GenericMonoDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TopLevelCollection</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dict that returns only top level members.</span>
+
+<span class="sd">    Consistent with</span>
+<span class="sd">    ``Mapping[str, Union[IntegrityEPrints, IntegrityListings]]``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TopLevelCollection</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">IntegrityEPrints</span><span class="p">,</span> <span class="n">IntegrityListings</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="Integrity"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.integrity.html#arxiv.canonical.integrity.Integrity">[docs]</a><span class="k">class</span> <span class="nc">Integrity</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">R</span><span class="o">.</span><span class="n">Record</span><span class="p">,</span>
+                              <span class="nb">str</span><span class="p">,</span>
+                              <span class="n">Union</span><span class="p">[</span><span class="n">IntegrityEPrints</span><span class="p">,</span> <span class="n">IntegrityListings</span><span class="p">]]):</span>
+    <span class="sd">&quot;&quot;&quot;Apex of the integrity collection.&quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

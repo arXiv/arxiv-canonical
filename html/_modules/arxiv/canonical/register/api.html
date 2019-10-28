@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.register.api &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.register.api</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides the main public API for the canonical register.</span>
+
+<span class="sd">See :class:`.RegisterAPI`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">abc</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span><span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span>
+                    <span class="n">Tuple</span><span class="p">,</span> <span class="n">overload</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">..manifest</span> <span class="k">import</span> <span class="n">Manifest</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">ICanonicalSource</span><span class="p">,</span> <span class="n">Base</span><span class="p">,</span>
+                   <span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">,</span> <span class="n">YearMonth</span><span class="p">,</span> <span class="n">IStorableEntry</span><span class="p">,</span> <span class="n">Selector</span><span class="p">,</span>
+                   <span class="n">IRegisterAPI</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.eprint</span> <span class="k">import</span> <span class="p">(</span><span class="n">RegisterEPrint</span><span class="p">,</span> <span class="n">RegisterDay</span><span class="p">,</span> <span class="n">RegisterMonth</span><span class="p">,</span> <span class="n">RegisterYear</span><span class="p">,</span>
+                     <span class="n">RegisterEPrints</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">NoSuchResource</span><span class="p">,</span> <span class="n">ConsistencyError</span>
+<span class="kn">from</span> <span class="nn">.listing</span> <span class="k">import</span> <span class="p">(</span><span class="n">RegisterListing</span><span class="p">,</span> <span class="n">RegisterListingDay</span><span class="p">,</span>
+                      <span class="n">RegisterListingMonth</span><span class="p">,</span> <span class="n">RegisterListingYear</span><span class="p">,</span>
+                      <span class="n">RegisterListings</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">RegisterMetadata</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">RegisterVersion</span>
+
+<span class="n">_ID</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="RegisterAPI"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI">[docs]</a><span class="k">class</span> <span class="nc">RegisterAPI</span><span class="p">(</span><span class="n">IRegisterAPI</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The main public API for the register.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                 <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                 <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the API with a storage backend.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span> <span class="o">=</span> <span class="n">sources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register</span> <span class="o">=</span> <span class="n">Register</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegisterAPI.add_events"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.add_events">[docs]</a>    <span class="k">def</span> <span class="nf">add_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add new events to the register.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register</span><span class="o">.</span><span class="n">add_events</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_eprint"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_eprint">[docs]</a>    <span class="k">def</span> <span class="nf">load_eprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrint</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load an :class:`.EPrint` from the record.&quot;&quot;&quot;</span>
+        <span class="n">eprint</span> <span class="o">=</span> <span class="n">RegisterEPrint</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eprint</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoSuchResource</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No versions exist for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">eprint</span><span class="o">.</span><span class="n">domain</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_event"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_event">[docs]</a>    <span class="k">def</span> <span class="nf">load_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load an :class:`.Event` by identifier.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RegisterListingDay</span><span class="o">.</span><span class="n">load_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span>
+                                             <span class="n">D</span><span class="o">.</span><span class="n">EventIdentifier</span><span class="p">(</span><span class="n">identifier</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_events"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_events">[docs]</a>    <span class="k">def</span> <span class="nf">load_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Selector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load all :class:`.Event`s for a day, month, or year.</span>
+
+<span class="sd">        Returns an :class:`.Event` generator that loads event data lazily from</span>
+<span class="sd">        the underlying storage, so that in general we are loading only the data</span>
+<span class="sd">        that we are actually consuming. Events are generated in order.</span>
+
+<span class="sd">        **But be warned!** Evaluating the entire generator all at once (e.g. by</span>
+<span class="sd">        coercing it to a ``list``) may load a considerable amount of data into</span>
+<span class="sd">        memory (and use a lot of i/o), especially if events for an entire year</span>
+<span class="sd">        are loaded.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selector : int, tuple, or :class:`datetime.date`</span>
+<span class="sd">            Indicates the year (int), month (Tuple[int, int]), or day for which</span>
+<span class="sd">            events should be loaded.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        generator</span>
+<span class="sd">            Yields :class:`.Event` instances in chronological order.</span>
+<span class="sd">        int</span>
+<span class="sd">            An estimate of the number of events that will be generated. Note</span>
+<span class="sd">            that the actual number may change (especially for large selections)</span>
+<span class="sd">            because the record may be updated while the generator is being</span>
+<span class="sd">            consumed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_events_date</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_events_month</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Year</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_events_year</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot load events for </span><span class="si">{selector}</span><span class="s1">; invalid type&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_history"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_history">[docs]</a>    <span class="k">def</span> <span class="nf">load_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">_ID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">EventSummary</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Load the event history of an :class:`.EPrint`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">):</span>
+            <span class="n">epr</span> <span class="o">=</span> <span class="n">RegisterEPrint</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">epr</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NoSuchResource</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No versions exist for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">summary</span>
+                    <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">epr</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">versions</span>
+                    <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">epr</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">versions</span><span class="p">[</span><span class="n">version</span><span class="p">]</span><span class="o">.</span><span class="n">events</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">summary</span>
+                    <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_version</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">events</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot load event history for </span><span class="si">{identifier}</span><span class="s1">;&#39;</span>
+                         <span class="s1">&#39; invalid type&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_listing"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_listing">[docs]</a>    <span class="k">def</span> <span class="nf">load_listing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                     <span class="n">shard</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="o">.</span><span class="n">get_default_shard</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-member</span>
+        <span class="sd">&quot;&quot;&quot;Load a :class:`.Listing` for a particulate date.&quot;&quot;&quot;</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">ListingIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">shard</span><span class="p">)</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="n">RegisterListing</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lst</span><span class="o">.</span><span class="n">domain</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_render"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_render">[docs]</a>    <span class="k">def</span> <span class="nf">load_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_version</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span> \
+                <span class="ow">or</span> <span class="n">version</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoSuchResource</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot load render for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">version</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">render</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">version</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">render</span><span class="p">,</span> <span class="n">version</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_source"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_source">[docs]</a>    <span class="k">def</span> <span class="nf">load_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">,</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_version</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoSuchResource</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Cannot load source for </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">version</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">version</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span></div>
+
+<div class="viewcode-block" id="RegisterAPI.load_version"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.RegisterAPI.load_version">[docs]</a>    <span class="k">def</span> <span class="nf">load_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load an e-print :class:`.Version` from the record.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_version</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span></div>
+
+    <span class="k">def</span> <span class="nf">_load_events_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">listing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_listing</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">listing</span><span class="o">.</span><span class="n">events</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">listing</span><span class="o">.</span><span class="n">events</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_load_events_month</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">YearMonth</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">),</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="n">listing_month</span> <span class="o">=</span> <span class="n">RegisterListingMonth</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span>
+                                                  <span class="n">selector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">event</span>
+             <span class="k">for</span> <span class="n">listing_day</span> <span class="ow">in</span> <span class="n">listing_month</span><span class="o">.</span><span class="n">iter_members</span><span class="p">()</span>
+             <span class="k">for</span> <span class="n">listing</span> <span class="ow">in</span> <span class="n">listing_day</span><span class="o">.</span><span class="n">iter_members</span><span class="p">()</span>
+             <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">listing</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">events</span><span class="p">),</span>
+            <span class="n">listing_month</span><span class="o">.</span><span class="n">number_of_events</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_events_year</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Year</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">listing_year</span> <span class="o">=</span> <span class="n">RegisterListingYear</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span>
+                                                <span class="n">selector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">event</span>
+             <span class="k">for</span> <span class="n">listing_month</span> <span class="ow">in</span> <span class="n">listing_year</span><span class="o">.</span><span class="n">iter_members</span><span class="p">()</span>
+             <span class="k">for</span> <span class="n">listing_day</span> <span class="ow">in</span> <span class="n">listing_month</span><span class="o">.</span><span class="n">iter_members</span><span class="p">()</span>
+             <span class="k">for</span> <span class="n">listing</span> <span class="ow">in</span> <span class="n">listing_day</span><span class="o">.</span><span class="n">iter_members</span><span class="p">()</span>
+             <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">listing</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">events</span><span class="p">),</span>
+            <span class="n">listing_year</span><span class="o">.</span><span class="n">number_of_events</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">RegisterVersion</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RegisterVersion</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">,</span>
+                                        <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># TODO: make this more specific.</span>
+            <span class="k">raise</span> <span class="n">NoSuchResource</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No such version: </span><span class="si">{identifier}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<span class="n">listings_key</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;listings&#39;</span><span class="p">]</span>
+<span class="n">eprints_key</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;eprints&#39;</span><span class="p">]</span>
+<span class="n">_TopLevelNames</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">listings_key</span><span class="p">,</span> <span class="n">eprints_key</span><span class="p">]</span>
+<span class="n">_TopLevelMembers</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">RegisterListings</span><span class="p">,</span> <span class="n">RegisterEPrints</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Register"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.Register">[docs]</a><span class="k">class</span> <span class="nc">Register</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span>
+                    <span class="n">D</span><span class="o">.</span><span class="n">Canon</span><span class="p">,</span>
+                    <span class="n">R</span><span class="o">.</span><span class="n">Record</span><span class="p">,</span>
+                    <span class="n">I</span><span class="o">.</span><span class="n">Integrity</span><span class="p">,</span>
+                    <span class="n">_TopLevelNames</span><span class="p">,</span>
+                    <span class="n">_TopLevelMembers</span><span class="p">]):</span>
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Canon</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">Record</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">Integrity</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">_TopLevelMembers</span>  <span class="c1"># type: ignore</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_TopLevelNames</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;listings&#39;</span><span class="p">,</span> <span class="s1">&#39;eprints&#39;</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_members</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                     <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                     <span class="n">_</span><span class="p">:</span> <span class="n">Manifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;_TopMapping&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_TopMapping</span><span class="p">(</span><span class="n">RegisterListings</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="s1">&#39;listings&#39;</span><span class="p">),</span>
+                           <span class="n">RegisterEPrints</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="s1">&#39;eprints&#39;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Register.add_events"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.api.html#arxiv.canonical.register.Register.add_events">[docs]</a>    <span class="k">def</span> <span class="nf">add_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                   <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                   <span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add events to this register.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Register</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">add_events</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_TopMapping</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">MutableMapping</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listings</span><span class="p">:</span> <span class="n">RegisterListings</span><span class="p">,</span>
+                 <span class="n">eprints</span><span class="p">:</span> <span class="n">RegisterEPrints</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initilize with listings and eprints registers.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eprints</span> <span class="o">=</span> <span class="n">eprints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listings</span> <span class="o">=</span> <span class="n">listings</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">listings_key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegisterListings</span><span class="p">:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">eprints_key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegisterEPrints</span><span class="p">:</span> <span class="o">...</span>  <span class="c1"># pylint: disable=function-redefined</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># pylint: disable=function-redefined</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="s1">&#39;eprints&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eprints</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="s1">&#39;listings&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listings</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;No such resource&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Does not support deletion&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="s1">&#39;eprints&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">RegisterEPrints</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eprints</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="s1">&#39;listings&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">RegisterListings</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">listings</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Not supported&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">eprints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">listings</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

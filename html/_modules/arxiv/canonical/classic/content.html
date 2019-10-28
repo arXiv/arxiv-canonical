@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.content &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.classic.content</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for resolving classic content.</span>
+
+<span class="sd">TODO: really need to cache stuff here.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">timezone</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">domain</span> <span class="k">as</span> <span class="n">D</span>
+<span class="kn">from</span> <span class="nn">..services</span> <span class="k">import</span> <span class="n">RemoteSource</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LOGLEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;40&#39;</span><span class="p">)))</span>
+
+<span class="n">ET</span> <span class="o">=</span> <span class="n">timezone</span><span class="p">(</span><span class="s1">&#39;US/Eastern&#39;</span><span class="p">)</span>
+
+<span class="n">REMOTE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;RemoteSourceWithHead&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">_CF_Cache</span> <span class="o">=</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">],</span>
+                           <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="get_source_path"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.content.html#arxiv.canonical.classic.content.get_source_path">[docs]</a><span class="k">def</span> <span class="nf">get_source_path</span><span class="p">(</span><span class="n">dpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">D</span><span class="o">.</span><span class="n">list_source_extensions</span><span class="p">():</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">_get_path</span><span class="p">(</span><span class="n">_orig_source</span><span class="p">,</span> <span class="n">_latest_source</span><span class="p">,</span> <span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span>
+    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No source path found for </span><span class="si">{ident}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_source"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.content.html#arxiv.canonical.classic.content.get_source">[docs]</a><span class="k">def</span> <span class="nf">get_source</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get the source file for a version from classic.&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Getting source for </span><span class="si">{ident}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_source_path</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ident</span><span class="p">)</span>
+    <span class="n">mtime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">))</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c1"># In classic, stand-alone tex files were not given extensions.</span>
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">tex</span>
+
+    <span class="n">is_gzipped</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">))</span>
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">(</span>
+        <span class="n">modified</span><span class="o">=</span><span class="n">mtime</span><span class="p">,</span>
+        <span class="n">size_bytes</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span>
+        <span class="n">ref</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">content_type</span><span class="o">.</span><span class="n">make_filename</span><span class="p">(</span><span class="n">ident</span><span class="p">),</span>
+        <span class="n">is_gzipped</span><span class="o">=</span><span class="n">is_gzipped</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got source file for </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cf</span></div>
+
+
+<div class="viewcode-block" id="get_formats"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.content.html#arxiv.canonical.classic.content.get_formats">[docs]</a><span class="k">def</span> <span class="nf">get_formats</span><span class="p">(</span><span class="n">dpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                <span class="n">source_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">SourceType</span><span class="p">],</span>
+                <span class="n">source</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">,</span>
+                <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_Cache</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Get the dissemination formats for a version.&quot;&quot;&quot;</span>
+    <span class="n">available_formats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">available_formats</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">available_formats_by_ext</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">available_formats</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">source_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">available_formats</span> <span class="o">=</span> <span class="n">source_type</span><span class="o">.</span><span class="n">available_formats</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">available_formats</span><span class="p">:</span>   <span class="c1"># Nothing more can be done at this point.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;No available dissemination formats for: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">ident</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">content_type</span> <span class="ow">in</span> <span class="n">available_formats</span><span class="p">:</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>   <span class="c1"># What we hope to yield.</span>
+
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cf_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">cf_cache</span><span class="p">:</span>
+            <span class="n">cf</span> <span class="o">=</span> <span class="n">cf_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">cf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">yield</span> <span class="n">cf</span>
+            <span class="k">continue</span>
+
+        <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># We hope to find the file on disk.</span>
+
+        <span class="c1"># We want to try both gziped and non-gzipped variants of the filename.</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">content_type</span><span class="o">.</span><span class="n">ext</span>
+        <span class="n">ext_gz</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ext}</span><span class="s1">.gz&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">ext</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ext}</span><span class="s1">.gz&#39;</span>
+
+        <span class="c1"># In some cases, the resource may have just been the original</span>
+        <span class="c1"># source (e.g. pdf-only submissions).</span>
+        <span class="k">for</span> <span class="n">_ext</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="n">ext_gz</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">_get_path</span><span class="p">(</span><span class="n">_orig_source</span><span class="p">,</span> <span class="n">_latest_source</span><span class="p">,</span> <span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">_ext</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got source path for </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                             <span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Tried source path for </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> with ext </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                         <span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">_ext</span><span class="p">)</span>
+
+        <span class="c1"># HTML is kind of a special case. The HTML source package is either a</span>
+        <span class="c1"># .html.gz or .tar.gz file, and the ps_cache content is a directory</span>
+        <span class="c1"># containing one or many files that get served up directly by the web</span>
+        <span class="c1"># server. .html.gz will have gotten picked up above, so we just want</span>
+        <span class="c1"># to make sure that if we have a multi-file HTML file we also check for</span>
+        <span class="c1"># a .tar.gz in the source directory.</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> \
+                <span class="ow">and</span> <span class="n">content_type</span> <span class="o">==</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">html</span> \
+                <span class="ow">and</span> <span class="n">source_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">source_type</span><span class="o">.</span><span class="n">has_html</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">_get_path</span><span class="p">(</span><span class="n">_orig_source</span><span class="p">,</span> <span class="n">_latest_source</span><span class="p">,</span> <span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="s1">&#39;tar&#39;</span><span class="p">)</span>
+                <span class="ow">or</span>
+                <span class="n">_get_path</span><span class="p">(</span><span class="n">_orig_source</span><span class="p">,</span> <span class="n">_latest_source</span><span class="p">,</span> <span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="s1">&#39;tar.gz&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Otherwise look in the ps_cache.</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_ext</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="n">ext_gz</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">_cache</span><span class="p">(</span><span class="n">content_type</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">_ext</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got ps_cache path for </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Tried ps_cache for </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> with ext </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">_ext</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">mtime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> \
+                <span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span>
+            <span class="c1"># We want the canonical filename to correspond to the content type</span>
+            <span class="c1"># more precisely (this is not the case in classic).</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">content_type</span><span class="o">.</span><span class="n">make_filename</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+            <span class="n">cf</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">(</span>
+                <span class="n">modified</span><span class="o">=</span><span class="n">mtime</span><span class="p">,</span>
+                <span class="n">size_bytes</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span>
+                <span class="n">ref</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                <span class="n">is_gzipped</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>   <span class="c1"># Fall back to a HEAD request to the main site.</span>
+            <span class="n">cf</span> <span class="o">=</span> <span class="n">_get_via_http</span><span class="p">(</span><span class="n">ident</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Sanity check.</span>
+            <span class="k">assert</span> <span class="n">cf</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cf</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">ext</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Expected ext </span><span class="si">%s</span><span class="s1">, but filename is </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                             <span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">ext</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Expected ext </span><span class="si">%s</span><span class="s1">, but filename is </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                                   <span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">ext</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">cf_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># A null result is still worth saving.</span>
+            <span class="n">cf_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cf</span>
+
+        <span class="k">if</span> <span class="n">cf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">cf</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_via_http</span><span class="p">(</span><span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                  <span class="n">content_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">,</span>
+                  <span class="n">remote</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;arxiv.org&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Retrieve the&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting metadata for </span><span class="si">%s</span><span class="s1"> for </span><span class="si">%s</span><span class="s1"> via http&#39;</span><span class="p">,</span>
+                 <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ident</span><span class="p">)</span>
+    <span class="k">global</span> <span class="n">REMOTE</span>       <span class="c1"># This is fine for now since this is single-threaded.</span>
+    <span class="k">if</span> <span class="n">REMOTE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">REMOTE</span> <span class="o">=</span> <span class="n">RemoteSourceWithHead</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+
+    <span class="c1"># The .dvi extension is not supported in the classic /dvi route.</span>
+    <span class="k">if</span> <span class="n">content_type</span> <span class="o">==</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">dvi</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{content_type.value}</span><span class="s1">/</span><span class="si">{ident}</span><span class="s1">&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{content_type.value}</span><span class="s1">/</span><span class="si">{ident}</span><span class="s1">.</span><span class="si">{content_type.ext}</span><span class="s1">&#39;</span>
+
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">REMOTE</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;https://arxiv.org/</span><span class="si">{path}</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">content_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cf</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">content_type</span><span class="o">.</span><span class="n">make_filename</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cf</span>
+
+
+<div class="viewcode-block" id="RemoteSourceWithHead"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.content.html#arxiv.canonical.classic.content.RemoteSourceWithHead">[docs]</a><span class="k">class</span> <span class="nc">RemoteSourceWithHead</span><span class="p">(</span><span class="n">RemoteSource</span><span class="p">):</span>
+<div class="viewcode-block" id="RemoteSourceWithHead.head"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.content.html#arxiv.canonical.classic.content.RemoteSourceWithHead.head">[docs]</a>    <span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">,</span> <span class="n">content_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">]:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># arXiv may need to rebuild the product.</span>
+        <span class="k">while</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span> <span class="ow">and</span> <span class="s1">&#39;Refresh&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Refresh&#39;</span><span class="p">]))</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%i</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Could not retrieve </span><span class="si">{key}</span><span class="s1">: </span><span class="si">{response.status_code}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># At this point, we are most likely encountering the &quot;unavailable&quot;</span>
+        <span class="c1"># page, which (intriguingly) returns 200 instead of 404.</span>
+        <span class="k">if</span> <span class="s1">&#39;Last-Modified&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">mtime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Last-Modified&#39;</span><span class="p">],</span>
+                                  <span class="s1">&#39;</span><span class="si">%a</span><span class="s1">, </span><span class="si">%d</span><span class="s1"> %b %Y %H:%M:%S %Z&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span>
+
+        <span class="c1"># Oddly, arxiv.org may return compressed content (i.e. not just for</span>
+        <span class="c1"># transport). We&#39;ve been around for a while!</span>
+        <span class="n">is_gzipped</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Content-Encoding&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;x-gzip&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">(</span>
+            <span class="n">modified</span><span class="o">=</span><span class="n">mtime</span><span class="p">,</span>
+            <span class="n">size_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Content-Length&#39;</span><span class="p">]),</span>
+            <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span>
+            <span class="n">ref</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">),</span>    <span class="c1"># There may have been redirects.</span>
+            <span class="n">is_gzipped</span><span class="o">=</span><span class="n">is_gzipped</span>
+        <span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_latest</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">cat</span> <span class="o">=</span> <span class="n">ident</span><span class="o">.</span><span class="n">category_part</span> <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span> <span class="k">else</span> <span class="s1">&#39;arxiv&#39;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="p">,</span> <span class="s1">&#39;papers&#39;</span><span class="p">,</span> <span class="n">ident</span><span class="o">.</span><span class="n">yymm</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_orig</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">cat</span> <span class="o">=</span> <span class="n">ident</span><span class="o">.</span><span class="n">category_part</span> <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span> <span class="k">else</span> <span class="s1">&#39;arxiv&#39;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;orig&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="p">,</span> <span class="s1">&#39;papers&#39;</span><span class="p">,</span> <span class="n">ident</span><span class="o">.</span><span class="n">yymm</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_cache</span><span class="p">(</span><span class="n">content_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+           <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident.numeric_part}</span><span class="s1">v</span><span class="si">{ident.version}</span><span class="s1">.</span><span class="si">{ext}</span><span class="s1">&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident}</span><span class="s1">.</span><span class="si">{ext}</span><span class="s1">&#39;</span>
+    <span class="n">cat</span> <span class="o">=</span> <span class="n">ident</span><span class="o">.</span><span class="n">category_part</span> <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span> <span class="k">else</span> <span class="s1">&#39;arxiv&#39;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ps_cache_path</span><span class="p">,</span> <span class="s1">&#39;ps_cache&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="p">,</span> <span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                        <span class="n">ident</span><span class="o">.</span><span class="n">yymm</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_latest_source</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident.numeric_part}</span><span class="s1">.{ext.lstrip(&quot;.&quot;)}&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident}</span><span class="s1">.{ext.lstrip(&quot;.&quot;)}&#39;</span>
+    <span class="k">return</span> <span class="n">_latest</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_orig_source</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident.numeric_part}</span><span class="s1">v</span><span class="si">{ident.version}</span><span class="s1">.{ext.lstrip(&quot;.&quot;)}&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{ident}</span><span class="s1">.{ext.lstrip(&quot;.&quot;)}&#39;</span>
+    <span class="k">return</span> <span class="n">_orig</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_path</span><span class="p">(</span><span class="n">get_orig</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>
+              <span class="n">get_latest</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>
+              <span class="n">dpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+              <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic logic for finding the path to a resource.</span>
+
+<span class="sd">    Resources for the latest version are stored separately from resources</span>
+<span class="sd">    for prior versions. But resources for the latest version are not named</span>
+<span class="sd">    with their version number affix.</span>
+
+<span class="sd">    A second challenge is that in some cases we do not know ahead of time what</span>
+<span class="sd">    file format (and hence filename) we are looking for.</span>
+
+<span class="sd">    So it takes a bit of a dance to figure out whether a respondant resource</span>
+<span class="sd">    exists, and where it is located.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># For versions prior to the latest, resources are named with their</span>
+    <span class="c1"># version affix.</span>
+    <span class="n">orig</span> <span class="o">=</span> <span class="n">get_orig</span><span class="p">(</span><span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">orig</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;found orig path: </span><span class="si">{orig}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">orig</span>
+
+    <span class="c1"># If this is the first version, the only other place it could be is</span>
+    <span class="c1"># in the &quot;latest&quot; section.</span>
+
+    <span class="n">latest</span> <span class="o">=</span> <span class="n">get_latest</span><span class="p">(</span><span class="n">dpath</span><span class="p">,</span> <span class="n">ident</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">latest</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;can only be in latest: </span><span class="si">{latest}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">latest</span>
+
+    <span class="c1"># If the prior version exists in the &quot;original&quot; section, then the latest</span>
+    <span class="c1"># version must be the one that we are working with.</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">ident</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">ident</span><span class="o">.</span><span class="n">version</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Have to check for the abs file, since we don&#39;t know what format the</span>
+    <span class="c1"># previous version was in.</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">get_orig</span><span class="p">(</span><span class="n">dpath</span><span class="p">,</span> <span class="n">prior</span><span class="p">,</span> <span class="s1">&#39;abs&#39;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">latest</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;prior version in orig; must be latest: </span><span class="si">{latest}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">latest</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

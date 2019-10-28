@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.record package &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.record.tests package" href="arxiv.canonical.record.tests.html" />
+    <link rel="prev" title="arxiv.canonical.log.tests module" href="arxiv.canonical.log.tests.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.record">
+<span id="arxiv-canonical-record-package"></span><h1>arxiv.canonical.record package<a class="headerlink" href="#module-arxiv.canonical.record" title="Permalink to this headline">¶</a></h1>
+<p>Defines how the canonical record is represented in a key-binary system.</p>
+<p>The bulk of this module is concerned with how keys for records and record
+manifests are generated.</p>
+<p>Classes in this module are largely isomorphic to those in <a class="reference internal" href="arxiv.canonical.domain.html#module-arxiv.canonical.domain" title="arxiv.canonical.domain"><code class="xref py py-mod docutils literal notranslate"><span class="pre">domain</span></code></a>.
+<a class="reference internal" href="#arxiv.canonical.record.RecordEntry" title="arxiv.canonical.record.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordEntry</span></code></a> represents content at the bitstream level, e.g. a file
+containing a listings document or a render PDF. Collections of entries are
+based on <a class="reference internal" href="#arxiv.canonical.record.RecordBase" title="arxiv.canonical.record.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordBase</span></code></a>, and are composed hierarchically with the apex
+at <a class="reference internal" href="#arxiv.canonical.record.Record" title="arxiv.canonical.record.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a>.</p>
+<dl class="class">
+<dt id="arxiv.canonical.record.Record">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">Record</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record.html#Record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.Record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<p>The apex container for the canonical record.</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.Record.eprints">
+<em class="property">property </em><code class="sig-name descname">eprints</code><a class="headerlink" href="#arxiv.canonical.record.Record.eprints" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordEPrints" title="arxiv.canonical.record.version.RecordEPrints"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordEPrints</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.Record.listings">
+<em class="property">property </em><code class="sig-name descname">listings</code><a class="headerlink" href="#arxiv.canonical.record.Record.listings" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="arxiv.canonical.record.listing.html#arxiv.canonical.record.listing.RecordListings" title="arxiv.canonical.record.listing.RecordListings"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordListings</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.Record.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record.html#Record.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.Record.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for global manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordBase">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordBase</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Generic" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></a></p>
+<p>Generic base class for record collections in this module.</p>
+<p>This produces a uniform protocol for record collections, while allowing
+name, member, and member name types to vary across collection subclasses.</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordBase.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordBase.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordBase.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a full key that can be used to store a manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordDay">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordDay</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordDay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordDay.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">date</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordDay.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordDay.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a daily e-print manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordEntry">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordEntry</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Generic" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></a></p>
+<p>An entry in the canonical record.</p>
+<p>Comprised of a <a class="reference internal" href="#arxiv.canonical.record.RecordStream" title="arxiv.canonical.record.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a> and a domain representation of the
+entry (i.e. the application-level interpretation of the stream).</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEntry.from_domain">
+<em class="property">classmethod </em><code class="sig-name descname">from_domain</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordEntry.from_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEntry.from_domain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.record.RecordEntry.key">
+<code class="sig-name descname">key</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.record.RecordEntry.key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full key (path) at which the entry is stored.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEntry.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#arxiv.canonical.record.RecordEntry.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEntry.to_domain">
+<em class="property">classmethod </em><code class="sig-name descname">to_domain</code><span class="sig-paren">(</span><em class="sig-param">stream</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordEntry.to_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEntry.to_domain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_EDomain</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordEPrint">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordEPrint</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordEPrint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEPrint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEPrint.make_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_key</code><span class="sig-paren">(</span><em class="sig-param">idn</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordEPrint.make_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEPrint.make_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key prefix for an e-print record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>idn</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – arXiv identifier</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEPrint.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordEPrint.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEPrint.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for an e-print manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordEPrints">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordEPrints</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordEPrints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEPrints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordEPrints.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordEPrints.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordEPrints.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for all e-print manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordFile">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordFile</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/file.html#RecordFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordEntry</span></code></a></p>
+<p>An entry that is handled as an otherwise-uninterpreted file.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordListing">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordListing</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordEntry</span></code></a></p>
+<p>A listing entry.</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.created">
+<em class="property">property </em><code class="sig-name descname">created</code><a class="headerlink" href="#arxiv.canonical.record.RecordListing.created" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.datetime" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.from_domain">
+<em class="property">classmethod </em><code class="sig-name descname">from_domain</code><span class="sig-paren">(</span><em class="sig-param">listing</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing.from_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing.from_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize a <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Listing" title="arxiv.canonical.domain.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.from_stream">
+<em class="property">classmethod </em><code class="sig-name descname">from_stream</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing.from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing.from_stream" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.record.listing.html#arxiv.canonical.record.listing.RecordListing" title="arxiv.canonical.record.listing.RecordListing"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordListing</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.make_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_key</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing.make_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing.make_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.make_prefix">
+<em class="property">classmethod </em><code class="sig-name descname">make_prefix</code><span class="sig-paren">(</span><em class="sig-param">date</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing.make_prefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing.make_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#arxiv.canonical.record.RecordListing.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListing.to_domain">
+<em class="property">classmethod </em><code class="sig-name descname">to_domain</code><span class="sig-paren">(</span><em class="sig-param">stream</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListing.to_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListing.to_domain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.listing.html#arxiv.canonical.domain.listing.Listing" title="arxiv.canonical.domain.listing.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordListingDay">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordListingDay</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingDay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListingDay.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">date</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingDay.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingDay.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a full key that can be used to store a manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordListingMonth">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordListingMonth</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingMonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingMonth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListingMonth.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">year_and_month</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingMonth.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingMonth.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a monthly listing manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordListingYear">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordListingYear</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingYear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingYear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListingYear.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">year</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListingYear.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListingYear.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a yearly listing manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordListings">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordListings</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordListings.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/listing.html#RecordListings.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordListings.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a root listing manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordMetadata">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordMetadata</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordEntry</span></code></a></p>
+<p>An entry for version metadata.</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMetadata.from_domain">
+<em class="property">classmethod </em><code class="sig-name descname">from_domain</code><span class="sig-paren">(</span><em class="sig-param">version</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata.from_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata.from_domain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMetadata.from_stream">
+<em class="property">classmethod </em><code class="sig-name descname">from_stream</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata.from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata.from_stream" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.record.metadata.html#arxiv.canonical.record.metadata.RecordMetadata" title="arxiv.canonical.record.metadata.RecordMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordMetadata</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMetadata.make_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_key</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata.make_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata.make_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMetadata.make_prefix">
+<em class="property">classmethod </em><code class="sig-name descname">make_prefix</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata.make_prefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata.make_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key prefix for an e-print record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>date</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.date" title="(in Python v3.6)"><em>datetime.date</em></a>) – The day on which the first version of the e-print was announced.</p></li>
+<li><p><strong>ident</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – arXiv identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMetadata.to_domain">
+<em class="property">classmethod </em><code class="sig-name descname">to_domain</code><span class="sig-paren">(</span><em class="sig-param">stream</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/metadata.html#RecordMetadata.to_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMetadata.to_domain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordMonth">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordMonth</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordMonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMonth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordMonth.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">year_and_month</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordMonth.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordMonth.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a monthly e-print manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordStream">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordStream</code><a class="reference internal" href="../_modules/arxiv/canonical/record/core.html#RecordStream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></p>
+<p>A single bitstream in the record.</p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordStream.content">
+<em class="property">property </em><code class="sig-name descname">content</code><a class="headerlink" href="#arxiv.canonical.record.RecordStream.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raw content of the entry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordStream.content_type">
+<em class="property">property </em><code class="sig-name descname">content_type</code><a class="headerlink" href="#arxiv.canonical.record.RecordStream.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>MIME-type of the content.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordStream.domain">
+<em class="property">property </em><code class="sig-name descname">domain</code><a class="headerlink" href="#arxiv.canonical.record.RecordStream.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordStream.size_bytes">
+<em class="property">property </em><code class="sig-name descname">size_bytes</code><a class="headerlink" href="#arxiv.canonical.record.RecordStream.size_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of <code class="docutils literal notranslate"><span class="pre">content</span></code> in bytes.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordVersion">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordVersion</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<p>A collection of serialized components that make up a version record.</p>
+<p>A version record is comprised of (1) a metadata record, (2) a source
+package, containing the original content provided by the submitter, and (3)
+a canonical rendering of the version (e.g. in PDF format).</p>
+<p>The key prefix structure for an version record is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">e-prints/&lt;YYYY&gt;/&lt;MM&gt;/&lt;arXiv</span> <span class="pre">ID&gt;/v&lt;version&gt;/</span>
+<span class="pre">`</span></code></p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">YYYY</span></code> is the year and <code class="docutils literal notranslate"><span class="pre">MM</span></code> the month during which the first
+version of the e-print was announced.</p>
+<p>Sub-keys are:</p>
+<ul class="simple">
+<li><p>Metadata record: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.json</span></code></p></li>
+<li><p>Source package: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.tar</span></code></p></li>
+<li><p>PDF: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.render</span></code></p></li>
+<li><p>Manifest: <code class="docutils literal notranslate"><span class="pre">&lt;arXiv</span> <span class="pre">ID&gt;v&lt;version&gt;.manifest.json</span></code></p></li>
+</ul>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.formats">
+<em class="property">property </em><code class="sig-name descname">formats</code><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.formats" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.content.html#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>, <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordEntry</span></code></a>[~_EDomain]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.from_domain">
+<em class="property">classmethod </em><code class="sig-name descname">from_domain</code><span class="sig-paren">(</span><em class="sig-param">version</em>, <em class="sig-param">dereferencer</em>, <em class="sig-param">metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion.from_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.from_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a> to an <a class="reference internal" href="#arxiv.canonical.record.RecordVersion" title="arxiv.canonical.record.RecordVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordVersion</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordVersion" title="arxiv.canonical.record.version.RecordVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordVersion</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.identifier">
+<em class="property">property </em><code class="sig-name descname">identifier</code><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.VersionedIdentifier" title="arxiv.canonical.domain.identifier.VersionedIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionedIdentifier</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.instance_to_domain">
+<code class="sig-name descname">instance_to_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion.instance_to_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.instance_to_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize an <a class="reference internal" href="#arxiv.canonical.record.RecordVersion" title="arxiv.canonical.record.RecordVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordVersion</span></code></a> to an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.make_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_key</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion.make_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.make_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a full key that can be used to store a manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.make_prefix">
+<em class="property">classmethod </em><code class="sig-name descname">make_prefix</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordVersion.make_prefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.make_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key prefix for an e-print record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>date</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.date" title="(in Python v3.6)"><em>datetime.date</em></a>) – The day on which the first version of the e-print was announced.</p></li>
+<li><p><strong>ident</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – arXiv identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.metadata">
+<em class="property">property </em><code class="sig-name descname">metadata</code><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>JSON document containing canonical e-print metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.record.metadata.html#arxiv.canonical.record.metadata.RecordMetadata" title="arxiv.canonical.record.metadata.RecordMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordMetadata</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.render">
+<em class="property">property </em><code class="sig-name descname">render</code><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Canonical PDF for the e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordEntry</span></code></a>[~_EDomain]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordVersion.source">
+<em class="property">property </em><code class="sig-name descname">source</code><a class="headerlink" href="#arxiv.canonical.record.RecordVersion.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gzipped tarball containing the e-print source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordEntry</span></code></a>[~_EDomain]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.record.RecordYear">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.record.</code><code class="sig-name descname">RecordYear</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">members</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordYear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordYear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordBase" title="arxiv.canonical.record.core.RecordBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordBase</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.record.RecordYear.make_manifest_key">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_key</code><span class="sig-paren">(</span><em class="sig-param">year</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/record/version.html#RecordYear.make_manifest_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.record.RecordYear.make_manifest_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a key for a yearly e-print manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.Key" title="arxiv.canonical.domain.file.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.tests.html">arxiv.canonical.record.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.record.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.tests.test_listing.html">arxiv.canonical.record.tests.test_listing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.canonical.record.tests.test_version.html">arxiv.canonical.record.tests.test_version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.core.html">arxiv.canonical.record.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.file.html">arxiv.canonical.record.file module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.listing.html">arxiv.canonical.record.listing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.metadata.html">arxiv.canonical.record.metadata module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.preservation.html">arxiv.canonical.record.preservation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.canonical.record.version.html">arxiv.canonical.record.version module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.log.tests.html" title="previous chapter">arxiv.canonical.log.tests module</a></li>
+      <li>Next: <a href="arxiv.canonical.record.tests.html" title="next chapter">arxiv.canonical.record.tests package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.record.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

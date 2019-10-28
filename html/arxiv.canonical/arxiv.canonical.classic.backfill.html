@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.backfill module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.classic.cli module" href="arxiv.canonical.classic.cli.html" />
+    <link rel="prev" title="arxiv.canonical.classic.abs module" href="arxiv.canonical.classic.abs.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.classic.backfill">
+<span id="arxiv-canonical-classic-backfill-module"></span><h1>arxiv.canonical.classic.backfill module<a class="headerlink" href="#module-arxiv.canonical.classic.backfill" title="Permalink to this headline">¶</a></h1>
+<p>Functions for backfilling the NG record from classic.</p>
+<p>In order to ensure a smooth transition from classic to the NG announcement
+process, we need to be able to initially operate both the classic and NG
+canonical records in parallel. This means that we need to be able to:</p>
+<ol class="arabic simple">
+<li><p>Backfill the canonical record from the classic record, starting at the
+beginning of time and running up to the present. See <a class="reference internal" href="#arxiv.canonical.classic.backfill.backfill" title="arxiv.canonical.classic.backfill.backfill"><code class="xref py py-func docutils literal notranslate"><span class="pre">backfill()</span></code></a>.</p></li>
+<li><p>Continuously update the canonical record from data in the classic system.
+See <a class="reference internal" href="#arxiv.canonical.classic.backfill.backfill_today" title="arxiv.canonical.classic.backfill.backfill_today"><code class="xref py py-func docutils literal notranslate"><span class="pre">backfill_today()</span></code></a>.</p></li>
+</ol>
+<p>This module is implemented on the assumption that its functions will be
+executed on a machine with access to the classic filesystem, specifically to
+the abs/source files and daily.log file. It is agnostic, however, about the
+target storage medium for the canonical record. So this these functions can be
+used to backfill the canonical record both on local filesystems and in (for
+example) an S3 bucket.</p>
+<div class="section" id="what-version-is-this">
+<h2>What version is this?<a class="headerlink" href="#what-version-is-this" title="Permalink to this headline">¶</a></h2>
+<p>The lacuna of the classic record is an unambiguous mapping between announcement
+events and specific versions of an e-print. For example, if we encounter a
+replacement event in the daily.log file, there is no explicit indication of
+whether the resulting version is 2, 3, or some higher value. The abs file
+does not provide this information either, as only the submission date of each
+version is preserved (although this could at least be used as a lower bound).
+So, we need to get creative.</p>
+<p>Start at the beginning of time. Initialize a counter that keeps track of the
+last version number seen for each e-print identifier.</p>
+<p>Prior to the start of the daily.log (mid-1998): Read the abs file for each
+e-print, and generate a <code class="docutils literal notranslate"><span class="pre">new</span></code> and subsequent <code class="docutils literal notranslate"><span class="pre">replace</span></code> event(s) <strong>using the
+submission date(s) as the announcement date(s)</strong>.</p>
+<p>Read daily.log in order. Rely on the version number mapping to keep track of
+where we are with each e-print.</p>
+<dl class="function">
+<dt id="arxiv.canonical.classic.backfill.backfill">
+<code class="sig-prename descclassname">arxiv.canonical.classic.backfill.</code><code class="sig-name descname">backfill</code><span class="sig-paren">(</span><em class="sig-param">register</em>, <em class="sig-param">daily_path</em>, <em class="sig-param">abs_path</em>, <em class="sig-param">ps_cache_path</em>, <em class="sig-param">state_path</em>, <em class="sig-param">limit_to=None</em>, <em class="sig-param">cache_path=None</em>, <em class="sig-param">until=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/backfill.html#backfill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.backfill.backfill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lazily backfill the canonical record from the classic record.</p>
+<p>Note: you <strong>must</strong> consume this iterator in order for backfilling to occur.
+This was implemented lazily because there is considerable I/O (including
+possibly some over the network), and being able to control processing rate
+at a high level was foreseen as important.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>register</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">IRegisterAPI</span></code>) – A canonical register instance that will handle events derived from the
+classic record.</p></li>
+<li><p><strong>daily_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path to the daily.log file.</p></li>
+<li><p><strong>abs_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path of the directory containing abs files and source
+packages. Specifically, this is the directory that contains the <code class="docutils literal notranslate"><span class="pre">ftp</span></code>
+and <code class="docutils literal notranslate"><span class="pre">orig</span></code> subdirectories.</p></li>
+<li><p><strong>state_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path of a writeable directory where backfill state can be
+stored. This allows us to persist the backfill state, in case we need
+to restart after a failure.</p></li>
+<li><p><strong>limit_to</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#set" title="(in Python v3.6)"><em>set</em></a>) – A set of <code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier`s</span> <span class="pre">indicating</span> <span class="pre">a</span> <span class="pre">subset</span> <span class="pre">of</span> <span class="pre">e-prints</span> <span class="pre">to</span>
+<span class="pre">backfill.</span> <span class="pre">If</span> <span class="pre">``None`</span></code> (default) all events for all e-prints are
+backfilled.</p></li>
+<li><p><strong>cache_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – If provided, a writable directory where a cache of events can be
+maintained. This cuts down on spin-up time considerably.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>Event`s that have been successfully backfilled.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterator</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.backfill.backfill_today">
+<code class="sig-prename descclassname">arxiv.canonical.classic.backfill.</code><code class="sig-name descname">backfill_today</code><span class="sig-paren">(</span><em class="sig-param">register</em>, <em class="sig-param">daily_path</em>, <em class="sig-param">abs_path</em>, <em class="sig-param">ps_cache_path</em>, <em class="sig-param">state_path</em>, <em class="sig-param">cache_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/backfill.html#backfill_today"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.backfill.backfill_today" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lazily backfill the canonical record from today’s events in classic record.</p>
+<p>This is intended to be used to keep the canonical record up to date from
+the classic record on a daily basis, after the initial backfill.</p>
+<p>Note: you <strong>must</strong> consume this iterator in order for backfilling to occur.
+This was implemented lazily because there is considerable I/O (including
+possibly some over the network), and being able to control processing rate
+at a high level was foreseen as important.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>register</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">IRegisterAPI</span></code>) – A canonical register instance that will handle events derived from the
+classic record.</p></li>
+<li><p><strong>daily_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path to the daily.log file.</p></li>
+<li><p><strong>abs_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path of the directory containing abs files and source
+packages. Specifically, this is the directory that contains the <code class="docutils literal notranslate"><span class="pre">ftp</span></code>
+and <code class="docutils literal notranslate"><span class="pre">orig</span></code> subdirectories.</p></li>
+<li><p><strong>state_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Absolute path of a writeable directory where backfill state can be
+stored. This allows us to persist the backfill state, in case we need
+to restart after a failure.</p></li>
+<li><p><strong>cache_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – If provided, a writable directory where a cache of events can be
+maintained. This cuts down on spin-up time considerably.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields :class:<a href="#id3"><span class="problematic" id="id4">`</span></a>Event`s that have been successfully backfilled.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterator</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.classic.html">arxiv.canonical.classic package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.classic.abs.html" title="previous chapter">arxiv.canonical.classic.abs module</a></li>
+      <li>Next: <a href="arxiv.canonical.classic.cli.html" title="next chapter">arxiv.canonical.classic.cli module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.classic.backfill.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

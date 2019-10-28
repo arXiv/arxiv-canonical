@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.record.listing &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.record.listing</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="k">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Type</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="n">RecordBase</span><span class="p">,</span> <span class="n">RecordEntry</span><span class="p">,</span> <span class="n">RecordStream</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">_Self</span><span class="p">,</span> \
+    <span class="n">Year</span><span class="p">,</span> <span class="n">YearMonth</span>
+
+
+<div class="viewcode-block" id="RecordListing"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing">[docs]</a><span class="k">class</span> <span class="nc">RecordListing</span><span class="p">(</span><span class="n">RecordEntry</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;A listing entry.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RecordListing.from_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing.from_domain">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_domain</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Self</span><span class="p">],</span> <span class="n">listing</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Self</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Serialize a :class:`.Listing`.&quot;&quot;&quot;</span>
+        <span class="n">content</span><span class="p">,</span> <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">RecordListing</span><span class="o">.</span><span class="n">_encode</span><span class="p">(</span><span class="n">listing</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">RecordListing</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">listing</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+            <span class="n">stream</span><span class="o">=</span><span class="n">RecordStream</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">(</span>
+                    <span class="n">modified</span><span class="o">=</span><span class="n">listing</span><span class="o">.</span><span class="n">end_datetime</span><span class="p">,</span>
+                    <span class="n">size_bytes</span><span class="o">=</span><span class="n">size_bytes</span><span class="p">,</span>
+                    <span class="n">content_type</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">json</span><span class="p">,</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                    <span class="n">ref</span><span class="o">=</span><span class="n">key</span>
+                <span class="p">),</span>
+                <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span>
+                <span class="n">content_type</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="o">.</span><span class="n">json</span><span class="p">,</span>
+                <span class="n">size_bytes</span><span class="o">=</span><span class="n">size_bytes</span>
+            <span class="p">),</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">listing</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordListing.from_stream"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing.from_stream">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_stream</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">RecordStream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RecordListing&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
+                   <span class="n">domain</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">to_domain</span><span class="p">(</span><span class="n">stream</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RecordListing.make_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing.make_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">ListingIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_prefix</span><span class="p">(</span><span class="n">identifier</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+            <span class="n">f</span><span class="s1">&#39;</span><span class="si">{prefix}</span><span class="s1">/%Y-%m-</span><span class="si">%d</span><span class="s1">-</span><span class="si">{identifier.name}</span><span class="s1">.json&#39;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordListing.make_prefix"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing.make_prefix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_prefix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;announcement/%Y/%m/</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordListing.to_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListing.to_domain">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_domain</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">RecordStream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">stream</span><span class="o">.</span><span class="n">content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">listing</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="p">),</span>
+                                      <span class="p">)</span>
+        <span class="k">if</span> <span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">seekable</span><span class="p">:</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">listing</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">listing</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Listing</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">listing</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">created</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">start_datetime</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;listing&#39;</span></div>
+
+
+<div class="viewcode-block" id="RecordListingDay"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingDay">[docs]</a><span class="k">class</span> <span class="nc">RecordListingDay</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                                  <span class="n">D</span><span class="o">.</span><span class="n">ListingIdentifier</span><span class="p">,</span>
+                                  <span class="n">RecordListing</span><span class="p">,</span>
+                                  <span class="n">D</span><span class="o">.</span><span class="n">ListingDay</span><span class="p">]):</span>
+
+<div class="viewcode-block" id="RecordListingDay.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingDay.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;announcement/%Y/%m/%Y-%m-</span><span class="si">%d</span><span class="s1">.manifest.json&#39;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="RecordListingMonth"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingMonth">[docs]</a><span class="k">class</span> <span class="nc">RecordListingMonth</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">YearMonth</span><span class="p">,</span>
+                                    <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                                    <span class="n">RecordListing</span><span class="p">,</span>
+                                    <span class="n">D</span><span class="o">.</span><span class="n">ListingMonth</span><span class="p">]):</span>
+<div class="viewcode-block" id="RecordListingMonth.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingMonth.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">year_and_month</span><span class="p">:</span> <span class="n">YearMonth</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a monthly listing manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">yr</span><span class="p">,</span> <span class="n">month</span> <span class="o">=</span> <span class="n">year_and_month</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;announcement/</span><span class="si">{yr}</span><span class="s1">/</span><span class="si">{yr}</span><span class="s1">-{str(month).zfill(2)}.manifest.json&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RecordListingYear"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingYear">[docs]</a><span class="k">class</span> <span class="nc">RecordListingYear</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span>
+                                   <span class="n">YearMonth</span><span class="p">,</span>
+                                   <span class="n">RecordListingMonth</span><span class="p">,</span>
+                                   <span class="n">D</span><span class="o">.</span><span class="n">ListingYear</span><span class="p">]):</span>
+
+<div class="viewcode-block" id="RecordListingYear.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListingYear.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="n">Year</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a yearly listing manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;announcement/</span><span class="si">{year}</span><span class="s1">.manifest.json&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RecordListings"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListings">[docs]</a><span class="k">class</span> <span class="nc">RecordListings</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Year</span><span class="p">,</span> <span class="n">RecordListingYear</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">AllListings</span><span class="p">]):</span>
+
+<div class="viewcode-block" id="RecordListings.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.listing.html#arxiv.canonical.integrity.RecordListings.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a root listing manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="s1">&#39;announcement.manifest.json&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../record.html">arxiv.canonical.record</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

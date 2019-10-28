@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.record.version &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.record.version</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="n">RecordBase</span><span class="p">,</span> <span class="n">RecordEntry</span><span class="p">,</span> <span class="n">RecordEntryMembers</span><span class="p">,</span> <span class="n">RecordStream</span><span class="p">,</span> \
+    <span class="n">D</span><span class="p">,</span> <span class="n">Year</span><span class="p">,</span> <span class="n">YearMonth</span>
+<span class="kn">from</span> <span class="nn">.file</span> <span class="k">import</span> <span class="n">RecordFile</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">RecordMetadata</span>
+
+
+<div class="viewcode-block" id="RecordVersion"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion">[docs]</a><span class="k">class</span> <span class="nc">RecordVersion</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                               <span class="nb">str</span><span class="p">,</span>
+                               <span class="n">RecordEntry</span><span class="p">,</span>
+                               <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of serialized components that make up a version record.</span>
+
+<span class="sd">    A version record is comprised of (1) a metadata record, (2) a source</span>
+<span class="sd">    package, containing the original content provided by the submitter, and (3)</span>
+<span class="sd">    a canonical rendering of the version (e.g. in PDF format).</span>
+
+<span class="sd">    The key prefix structure for an version record is:</span>
+
+<span class="sd">    ```</span>
+<span class="sd">    e-prints/&lt;YYYY&gt;/&lt;MM&gt;/&lt;arXiv ID&gt;/v&lt;version&gt;/</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Where ``YYYY`` is the year and ``MM`` the month during which the first</span>
+<span class="sd">    version of the e-print was announced.</span>
+
+<span class="sd">    Sub-keys are:</span>
+
+<span class="sd">    - Metadata record: ``&lt;arXiv ID&gt;v&lt;version&gt;.json``</span>
+<span class="sd">    - Source package: ``&lt;arXiv ID&gt;v&lt;version&gt;.tar``</span>
+<span class="sd">    - PDF: ``&lt;arXiv ID&gt;v&lt;version&gt;.render``</span>
+<span class="sd">    - Manifest: ``&lt;arXiv ID&gt;v&lt;version&gt;.manifest.json``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RecordVersion.from_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion.from_domain">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_domain</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">,</span>
+                    <span class="n">dereferencer</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">D</span><span class="o">.</span><span class="n">URI</span><span class="p">],</span> <span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]],</span>
+                    <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RecordVersion&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Serialize an :class:`.Version` to an :class:`.RecordVersion`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Source is missing&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">announced_date_first</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;First announcement date not set&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Dereference the bitstreams, wherever they happen to live.</span>
+        <span class="n">source_content</span> <span class="o">=</span> <span class="n">dereferencer</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+        <span class="n">format_content</span> <span class="o">=</span> <span class="p">{</span><span class="n">fmt</span><span class="p">:</span> <span class="n">dereferencer</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="n">source_key</span> <span class="o">=</span> <span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                            <span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">format_keys</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">fmt</span><span class="p">:</span> <span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">RecordFile</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">source_key</span><span class="p">,</span>
+            <span class="n">stream</span><span class="o">=</span><span class="n">RecordStream</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                <span class="n">content</span><span class="o">=</span><span class="n">source_content</span><span class="p">,</span>
+                <span class="n">content_type</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+                <span class="n">size_bytes</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">size_bytes</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">source</span>
+        <span class="p">)</span>
+
+        <span class="n">formats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">fmt</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">RecordFile</span><span class="p">(</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">format_keys</span><span class="p">[</span><span class="n">fmt</span><span class="p">],</span>
+                <span class="n">stream</span><span class="o">=</span><span class="n">RecordStream</span><span class="p">(</span>
+                    <span class="n">domain</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span>
+                    <span class="n">content</span><span class="o">=</span><span class="n">format_content</span><span class="p">[</span><span class="n">fmt</span><span class="p">],</span>
+                    <span class="n">content_type</span><span class="o">=</span><span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+                    <span class="n">size_bytes</span><span class="o">=</span><span class="n">cf</span><span class="o">.</span><span class="n">size_bytes</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">cf</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="p">:</span>
+            <span class="n">render_content</span> <span class="o">=</span> <span class="n">dereferencer</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+            <span class="n">render_key</span> <span class="o">=</span> <span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                                <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">render_key</span>
+            <span class="n">formats</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RecordFile</span><span class="p">(</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">render_key</span><span class="p">,</span>
+                <span class="n">stream</span><span class="o">=</span><span class="n">RecordStream</span><span class="p">(</span>
+                    <span class="n">domain</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+                    <span class="n">content</span><span class="o">=</span><span class="n">render_content</span><span class="p">,</span>
+                    <span class="n">content_type</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+                    <span class="n">size_bytes</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">size_bytes</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">version</span><span class="o">.</span><span class="n">render</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">RecordMetadata</span><span class="o">.</span><span class="n">from_domain</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="c1"># From now on we refer to bitstreams with canonical URIs.</span>
+        <span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">source_key</span>
+        <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">format_keys</span><span class="p">[</span><span class="n">fmt</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">RecordVersion</span><span class="p">(</span>
+            <span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+            <span class="n">members</span><span class="o">=</span><span class="n">RecordEntryMembers</span><span class="p">(</span>
+                <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+                <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">formats</span>
+            <span class="p">),</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">version</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordVersion.make_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion.make_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RecordMetadata</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{cls.make_prefix(identifier)}/</span><span class="si">{filename}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordVersion.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="n">date_part</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;e-prints/</span><span class="si">{ident.year}</span><span class="s1">/{str(ident.month).zfill(2)}&#39;</span>
+        <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{date_part}</span><span class="s1">/</span><span class="si">{ident.category_part}</span><span class="s1">/</span><span class="si">{ident.numeric_part}</span><span class="s1">/</span><span class="si">{ident.numeric_part}</span><span class="s1">.manifest.json&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{date_part}</span><span class="s1">/</span><span class="si">{ident.arxiv_id}</span><span class="s1">/</span><span class="si">{ident}</span><span class="s1">.manifest.json&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordVersion.make_prefix"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion.make_prefix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_prefix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key prefix for an e-print record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        date : datetime.date</span>
+<span class="sd">            The day on which the first version of the e-print was announced.</span>
+<span class="sd">        ident : str</span>
+<span class="sd">            arXiv identifier</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">date_part</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;e-prints/</span><span class="si">{ident.year}</span><span class="s1">/{str(ident.month).zfill(2)}&#39;</span>
+        <span class="k">if</span> <span class="n">ident</span><span class="o">.</span><span class="n">is_old_style</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{date_part}</span><span class="s1">/</span><span class="si">{ident.category_part}</span><span class="s1">/</span><span class="si">{ident.numeric_part}</span><span class="s1">/&#39;</span>
+                    <span class="n">f</span><span class="s1">&#39;v</span><span class="si">{ident.version}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{date_part}</span><span class="s1">/</span><span class="si">{ident.arxiv_id}</span><span class="s1">/v</span><span class="si">{ident.version}</span><span class="s1">&#39;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordMetadata</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;JSON document containing canonical e-print metadata.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s1">&#39;metadata&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span>
+        <span class="n">member</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">RecordMetadata</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">member</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordEntry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Canonical PDF for the e-print.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;render&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">formats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">RecordEntry</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">(</span><span class="n">fmt</span><span class="p">):</span> <span class="n">entry</span>
+                <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;render&#39;</span><span class="p">]}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordEntry</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gzipped tarball containing the e-print source.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s1">&#39;source&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="RecordVersion.instance_to_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordVersion.instance_to_domain">[docs]</a>    <span class="k">def</span> <span class="nf">instance_to_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Deserialize an :class:`.RecordVersion` to an :class:`.Version`.&quot;&quot;&quot;</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_domain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">version</span><span class="o">.</span><span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Failed to to_domain source or render metadata&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">version</span></div></div>
+
+
+<div class="viewcode-block" id="RecordEPrint"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordEPrint">[docs]</a><span class="k">class</span> <span class="nc">RecordEPrint</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                              <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                              <span class="n">RecordVersion</span><span class="p">,</span>
+                              <span class="n">D</span><span class="o">.</span><span class="n">EPrint</span><span class="p">]):</span>
+<div class="viewcode-block" id="RecordEPrint.make_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordEPrint.make_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">idn</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key prefix for an e-print record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        idn : str</span>
+<span class="sd">            arXiv identifier</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;e-prints/</span><span class="si">{idn.year}</span><span class="s1">/{str(idn.month).zfill(2)}/</span><span class="si">{idn}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordEPrint.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordEPrint.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for an e-print manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{cls.make_key(ident)}.manifest.json&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RecordDay"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordDay">[docs]</a><span class="k">class</span> <span class="nc">RecordDay</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                           <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                           <span class="n">RecordEPrint</span><span class="p">,</span>
+                           <span class="n">D</span><span class="o">.</span><span class="n">EPrintDay</span><span class="p">]):</span>
+<div class="viewcode-block" id="RecordDay.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordDay.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a daily e-print manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;e-prints/%Y/%m/%Y-%m-</span><span class="si">%d</span><span class="s1">.manifest.json&#39;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="RecordMonth"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordMonth">[docs]</a><span class="k">class</span> <span class="nc">RecordMonth</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">YearMonth</span><span class="p">,</span>
+                             <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                             <span class="n">RecordDay</span><span class="p">,</span>
+                             <span class="n">D</span><span class="o">.</span><span class="n">EPrintMonth</span><span class="p">]):</span>
+<div class="viewcode-block" id="RecordMonth.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordMonth.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">year_and_month</span><span class="p">:</span> <span class="n">YearMonth</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a monthly e-print manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">year_and_month</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;e-prints/</span><span class="si">{y}</span><span class="s1">/</span><span class="si">{y}</span><span class="s1">-{str(m).zfill(2)}.manifest.json&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RecordYear"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordYear">[docs]</a><span class="k">class</span> <span class="nc">RecordYear</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span>
+                            <span class="n">YearMonth</span><span class="p">,</span>
+                            <span class="n">RecordMonth</span><span class="p">,</span>
+                            <span class="n">D</span><span class="o">.</span><span class="n">EPrintYear</span><span class="p">]):</span>
+
+<div class="viewcode-block" id="RecordYear.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordYear.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="n">Year</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for a yearly e-print manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;e-prints/</span><span class="si">{year}</span><span class="s1">.manifest.json&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RecordEPrints"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordEPrints">[docs]</a><span class="k">class</span> <span class="nc">RecordEPrints</span><span class="p">(</span><span class="n">RecordBase</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Year</span><span class="p">,</span> <span class="n">RecordYear</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">AllEPrints</span><span class="p">]):</span>
+<div class="viewcode-block" id="RecordEPrints.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.version.html#arxiv.canonical.record.RecordEPrints.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a key for all e-print manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;e-prints.manifest.json&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../record.html">arxiv.canonical.record</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

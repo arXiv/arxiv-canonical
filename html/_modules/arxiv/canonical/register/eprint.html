@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.register.eprint &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.register.eprint</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides structs for organizing e-print metadata and content in the register.</span>
+
+<span class="sd">The classes in this module extend :class:`.Base` with methods for naming</span>
+<span class="sd">themselves and manifests.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">ICanonicalSource</span><span class="p">,</span> <span class="n">_Self</span><span class="p">,</span>
+                   <span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">,</span> <span class="n">YearMonth</span><span class="p">,</span> <span class="n">dereference</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">ConsistencyError</span>
+<span class="kn">from</span> <span class="nn">.file</span> <span class="k">import</span> <span class="n">RegisterFile</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">RegisterMetadata</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">RegisterVersion</span>
+
+
+<div class="viewcode-block" id="RegisterEPrint"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint">[docs]</a><span class="k">class</span> <span class="nc">RegisterEPrint</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                          <span class="n">D</span><span class="o">.</span><span class="n">EPrint</span><span class="p">,</span>
+                          <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrint</span><span class="p">,</span>
+                          <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEPrint</span><span class="p">,</span>
+                          <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                          <span class="n">RegisterVersion</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Representation of an e-print in the canonical register.</span>
+
+<span class="sd">    Organizes a series of one or more :class:`.RegisterVersion`s.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrint</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrint</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEPrint</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterVersion</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_manifest_to_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># Single-dispatch based on the event type, using the ``add_event_`` methods</span>
+    <span class="c1"># defined below.</span>
+    <span class="k">def</span> <span class="nf">_add_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                    <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                    <span class="n">events</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">],</span>
+                    <span class="n">_</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="n">added</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">adder</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;add_event_</span><span class="si">{event.event_type.value}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">adder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">added</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">adder</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">added</span>
+
+    <span class="k">def</span> <span class="nf">_add_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                      <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                      <span class="n">versions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">],</span>
+                      <span class="n">fkey</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">],</span> <span class="n">Any</span><span class="p">])</span> \
+            <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">altered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">fkey</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConsistencyError</span><span class="p">(</span><span class="s1">&#39;Version already exists&#39;</span><span class="p">)</span>
+            <span class="n">member</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">member_type</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
+            <span class="n">altered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">altered</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_new"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_new">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                      <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                      <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add an event that results in a new version.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">altered</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_member_name</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConsistencyError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Version already exists: </span><span class="si">{key}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> \
+                <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">member_type</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="n">altered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">altered</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_update"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_update">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                         <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                         <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add an event that results in an update to a version.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">altered</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_member_name</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConsistencyError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No such version: </span><span class="si">{event.identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="n">altered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">altered</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_update_metadata"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_update_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_update_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                                  <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                                  <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add an event that results in an update to metadata of a version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_update</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_replace"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_replace">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                          <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                          <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add an event that generates a replacement version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_new</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_cross"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_cross">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                        <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                        <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add a cross-list event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_update_metadata</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_migrate"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_migrate">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_migrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                          <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                          <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add a data-migration event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_update</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_migrate_metadata"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_migrate_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_migrate_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                                   <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                                   <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add a metadata-migration event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_update_metadata</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterEPrint.add_event_withdraw"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrint.add_event_withdraw">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_withdraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                           <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+                           <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RegisterVersion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Add an event that withdraws an e-print.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_event_new</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RegisterDay"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterDay">[docs]</a><span class="k">class</span> <span class="nc">RegisterDay</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="n">date</span><span class="p">,</span>
+                       <span class="n">D</span><span class="o">.</span><span class="n">EPrintDay</span><span class="p">,</span>
+                       <span class="n">R</span><span class="o">.</span><span class="n">RecordDay</span><span class="p">,</span>
+                       <span class="n">I</span><span class="o">.</span><span class="n">IntegrityDay</span><span class="p">,</span>
+                       <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                       <span class="n">RegisterEPrint</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a day-block of e-prints in the canonical register.&quot;&quot;&quot;</span>
+
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrintDay</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordDay</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityDay</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterEPrint</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_manifest_to_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RegisterMonth"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterMonth">[docs]</a><span class="k">class</span> <span class="nc">RegisterMonth</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="n">YearMonth</span><span class="p">,</span>
+                         <span class="n">D</span><span class="o">.</span><span class="n">EPrintMonth</span><span class="p">,</span>
+                         <span class="n">R</span><span class="o">.</span><span class="n">RecordMonth</span><span class="p">,</span>
+                         <span class="n">I</span><span class="o">.</span><span class="n">IntegrityMonth</span><span class="p">,</span>
+                         <span class="n">date</span><span class="p">,</span>
+                         <span class="n">RegisterDay</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a month-block in the canonical register.&quot;&quot;&quot;</span>
+
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrintMonth</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMonth</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityMonth</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterDay</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">announced_date_first</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_manifest_to_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">key</span><span class="p">[:</span><span class="mi">10</span><span class="p">],</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RegisterYear"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterYear">[docs]</a><span class="k">class</span> <span class="nc">RegisterYear</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span>
+                        <span class="n">D</span><span class="o">.</span><span class="n">EPrintYear</span><span class="p">,</span>
+                        <span class="n">R</span><span class="o">.</span><span class="n">RecordYear</span><span class="p">,</span>
+                        <span class="n">I</span><span class="o">.</span><span class="n">IntegrityYear</span><span class="p">,</span>
+                        <span class="n">YearMonth</span><span class="p">,</span>
+                        <span class="n">RegisterMonth</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a year-block in the canonical register.&quot;&quot;&quot;</span>
+
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">EPrintYear</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordYear</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityYear</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterMonth</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">YearMonth</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                 <span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">month</span><span class="p">)]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_manifest_to_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YearMonth</span><span class="p">:</span>
+        <span class="n">year_part</span><span class="p">,</span> <span class="n">month_part</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">year_part</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">month_part</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RegisterEPrints"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.eprint.html#arxiv.canonical.register.RegisterEPrints">[docs]</a><span class="k">class</span> <span class="nc">RegisterEPrints</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span>
+                           <span class="n">D</span><span class="o">.</span><span class="n">AllEPrints</span><span class="p">,</span>
+                           <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrints</span><span class="p">,</span>
+                           <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEPrints</span><span class="p">,</span>
+                           <span class="n">Year</span><span class="p">,</span>
+                           <span class="n">RegisterYear</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Representation of the complete set of e-prints in the register.&quot;&quot;&quot;</span>
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">AllEPrints</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrints</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEPrints</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterYear</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Year</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">year</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_manifest_to_member_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Year</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

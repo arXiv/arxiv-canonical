@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.daily &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.classic.daily</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Parser for the daily.log file.</span>
+
+<span class="sd">The main goal of this implementation is parsing the log file for the purpose</span>
+<span class="sd">of transforming it into the arXiv Canonical format. Specifically, we want to</span>
+<span class="sd">use this legacy data structure to generate :class:`.Event` data that can be</span>
+<span class="sd">serialized in the daily listing files.</span>
+
+<span class="sd">From the original ``arXiv::Updates::DailyLog``:</span>
+
+<span class="sd">.. code-block:: plain</span>
+
+<span class="sd">    Module to provide information about updates to the archive</span>
+<span class="sd">    over specified periods. This should be the only section</span>
+<span class="sd">    of code that reads the daily.log file.</span>
+
+<span class="sd">     Simeon Warner - 6Jan2000...</span>
+<span class="sd">     25Jan2000 - modified so that undef $startdate or $enddate select</span>
+<span class="sd">       the beginning or end of time respectively.</span>
+<span class="sd">     25Jan2000 - modified so that by simply removing the `-&#39; from</span>
+<span class="sd">       and ISO8601 date we get YYYYMMDD from YYYY-MM-DD</span>
+<span class="sd">     16Oct2000 - to allow easy resumption in the OAI1 interface and</span>
+<span class="sd">       because it seems that it might be useful in other contexts the</span>
+<span class="sd">       number limited behaviour has been changed. query_daily_log() and</span>
+<span class="sd">       hence all other routines now stop at then end of a day and</span>
+<span class="sd">       returns the that day (in the form YYYY-MM-DD) as the value</span>
+<span class="sd">       if limited, undef otherwise.</span>
+
+<span class="sd">    Thoughts: If this is to be used on the mirror sites then we will need</span>
+<span class="sd">    to mirror the daily log. This probably means that that file</span>
+<span class="sd">    should be split up.</span>
+
+<span class="sd">     [CVS: $Id: DailyLog.pm,v 1.6 2010/03/23 03:53:09 arxiv Exp $]</span>
+<span class="sd">```</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> \
+    <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">groupby</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.base.logging</span> <span class="k">import</span> <span class="n">getLogger</span>
+
+<span class="kn">from</span> <span class="nn">..domain</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">InvalidIdentifier</span><span class="p">,</span> \
+    <span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">EventType</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">PersistentMultifileIndex</span>
+
+
+<span class="k">def</span> <span class="nf">_showwarning</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+                 <span class="n">category</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]</span> <span class="o">=</span> <span class="ne">UserWarning</span><span class="p">,</span>
+                 <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">lineno</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">showwarning</span> <span class="o">=</span> <span class="n">_showwarning</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LOGLEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;40&#39;</span><span class="p">)))</span>
+
+<span class="n">Entry</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">EventType</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+<span class="n">MergedEntry</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">EventType</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+
+<span class="n">LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;event_date&gt;\d</span><span class="si">{6}</span><span class="s1">)\|(?P&lt;archive&gt;[a-z-]+)&#39;</span>
+                  <span class="sa">r</span><span class="s1">&#39;\|(?P&lt;data&gt;.*)$&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Each line in the log file begins with a date stamp and an archive.&quot;&quot;&quot;</span>
+
+<span class="n">NEW_STYLE_CUTOVER_AFTER</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2007</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Date after which the new-style format was adopted.&quot;&quot;&quot;</span>
+
+<span class="n">IDENTIFIER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(([a-z\-]+\/\d</span><span class="si">{7}</span><span class="s1">)|(\d</span><span class="si">{4}</span><span class="s1">\.\d{4,5}))&#39;</span><span class="p">)</span>
+<span class="n">SQUASHED_IDENTIFIER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?P&lt;archive&gt;[a-z\-]+)(?P&lt;identifier&gt;\d</span><span class="si">{7}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;The old-style format ommitted the forward slash in the old identifier.&quot;&quot;&quot;</span>
+
+<span class="n">IDENTIFIER_RANGE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;start_id&gt;\d</span><span class="si">{7}</span><span class="s1">)\-(?P&lt;end_id&gt;\d</span><span class="si">{7}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;The old-style format supported ranges of identifiers, e.g. ``1234-1238``.&quot;&quot;&quot;</span>
+<span class="n">SINGLE_IDENTIFIER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(\d</span><span class="si">{7}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Numeric part of an old-style arXiv ID.&quot;&quot;&quot;</span>
+<span class="n">OLD_STYLE_CROSS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;archive&gt;[\w\-]+)(\.[\w\-]+)?&#39;</span>
+                             <span class="sa">r</span><span class="s1">&#39;(?P&lt;identifier&gt;\d</span><span class="si">{7}</span><span class="s1">)(?P&lt;category&gt;\.[\w\-]+)?&#39;</span><span class="p">)</span>
+
+<span class="c1"># The semantics of these patterns are not clear to me. -Erick 2019-04-17</span>
+<span class="n">THREEPART_REPLACEMENT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;archive&gt;\.[a-zA-Z\-]+)?&#39;</span>
+                                   <span class="sa">r</span><span class="s1">&#39;(?P&lt;identifier&gt;\d</span><span class="si">{7}</span><span class="s1">)&#39;</span>
+                                   <span class="sa">r</span><span class="s1">&#39;(?P&lt;category&gt;\.[a-zA-Z\-]+)?$&#39;</span><span class="p">)</span>
+<span class="n">FOURPART_REPLACEMENT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;archive&gt;[a-z\-]+)(\.[a-zA-Z\-]+)?&#39;</span>
+                                  <span class="sa">r</span><span class="s1">&#39;(?P&lt;identifier&gt;\d</span><span class="si">{7}</span><span class="s1">)&#39;</span>
+                                  <span class="sa">r</span><span class="s1">&#39;(?P&lt;category&gt;\.[a-zA-Z\-]+)?$&#39;</span><span class="p">)</span>
+
+<span class="n">WEIRD_INVERTED_ENTRY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;identifier&gt;\d</span><span class="si">{7}</span><span class="s1">)(?:\.\d)?&#39;</span>
+                                  <span class="sa">r</span><span class="s1">&#39;(?P&lt;archive&gt;[a-z\-]+)(\.[a-zA-Z\-]+)?$&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pattern for a weird edge case not handled in the legacy code.</span>
+
+<span class="sd">Here is an example:</span>
+
+<span class="sd">.. code-block::</span>
+
+<span class="sd">   quant-ph9902016 9704019.0chao-dyn 9902003.0chao-dyn 9904021.0chao-dyn</span>
+
+<span class="sd">``quant-ph9902016`` is normal. But ``9704019.0chao-dyn`` does not match any</span>
+<span class="sd">patterns in the legacy code. In this particular case (from 1999), we can infer</span>
+<span class="sd">that ``9704019`` belongs with ``chao-dyn`` rather than ``quant-ph`` because</span>
+<span class="sd">``quant-ph/9704019`` was last updated in 1997 and this entry is in 1999 when</span>
+<span class="sd">``chao-dyn/9704019`` was last updated.</span>
+
+<span class="sd">Not sure what the decimal part is supposed to mean. It does not appear to refer</span>
+<span class="sd">to the e-print version. I also considered the possibility that it is a range</span>
+<span class="sd">of some kind, e.g. ``9912003.4solv-int`` -&gt; ``solv-int/9912003`` and</span>
+<span class="sd">``solv-int/9912004``, but this is in a replacement section and there is only</span>
+<span class="sd">one version of ``solv-int/9912004``.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="EventData"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.EventData">[docs]</a><span class="k">class</span> <span class="nc">EventData</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data about events that can be extracted from the daily log.&quot;&quot;&quot;</span>
+
+    <span class="n">arxiv_id</span><span class="p">:</span> <span class="n">Identifier</span>
+    <span class="n">event_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="n">event_type</span><span class="p">:</span> <span class="n">EventType</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">categories</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DailyLogParser"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.DailyLogParser">[docs]</a><span class="k">class</span> <span class="nc">DailyLogParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Parses the daily log file.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize both styles of parsers.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newstyle_parser</span> <span class="o">=</span> <span class="n">NewStyleLineParser</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oldstyle_parser</span> <span class="o">=</span> <span class="n">OldStyleLineParser</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_date_raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse date stamp in the format ``yymmdd``.&quot;&quot;&quot;</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">event_date_raw</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">event_date_raw</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">event_date_raw</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+
+        <span class="c1"># This will be OK until 2091.</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="mi">1900</span> <span class="o">+</span> <span class="n">yy</span> <span class="k">if</span> <span class="n">yy</span> <span class="o">&gt;</span> <span class="mi">90</span> <span class="k">else</span> <span class="mi">2000</span> <span class="o">+</span> <span class="n">yy</span>
+        <span class="n">event_date</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="n">day</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">event_date</span>
+
+    <span class="k">def</span> <span class="nf">_parse_date_only</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">LINE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_date</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;event_date&#39;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="DailyLogParser.parse"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.DailyLogParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">for_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse the daily log file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            Path to the daily log file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Each item is an :class:`.EventData` from the log file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">for_date</span> <span class="ow">is</span> <span class="kc">None</span>
+             <span class="ow">or</span> <span class="n">for_date</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_date_only</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        It is possible for a singular event to be represented in multiple</span>
+<span class="sd">        archive sections. For example ``math-ph/0702031`` was replaced</span>
+<span class="sd">        on 2007-02-13; on that day, it is listed in both ``math-ph`` and</span>
+<span class="sd">        ``math`` archive sections of the record.</span>
+
+<span class="sd">        This function takes a series of entries from a given day that may</span>
+<span class="sd">        contain multiple entries per event, and returns a series of entries</span>
+<span class="sd">        that correspond directly to unique announcement events.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_event_date</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;event_date&#39;</span><span class="p">)</span>
+        <span class="n">_identifier</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;arxiv_id&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_event_type</span><span class="p">(</span><span class="n">datum</span><span class="p">:</span> <span class="n">EventData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">EventType</span><span class="p">]:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="p">{</span><span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">EventType</span><span class="o">.</span><span class="n">CROSSLIST</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">EventType</span><span class="o">.</span><span class="n">UPDATED_METADATA</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+            <span class="k">return</span> <span class="n">order</span><span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">event_type</span><span class="p">],</span> <span class="n">datum</span><span class="o">.</span><span class="n">event_type</span>
+
+
+        <span class="c1"># We assume that the entries are sorted by date already.</span>
+        <span class="k">for</span> <span class="n">event_date</span><span class="p">,</span> <span class="n">day_entries</span> <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_event_date</span><span class="p">):</span>
+            <span class="c1"># These will be coming in one archive at a time, so we need to</span>
+            <span class="c1"># sort and group by identifier and event type to merge</span>
+            <span class="c1"># appropriately.</span>
+            <span class="n">grouped_by_id</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">day_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_identifier</span><span class="p">),</span>
+                                    <span class="n">key</span><span class="o">=</span><span class="n">_identifier</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">i_entries</span> <span class="ow">in</span> <span class="n">grouped_by_id</span><span class="p">:</span>
+                <span class="n">grouped_by_etype</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">i_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_event_type</span><span class="p">),</span>
+                                           <span class="n">key</span><span class="o">=</span><span class="n">_event_type</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">event_type</span><span class="p">),</span> <span class="n">e_entries</span> <span class="ow">in</span> <span class="n">grouped_by_etype</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">EventData</span><span class="p">(</span>
+                        <span class="n">arxiv_id</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                        <span class="n">event_date</span><span class="o">=</span><span class="n">event_date</span><span class="p">,</span>
+                        <span class="n">event_type</span><span class="o">=</span><span class="n">EventType</span><span class="p">(</span><span class="n">event_type</span><span class="p">),</span>
+                        <span class="n">version</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">e_entries</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">categories</span><span class="p">]</span>
+                    <span class="p">)</span>
+
+<div class="viewcode-block" id="DailyLogParser.parse_line"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.DailyLogParser.parse_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a single line from the daily log file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        raw : str</span>
+<span class="sd">            A single line.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.EventData` instances from the line.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">LINE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Line is malformed: </span><span class="si">{raw}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">archive</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;archive&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+        <span class="n">event_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_date</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;event_date&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">event_date</span> <span class="o">&gt;</span> <span class="n">NEW_STYLE_CUTOVER_AFTER</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">newstyle_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">event_date</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">oldstyle_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">event_date</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LineParser"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.LineParser">[docs]</a><span class="k">class</span> <span class="nc">LineParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Shared behavior among newstyle and oldstyle line parsing.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">MergedEntry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merge entries within an archive for a particular day.</span>
+
+<span class="sd">        There is one entry per category, so multiple entries may belong to the</span>
+<span class="sd">        same announcement event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_identifier</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Entry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Identifier</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">_event_type</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Entry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ident</span><span class="p">,</span> <span class="n">ent</span> \
+                <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_identifier</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">_identifier</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">ev_ent</span> \
+                    <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ent</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_event_type</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">_event_type</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">ident</span><span class="p">,</span> <span class="n">EventType</span><span class="p">(</span><span class="n">event_type</span><span class="p">),</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ev_ent</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_to_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">e_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                   <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">MergedEntry</span><span class="p">],</span>
+                   <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+        <span class="n">event_date</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">e_date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">e_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">e_date</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">paper_id</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">categories</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">EventData</span><span class="p">(</span><span class="n">paper_id</span><span class="p">,</span>
+                            <span class="n">event_date</span><span class="p">,</span>
+                            <span class="n">event_type</span><span class="p">,</span>
+                            <span class="n">version</span><span class="p">,</span>
+                            <span class="n">categories</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LineParser.parse"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.LineParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse data from a daily log file line.&quot;&quot;&quot;</span>
+        <span class="n">new</span><span class="p">,</span> <span class="n">cross</span><span class="p">,</span> <span class="n">replace</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_events</span><span class="p">(</span><span class="n">e_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_new</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">new</span><span class="p">)),</span> <span class="mi">1</span><span class="p">),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_to_events</span><span class="p">(</span><span class="n">e_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_cross</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">cross</span><span class="p">))),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_to_events</span><span class="p">(</span><span class="n">e_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parse_replace</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">replace</span><span class="p">))))</span></div>
+
+<div class="viewcode-block" id="LineParser.parse_new"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.LineParser.parse_new">[docs]</a>    <span class="k">def</span> <span class="nf">parse_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse entries for new e-prints.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Not implemented in this base class&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LineParser.parse_cross"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.LineParser.parse_cross">[docs]</a>    <span class="k">def</span> <span class="nf">parse_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse entries for cross-list e-prints.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Not implemented in this base class&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LineParser.parse_replace"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.LineParser.parse_replace">[docs]</a>    <span class="k">def</span> <span class="nf">parse_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse entries for replacements.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Not implemented in this base class&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OldStyleLineParser"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.OldStyleLineParser">[docs]</a><span class="k">class</span> <span class="nc">OldStyleLineParser</span><span class="p">(</span><span class="n">LineParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses data from old-style log lines.</span>
+
+<span class="sd">    The original format used a separate line for each archive. The line</span>
+<span class="sd">    contained three sections: e-prints newly announced in that archive,</span>
+<span class="sd">    e-prints cross-listed to that archive, and e-prints replaced either in that</span>
+<span class="sd">    archive or with a new cross-list category in that archive. Thus there may</span>
+<span class="sd">    be multiple lines for a given announcement day, one per archive in which</span>
+<span class="sd">    announcement activity occurred.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="OldStyleLineParser.parse_new"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.OldStyleLineParser.parse_new">[docs]</a>    <span class="k">def</span> <span class="nf">parse_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for new e-prints.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Archive to which entries on this line apply.</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing new e-print entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">match_range</span> <span class="o">=</span> <span class="n">IDENTIFIER_RANGE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match_range</span><span class="p">:</span>
+            <span class="n">start_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match_range</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;start_id&#39;</span><span class="p">))</span>
+            <span class="n">end_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match_range</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;end_id&#39;</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">_identifier</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_id</span><span class="p">,</span> <span class="n">end_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># Inclusive.</span>
+                <span class="n">identifier</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_identifier</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{archive}</span><span class="s1">/</span><span class="si">{identifier}</span><span class="s1">&#39;</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">archive</span>
+                <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">SINGLE_IDENTIFIER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">fragment</span><span class="p">):</span>
+            <span class="n">paper_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{archive}</span><span class="s1">/</span><span class="si">{fragment}</span><span class="s1">&#39;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">archive</span>
+            <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>   <span class="c1"># Blank is OK</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing new entry (old style): </span><span class="si">{fragment}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OldStyleLineParser.parse_cross"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.OldStyleLineParser.parse_cross">[docs]</a>    <span class="k">def</span> <span class="nf">parse_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for cross-list e-prints.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Archive to which entries on this line apply (to which the</span>
+<span class="sd">            e-print has been cross-listed).</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing cross-list entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">paper_id</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">OLD_STYLE_CROSS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;archive&#39;</span><span class="p">),</span>
+                                     <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">)])</span>
+                <span class="n">crossed_to</span> <span class="o">=</span> <span class="n">archive</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">category</span><span class="p">:</span>
+                    <span class="n">crossed_to</span> <span class="o">+=</span> <span class="n">category</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">EventType</span><span class="o">.</span><span class="n">CROSSLIST</span><span class="p">,</span> <span class="n">crossed_to</span>
+                <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing cross (old style): </span><span class="si">{paper_id}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OldStyleLineParser.parse_replace"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.OldStyleLineParser.parse_replace">[docs]</a>    <span class="k">def</span> <span class="nf">parse_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for replacements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Archive to which entries on this line apply.</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing replacement entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">paper_id</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+
+            <span class="n">abs_only</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">paper_id</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abs&#39;</span><span class="p">):</span>
+                <span class="n">abs_only</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="n">paper_id</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+
+            <span class="n">match_threepart</span> <span class="o">=</span> <span class="n">THREEPART_REPLACEMENT</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="n">match_fourpart</span> <span class="o">=</span> <span class="n">FOURPART_REPLACEMENT</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="n">match_weird</span> <span class="o">=</span> <span class="n">WEIRD_INVERTED_ENTRY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match_threepart</span><span class="p">:</span>
+                <span class="n">identifier</span> <span class="o">=</span> <span class="n">match_threepart</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">)</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{archive}</span><span class="s1">/</span><span class="si">{identifier}</span><span class="s1">&#39;</span>
+                <span class="n">crossed_to</span> <span class="o">=</span> <span class="n">archive</span>
+            <span class="k">elif</span> <span class="n">match_fourpart</span><span class="p">:</span>
+                <span class="n">this_archive</span> <span class="o">=</span> <span class="n">match_fourpart</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;archive&#39;</span><span class="p">)</span>
+                <span class="n">identifier</span> <span class="o">=</span> <span class="n">match_fourpart</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">)</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="n">match_fourpart</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{this_archive}</span><span class="s1">/</span><span class="si">{identifier}</span><span class="s1">&#39;</span>
+                <span class="n">crossed_to</span> <span class="o">=</span> <span class="n">archive</span>
+                <span class="k">if</span> <span class="n">category</span><span class="p">:</span>
+                    <span class="n">crossed_to</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39;.</span><span class="si">{category}</span><span class="s1">&#39;</span>
+            <span class="k">elif</span> <span class="n">match_weird</span><span class="p">:</span>
+                <span class="n">this_archive</span> <span class="o">=</span> <span class="n">match_weird</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;archive&#39;</span><span class="p">)</span>
+                <span class="n">identifier</span> <span class="o">=</span> <span class="n">match_weird</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">)</span>
+                <span class="n">paper_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{this_archive}</span><span class="s1">/</span><span class="si">{identifier}</span><span class="s1">&#39;</span>
+                <span class="n">crossed_to</span> <span class="o">=</span> <span class="n">archive</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing repl (old style): </span><span class="si">{paper_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">abs_only</span><span class="p">:</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="n">EventType</span><span class="o">.</span><span class="n">UPDATED_METADATA</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">crossed_to</span>
+            <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="NewStyleLineParser"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.NewStyleLineParser">[docs]</a><span class="k">class</span> <span class="nc">NewStyleLineParser</span><span class="p">(</span><span class="n">LineParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses new-style daily log lines.</span>
+
+<span class="sd">    Starting after 2007-04-02 (:const:`NEW_STYLE_CUTOVER_AFTER`), the format</span>
+<span class="sd">    changed to put all announcement-related events on a given day on the same</span>
+<span class="sd">    line. The three original sections of the line are preserved, but within</span>
+<span class="sd">    each section are entries for e-prints from all archives.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NewStyleLineParser.parse_new"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.NewStyleLineParser.parse_new">[docs]</a>    <span class="k">def</span> <span class="nf">parse_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for new e-prints.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Literally just ``&quot;arxiv&quot;``; this is a dummy place-holder, since</span>
+<span class="sd">            new-style lines contain entries for all archives for which</span>
+<span class="sd">            announcements occurred on a particular day.</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing new e-print entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">paper_id</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">paper_id</span><span class="p">,</span> <span class="n">dummy</span><span class="p">,</span> <span class="n">categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_entry</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing new (new style): </span><span class="si">{paper_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="n">category</span>
+                <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NewStyleLineParser.parse_cross"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.NewStyleLineParser.parse_cross">[docs]</a>    <span class="k">def</span> <span class="nf">parse_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for cross-lists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Literally just ``&quot;arxiv&quot;``; this is a dummy place-holder, since</span>
+<span class="sd">            new-style lines contain entries for all archives for which</span>
+<span class="sd">            announcements occurred on a particular day.</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing cross-list entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">paper_id</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">paper_id</span><span class="p">,</span> <span class="n">dummy</span><span class="p">,</span> <span class="n">categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_entry</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing cross (new style): </span><span class="si">{paper_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">crossed_to</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">EventType</span><span class="o">.</span><span class="n">CROSSLIST</span><span class="p">,</span> <span class="n">crossed_to</span>
+                <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NewStyleLineParser.parse_replace"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.NewStyleLineParser.parse_replace">[docs]</a>    <span class="k">def</span> <span class="nf">parse_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Entry</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse entries for replaced e-prints.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        archive : str</span>
+<span class="sd">            Literally just ``&quot;arxiv&quot;``; this is a dummy place-holder, since</span>
+<span class="sd">            new-style lines contain entries for all archives for which</span>
+<span class="sd">            announcements occurred on a particular day.</span>
+<span class="sd">        fragment : str</span>
+<span class="sd">            Section of the line containing replacement entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iterable</span>
+<span class="sd">            Yields :class:`.Event` instances from this section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">paper_id</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">paper_id</span><span class="p">,</span> <span class="n">abs_only</span><span class="p">,</span> <span class="n">categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_entry</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parsing repl (new style): </span><span class="si">{paper_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">abs_only</span><span class="p">:</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="n">EventType</span><span class="o">.</span><span class="n">UPDATED_METADATA</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">Identifier</span><span class="p">(</span><span class="n">paper_id</span><span class="p">),</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">category</span>
+                <span class="k">except</span> <span class="n">InvalidIdentifier</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skipping: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a single entry from within a section of the log line.</span>
+
+<span class="sd">        An entry represents an announcement-related event for a single e-print.</span>
+<span class="sd">        Data in the entry is delimited by a colon (``:``). The first item is</span>
+<span class="sd">        the e-print identifier, followed by each of the categories associated</span>
+<span class="sd">        with the event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">abs_only</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abs&#39;</span><span class="p">):</span>
+            <span class="n">abs_only</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">paper_id</span><span class="p">,</span> <span class="n">categories</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">categories_list</span> <span class="o">=</span> <span class="n">categories</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="c1"># unsquash old identifier, if squashed</span>
+        <span class="n">squashed</span> <span class="o">=</span> <span class="n">SQUASHED_IDENTIFIER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">squashed</span><span class="p">:</span>
+            <span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">squashed</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+        <span class="k">assert</span> <span class="n">IDENTIFIER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">paper_id</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">paper_id</span><span class="p">,</span> <span class="n">abs_only</span><span class="p">,</span> <span class="n">categories_list</span></div>
+
+
+<span class="n">EVENT_DATA</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">for_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+          <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse the daily log file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str</span>
+<span class="sd">        Path to the daily log file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterable</span>
+<span class="sd">        Each item is an :class:`.EventData` from the log file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">EVENT_DATA</span>
+    <span class="k">if</span> <span class="n">cache_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cache_path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">EVENT_DATA</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">EVENT_DATA</span> <span class="o">=</span> <span class="n">PersistentMultifileIndex</span><span class="p">()</span>
+        <span class="n">EVENT_DATA</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">EVENT_DATA</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Load events from cache&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">for_date</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">EVENT_DATA</span><span class="p">[</span><span class="n">for_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()]:</span>
+                <span class="k">yield</span> <span class="n">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">events</span> <span class="ow">in</span> <span class="n">EVENT_DATA</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">e</span>
+        <span class="k">return</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Parse events for the first time&#39;</span><span class="p">)</span>
+    <span class="n">year</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">DailyLogParser</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">year</span> <span class="o">!=</span> <span class="n">year</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Parsed </span><span class="si">%i</span><span class="s1"> events in </span><span class="si">%i</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">last</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">year</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cache_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">EVENT_DATA</span><span class="p">:</span>
+            <span class="n">EVENT_DATA</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">EVENT_DATA</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Parsed </span><span class="si">%i</span><span class="s1"> events&#39;</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">EVENT_DATA</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">for_date</span><span class="o">=</span><span class="n">for_date</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">e</span></div>
+
+
+<div class="viewcode-block" id="scan"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.daily.html#arxiv.canonical.classic.daily.scan">[docs]</a><span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventData</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ed</span> <span class="k">for</span> <span class="n">ed</span> <span class="ow">in</span> <span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ed</span><span class="o">.</span><span class="n">arxiv_id</span> <span class="o">==</span> <span class="n">identifier</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

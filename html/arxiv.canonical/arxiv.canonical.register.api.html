@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.register.api module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.register.core module" href="arxiv.canonical.register.core.html" />
+    <link rel="prev" title="arxiv.canonical.register.tests.test_api module" href="arxiv.canonical.register.tests.test_api.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.register.api">
+<span id="arxiv-canonical-register-api-module"></span><h1>arxiv.canonical.register.api module<a class="headerlink" href="#module-arxiv.canonical.register.api" title="Permalink to this headline">¶</a></h1>
+<p>Provides the main public API for the canonical register.</p>
+<p>See <a class="reference internal" href="#arxiv.canonical.register.api.RegisterAPI" title="arxiv.canonical.register.api.RegisterAPI"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterAPI</span></code></a>.</p>
+<dl class="class">
+<dt id="arxiv.canonical.register.api.Register">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.api.</code><code class="sig-name descname">Register</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#Register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.Register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.register.api.Register.add_events">
+<code class="sig-name descname">add_events</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">*events</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#Register.add_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.Register.add_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add events to this register.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.api.Register.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.api.Register.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.Canon</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.api.Register.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.api.Register.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.html#arxiv.canonical.integrity.Integrity" title="arxiv.canonical.integrity.Integrity"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.Integrity</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.api.Register.member_type">
+<code class="sig-name descname">member_type</code><em class="property"> = typing.Union[arxiv.canonical.register.listing.RegisterListings, arxiv.canonical.register.eprint.RegisterEPrints]</em><a class="headerlink" href="#arxiv.canonical.register.api.Register.member_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.api.Register.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.api.Register.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.html#arxiv.canonical.record.Record" title="arxiv.canonical.record.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.Record</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.register.api.RegisterAPI">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.api.</code><code class="sig-name descname">RegisterAPI</code><span class="sig-paren">(</span><em class="sig-param">storage</em>, <em class="sig-param">sources</em>, <em class="sig-param">name='all'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.IRegisterAPI" title="arxiv.canonical.core.IRegisterAPI"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.core.IRegisterAPI</span></code></a></p>
+<p>The main public API for the register.</p>
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.add_events">
+<code class="sig-name descname">add_events</code><span class="sig-paren">(</span><em class="sig-param">*events</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.add_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.add_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add new events to the register.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_eprint">
+<code class="sig-name descname">load_eprint</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_eprint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_eprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.EPrint" title="arxiv.canonical.domain.EPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPrint</span></code></a> from the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.eprint.html#arxiv.canonical.domain.eprint.EPrint" title="arxiv.canonical.domain.eprint.EPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPrint</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_event">
+<code class="sig-name descname">load_event</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> by identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_events">
+<code class="sig-name descname">load_events</code><span class="sig-paren">(</span><em class="sig-param">selector</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load all :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Event`s for a day, month, or year.</p>
+<p>Returns an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> generator that loads event data lazily from
+the underlying storage, so that in general we are loading only the data
+that we are actually consuming. Events are generated in order.</p>
+<p><strong>But be warned!</strong> Evaluating the entire generator all at once (e.g. by
+coercing it to a <code class="docutils literal notranslate"><span class="pre">list</span></code>) may load a considerable amount of data into
+memory (and use a lot of i/o), especially if events for an entire year
+are loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>selector</strong> (int, tuple, or <a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.date" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a>) – Indicates the year (int), month (Tuple[int, int]), or day for which
+events should be loaded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>generator</em> – Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances in chronological order.</p></li>
+<li><p><em>int</em> – An estimate of the number of events that will be generated. Note
+that the actual number may change (especially for large selections)
+because the record may be updated while the generator is being
+consumed.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_history">
+<code class="sig-name descname">load_history</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the event history of an <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.EPrint" title="arxiv.canonical.domain.EPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">EPrint</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventSummary" title="arxiv.canonical.domain.version.EventSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSummary</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_listing">
+<code class="sig-name descname">load_listing</code><span class="sig-paren">(</span><em class="sig-param">date</em>, <em class="sig-param">shard='listing'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_listing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_listing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Listing" title="arxiv.canonical.domain.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a> for a particulate date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.listing.html#arxiv.canonical.domain.listing.Listing" title="arxiv.canonical.domain.listing.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">Listing</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_render">
+<code class="sig-name descname">load_render</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_render" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.CanonicalFile" title="arxiv.canonical.domain.file.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.IO" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_source">
+<code class="sig-name descname">load_source</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_source" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.CanonicalFile" title="arxiv.canonical.domain.file.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.IO" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.api.RegisterAPI.load_version">
+<code class="sig-name descname">load_version</code><span class="sig-paren">(</span><em class="sig-param">identifier</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/api.html#RegisterAPI.load_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.api.RegisterAPI.load_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an e-print <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a> from the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.register.html">arxiv.canonical.register package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.register.tests.test_api.html" title="previous chapter">arxiv.canonical.register.tests.test_api module</a></li>
+      <li>Next: <a href="arxiv.canonical.register.core.html" title="next chapter">arxiv.canonical.register.core module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.register.api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

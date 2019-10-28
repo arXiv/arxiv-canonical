@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.role.stream module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.serialize package" href="arxiv.canonical.serialize.html" />
+    <link rel="prev" title="arxiv.canonical.role.role module" href="arxiv.canonical.role.role.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.role.stream">
+<span id="arxiv-canonical-role-stream-module"></span><h1>arxiv.canonical.role.stream module<a class="headerlink" href="#module-arxiv.canonical.role.stream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="arxiv.canonical.role.stream.Emitter">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.role.stream.</code><code class="sig-name descname">Emitter</code><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#Emitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.Emitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.role.stream.StreamRole" title="arxiv.canonical.role.stream.StreamRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.role.stream.StreamRole</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.canonical.role.stream.Emitter.event_supported">
+<code class="sig-name descname">event_supported</code><em class="property"> = ['emit']</em><a class="headerlink" href="#arxiv.canonical.role.stream.Emitter.event_supported" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.role.stream.Listener">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.role.stream.</code><code class="sig-name descname">Listener</code><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#Listener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.Listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.role.stream.StreamRole" title="arxiv.canonical.role.stream.StreamRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.role.stream.StreamRole</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.canonical.role.stream.Listener.event_supported">
+<code class="sig-name descname">event_supported</code><em class="property"> = ['listen']</em><a class="headerlink" href="#arxiv.canonical.role.stream.Listener.event_supported" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.role.stream.Listener.on_event">
+<code class="sig-name descname">on_event</code><span class="sig-paren">(</span><em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#Listener.on_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.Listener.on_event" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.role.stream.NoStream">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.role.stream.</code><code class="sig-name descname">NoStream</code><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#NoStream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.NoStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.role.stream.StreamRole" title="arxiv.canonical.role.stream.StreamRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.role.stream.StreamRole</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.role.stream.StreamRole">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.role.stream.</code><code class="sig-name descname">StreamRole</code><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#StreamRole"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.StreamRole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.canonical.role.stream.StreamRole.event_supported">
+<code class="sig-name descname">event_supported</code><em class="property"> = []</em><a class="headerlink" href="#arxiv.canonical.role.stream.StreamRole.event_supported" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.role.stream.StreamRole.set_stream">
+<code class="sig-name descname">set_stream</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">sources</em>, <em class="sig-param">name='all'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/role/stream.html#StreamRole.set_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.role.stream.StreamRole.set_stream" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.role.stream.StreamRole.stream">
+<em class="property">property </em><code class="sig-name descname">stream</code><a class="headerlink" href="#arxiv.canonical.role.stream.StreamRole.stream" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.IEventStream" title="arxiv.canonical.core.IEventStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">IEventStream</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.role.html">arxiv.canonical.role package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.role.role.html" title="previous chapter">arxiv.canonical.role.role module</a></li>
+      <li>Next: <a href="arxiv.canonical.serialize.html" title="next chapter">arxiv.canonical.serialize package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.role.stream.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,610 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.version module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.integrity package" href="arxiv.canonical.integrity.html" />
+    <link rel="prev" title="arxiv.canonical.domain.util module" href="arxiv.canonical.domain.util.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.domain.version">
+<span id="arxiv-canonical-domain-version-module"></span><h1>arxiv.canonical.domain.version module<a class="headerlink" href="#module-arxiv.canonical.domain.version" title="Permalink to this headline">¶</a></h1>
+<p>Provides the core domain concept and logic for individual versions.</p>
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.Event">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">Event</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">event_type</em>, <em class="sig-param">version</em>, <em class="sig-param">categories=None</em>, <em class="sig-param">description=''</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">event_agent=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.version._EventBase</span></code></p>
+<p>An announcement-related event.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.event_id">
+<em class="property">property </em><code class="sig-name descname">event_id</code><a class="headerlink" href="#arxiv.canonical.domain.version.Event.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unique identifier for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.EventIdentifier" title="arxiv.canonical.domain.version.EventIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Event.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.get_default_shard">
+<em class="property">classmethod </em><code class="sig-name descname">get_default_shard</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.get_default_shard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Event.get_default_shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default listing shard for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.shard">
+<em class="property">property </em><code class="sig-name descname">shard</code><a class="headerlink" href="#arxiv.canonical.domain.version.Event.shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shard name for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.summary">
+<em class="property">property </em><code class="sig-name descname">summary</code><a class="headerlink" href="#arxiv.canonical.domain.version.Event.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>A summary of this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.EventSummary" title="arxiv.canonical.domain.version.EventSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSummary</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Event.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Event.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Event.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Event.version">
+<code class="sig-name descname">version</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Event.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current state of the version (i.e. after the event).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.EventIdentifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">EventIdentifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Unique identifier for an <a class="reference internal" href="#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventIdentifier.event_date">
+<code class="sig-name descname">event_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventIdentifier.event_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp of the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.EventIdentifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">shard</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventIdentifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventIdentifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a event identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.EventIdentifier" title="arxiv.canonical.domain.version.EventIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventIdentifier.shard">
+<code class="sig-name descname">shard</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventIdentifier.shard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shard ID for the event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventIdentifier.version_id">
+<code class="sig-name descname">version_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventIdentifier.version_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the <a class="reference internal" href="#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a> to which the event pertains.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.EventSummary">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">EventSummary</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">event_date</em>, <em class="sig-param">event_type</em>, <em class="sig-param">event_id</em>, <em class="sig-param">categories=None</em>, <em class="sig-param">description=''</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">event_agent=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.version._EventBase</span></code></p>
+<p>A lightweight description of an event.</p>
+<p>This has all of the data of the original <a class="reference internal" href="#arxiv.canonical.domain.version.Event" title="arxiv.canonical.domain.version.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> except for the
+state of the e-print version.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventSummary.event_id">
+<code class="sig-name descname">event_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventSummary.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique identifier for the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.EventSummary.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventSummary.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.EventSummary" title="arxiv.canonical.domain.version.EventSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventSummary</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.EventSummary.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventSummary.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventSummary.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.EventType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">EventType</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#EventType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.EventType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported event types.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.CROSSLIST">
+<code class="sig-name descname">CROSSLIST</code><em class="property"> = 'cross'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.CROSSLIST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.JREF">
+<code class="sig-name descname">JREF</code><em class="property"> = 'jref'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.JREF" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.MIGRATE">
+<code class="sig-name descname">MIGRATE</code><em class="property"> = 'migrate'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.MIGRATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.MIGRATE_METADATA">
+<code class="sig-name descname">MIGRATE_METADATA</code><em class="property"> = 'migrate_metadata'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.MIGRATE_METADATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.NEW">
+<code class="sig-name descname">NEW</code><em class="property"> = 'new'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.NEW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.REPLACED">
+<code class="sig-name descname">REPLACED</code><em class="property"> = 'replace'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.REPLACED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.UPDATED">
+<code class="sig-name descname">UPDATED</code><em class="property"> = 'update'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.UPDATED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.UPDATED_METADATA">
+<code class="sig-name descname">UPDATED_METADATA</code><em class="property"> = 'update_metadata'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.UPDATED_METADATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.EventType.WITHDRAWN">
+<code class="sig-name descname">WITHDRAWN</code><em class="property"> = 'withdraw'</em><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.WITHDRAWN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.EventType.is_new_version">
+<em class="property">property </em><code class="sig-name descname">is_new_version</code><a class="headerlink" href="#arxiv.canonical.domain.version.EventType.is_new_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not this event type results in a new version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.Metadata">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">Metadata</code><span class="sig-paren">(</span><em class="sig-param">primary_classification</em>, <em class="sig-param">secondary_classification</em>, <em class="sig-param">title</em>, <em class="sig-param">abstract</em>, <em class="sig-param">authors</em>, <em class="sig-param">license</em>, <em class="sig-param">comments=None</em>, <em class="sig-param">journal_ref=None</em>, <em class="sig-param">report_num=None</em>, <em class="sig-param">doi=None</em>, <em class="sig-param">msc_class=None</em>, <em class="sig-param">acm_class=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Submitter-provided descriptive metadata for a version.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Metadata.add_secondaries">
+<code class="sig-name descname">add_secondaries</code><span class="sig-paren">(</span><em class="sig-param">*new_secondaries</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.add_secondaries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Metadata.add_secondaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add cross-list categories for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Metadata.all_categories">
+<em class="property">property </em><code class="sig-name descname">all_categories</code><a class="headerlink" href="#arxiv.canonical.domain.version.Metadata.all_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>All classification categories for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Metadata.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Metadata.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.Metadata" title="arxiv.canonical.domain.version.Metadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Metadata.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Metadata.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Metadata.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.Version">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">Version</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">announced_date</em>, <em class="sig-param">announced_date_first</em>, <em class="sig-param">submitted_date</em>, <em class="sig-param">updated_date</em>, <em class="sig-param">metadata</em>, <em class="sig-param">source</em>, <em class="sig-param">events=None</em>, <em class="sig-param">previous_versions=None</em>, <em class="sig-param">submitter=None</em>, <em class="sig-param">proxy=None</em>, <em class="sig-param">is_announced=False</em>, <em class="sig-param">is_withdrawn=False</em>, <em class="sig-param">is_legacy=False</em>, <em class="sig-param">reason_for_withdrawal=None</em>, <em class="sig-param">source_type=None</em>, <em class="sig-param">render=None</em>, <em class="sig-param">formats={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>Represents a single version of an arXiv e-print in the record.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.announced_date">
+<code class="sig-name descname">announced_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.announced_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Day on which this version was announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.announced_date_first">
+<code class="sig-name descname">announced_date_first</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.announced_date_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Day on which the first version of the e-print was announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.events">
+<code class="sig-name descname">events</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Events that are specific to this version of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.formats">
+<code class="sig-name descname">formats</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dissemination formats for this version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Version.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.get_format">
+<code class="sig-name descname">get_format</code><span class="sig-paren">(</span><em class="sig-param">desired_format</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.get_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Version.get_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a particular dissemination format for this version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.domain.file.html#arxiv.canonical.domain.file.CanonicalFile" title="arxiv.canonical.domain.file.CanonicalFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalFile</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.identifier">
+<code class="sig-name descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique arXiv identifier for the version.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.is_announced">
+<code class="sig-name descname">is_announced</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.is_announced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the version is announced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.is_legacy">
+<code class="sig-name descname">is_legacy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.is_legacy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether this record was populated from the legacy system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.is_withdrawn">
+<code class="sig-name descname">is_withdrawn</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.is_withdrawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the version is withdrawn.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.metadata">
+<code class="sig-name descname">metadata</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter-provided descriptive metadata for the version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.number_of_events">
+<em class="property">property </em><code class="sig-name descname">number_of_events</code><a class="headerlink" href="#arxiv.canonical.domain.version.Version.number_of_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numer of events described by this object (0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[0]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.number_of_versions">
+<em class="property">property </em><code class="sig-name descname">number_of_versions</code><a class="headerlink" href="#arxiv.canonical.domain.version.Version.number_of_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of versions described by this object (1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.previous_versions">
+<code class="sig-name descname">previous_versions</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.previous_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>References to previous versions of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.proxy">
+<code class="sig-name descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The proxy that deposited the version on behalf of the submitter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.reason_for_withdrawal">
+<code class="sig-name descname">reason_for_withdrawal</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.reason_for_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>The reason for the withdrawal of the e-print.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.render">
+<code class="sig-name descname">render</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human-readable representation of the e-print.</p>
+<p>Usually a PDF generated from the source, but may also be a user-provided
+PDF.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.size_kilobytes">
+<em class="property">property </em><code class="sig-name descname">size_kilobytes</code><a class="headerlink" href="#arxiv.canonical.domain.version.Version.size_kilobytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the source package in kb.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.source">
+<code class="sig-name descname">source</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original user-submitted source package.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.source_type">
+<code class="sig-name descname">source_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.source_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal code for the source type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.submitted_date">
+<code class="sig-name descname">submitted_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp when this version was submitted to arXiv.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.submitter">
+<code class="sig-name descname">submitter</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.submitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Person responsible for submitting this version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.Version.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#Version.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.Version.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.Version.updated_date">
+<code class="sig-name descname">updated_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.Version.updated_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last time the record for this version was changed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.version.VersionReference">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.version.</code><code class="sig-name descname">VersionReference</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">announced_date</em>, <em class="sig-param">submitted_date</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.domain.base.html#arxiv.canonical.domain.base.CanonicalBase" title="arxiv.canonical.domain.base.CanonicalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.base.CanonicalBase</span></code></a></p>
+<p>An abridged reference to a particular <a class="reference internal" href="#arxiv.canonical.domain.version.Version" title="arxiv.canonical.domain.version.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a>.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.VersionReference.announced_date">
+<code class="sig-name descname">announced_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference.announced_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the version was announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.VersionReference.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstitute from a native dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.version.VersionReference" title="arxiv.canonical.domain.version.VersionReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionReference</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.VersionReference.identifier">
+<code class="sig-name descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the version.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.version.VersionReference.submitted_date">
+<code class="sig-name descname">submitted_date</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference.submitted_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date on which the version was submitted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.version.VersionReference.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/version.html#VersionReference.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.version.VersionReference.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a native dict representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.domain.html">arxiv.canonical.domain package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.domain.util.html" title="previous chapter">arxiv.canonical.domain.util module</a></li>
+      <li>Next: <a href="arxiv.canonical.integrity.html" title="next chapter">arxiv.canonical.integrity package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.domain.version.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.block &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.domain.block</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Structures for organizing e-prints into periods of time.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Protocol</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">CanonicalBase</span>
+<span class="kn">from</span> <span class="nn">.eprint</span> <span class="k">import</span> <span class="n">EPrint</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">.identifier</span> <span class="k">import</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">VersionedIdentifier</span>
+<span class="kn">from</span> <span class="nn">.listing</span> <span class="k">import</span> <span class="n">Listing</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">now</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">Version</span>
+
+<span class="n">Year</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="n">Month</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="n">YearMonth</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="EPrintDay"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.block.html#arxiv.canonical.domain.EPrintDay">[docs]</a><span class="k">class</span> <span class="nc">EPrintDay</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;E-prints originally announced on a specific day.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span>
+                 <span class="n">eprints</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">EPrint</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with e-prints for a particular day.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eprints</span> <span class="o">=</span> <span class="n">eprints</span></div>
+
+
+<div class="viewcode-block" id="EPrintMonth"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.block.html#arxiv.canonical.domain.EPrintMonth">[docs]</a><span class="k">class</span> <span class="nc">EPrintMonth</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;E-prints originally announced in a particular calendar month.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">YearMonth</span><span class="p">,</span>
+                 <span class="n">days</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">EPrintDay</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with e-prints for a particular month.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">days</span> <span class="o">=</span> <span class="n">days</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Year</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">month</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Month</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="EPrintYear"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.block.html#arxiv.canonical.domain.EPrintYear">[docs]</a><span class="k">class</span> <span class="nc">EPrintYear</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;E-prints originally announced in a particular calendar year.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="n">Year</span><span class="p">,</span>
+                 <span class="n">months</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">EPrintMonth</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with e-prints for a particular year.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">months</span> <span class="o">=</span> <span class="n">months</span></div>
+
+
+<div class="viewcode-block" id="AllEPrints"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.block.html#arxiv.canonical.domain.AllEPrints">[docs]</a><span class="k">class</span> <span class="nc">AllEPrints</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the complete set of announced e-prints.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">years</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">EPrintYear</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with all of the e-prints in the record.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">years</span> <span class="o">=</span> <span class="n">years</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../domain.html">arxiv.canonical.domain</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

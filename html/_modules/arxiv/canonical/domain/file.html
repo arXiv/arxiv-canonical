@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.file &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.domain.file</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides bitstream-related concepts and logic.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span>
+
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Protocol</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">CanonicalBase</span>
+<span class="kn">from</span> <span class="nn">.content</span> <span class="k">import</span> <span class="n">ContentType</span>
+
+
+<div class="viewcode-block" id="URI"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.file.html#arxiv.canonical.domain.URI">[docs]</a><span class="k">class</span> <span class="nc">URI</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A unique identifier for bitstream content.</span>
+
+<span class="sd">    Bitstream content may be located in a variety of places prior to</span>
+<span class="sd">    canonicalization. For example, it may be located on a local filesystem,</span>
+<span class="sd">    or at a remote location accessible via HTTP.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;URI&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Make a new URI.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;file:///{value.lstrip(&quot;/&quot;)}&#39;</span>
+        <span class="n">uri</span><span class="p">:</span> <span class="n">URI</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">URI</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">uri</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize and parse an URI from a str value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;file:///{value.lstrip(&quot;/&quot;)}&#39;</span>
+
+        <span class="n">o</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Not a valid URI: </span><span class="si">{value}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">netloc</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">netloc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">query</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">fragment</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_canonical</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the URI is a key in the canonical record.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;arxiv&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the URI is a path to a local file.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_http_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether the URI is an HTTP URL.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;http&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;https&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.file.html#arxiv.canonical.domain.Key">[docs]</a><span class="k">class</span> <span class="nc">Key</span><span class="p">(</span><span class="n">URI</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The unique identifier for a bitstream in the canonical record.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Key&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Make a new key.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;arxiv:///&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;arxiv:///{value.lstrip(&quot;/&quot;)}&#39;</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Key</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Key</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">key</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a key with a str value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;arxiv:///&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;arxiv:///{value.lstrip(&quot;/&quot;)}&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Key</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CanonicalFile"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.file.html#arxiv.canonical.domain.CanonicalFile">[docs]</a><span class="k">class</span> <span class="nc">CanonicalFile</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a file in the canonical record, e.g. a source package.&quot;&quot;&quot;</span>
+
+    <span class="n">modified</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="sd">&quot;&quot;&quot;Last time the file was modified.&quot;&quot;&quot;</span>
+
+    <span class="n">size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="sd">&quot;&quot;&quot;Size of the file in bytes.&quot;&quot;&quot;</span>
+
+    <span class="n">content_type</span><span class="p">:</span> <span class="n">ContentType</span>
+    <span class="sd">&quot;&quot;&quot;The content type of the file.&quot;&quot;&quot;</span>
+
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;Filename in the canonical record.&quot;&quot;&quot;</span>
+
+    <span class="n">ref</span><span class="p">:</span> <span class="n">URI</span>
+    <span class="sd">&quot;&quot;&quot;A reference to the location of the content of the file.&quot;&quot;&quot;</span>
+
+    <span class="n">is_gzipped</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot;Whether or not the content at ``ref`` is served in gzipped form.&quot;&quot;&quot;</span>
+
+    <span class="n">exclude_from_comparison</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="s1">&#39;is_gzipped&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modified</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">size_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">content_type</span><span class="p">:</span> <span class="n">ContentType</span><span class="p">,</span>
+                 <span class="n">ref</span><span class="p">:</span> <span class="n">URI</span><span class="p">,</span>
+                 <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">is_gzipped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modified</span> <span class="o">=</span> <span class="n">modified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_bytes</span> <span class="o">=</span> <span class="n">size_bytes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="n">content_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_gzipped</span> <span class="o">=</span> <span class="n">is_gzipped</span>
+
+<div class="viewcode-block" id="CanonicalFile.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.file.html#arxiv.canonical.domain.CanonicalFile.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;CanonicalFile&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute a :class:`.CanonicalFile` from a native dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">modified</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">]),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">size_bytes</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;size_bytes&#39;</span><span class="p">],</span>
+            <span class="n">content_type</span><span class="o">=</span><span class="n">ContentType</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;content_type&#39;</span><span class="p">]),</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span>
+            <span class="n">ref</span><span class="o">=</span><span class="n">URI</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]),</span>
+            <span class="n">is_gzipped</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_gzipped&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mime_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convenience accessor for the MIME type of the file.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">mime_type</span>
+
+<div class="viewcode-block" id="CanonicalFile.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.file.html#arxiv.canonical.domain.CanonicalFile.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict from this :class:`.CanonicalFile`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;modified&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">modified</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;size_bytes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_bytes</span><span class="p">,</span>
+            <span class="s1">&#39;content_type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+            <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
+            <span class="s1">&#39;is_gzipped&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gzipped</span>
+        <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../domain.html">arxiv.canonical.domain</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

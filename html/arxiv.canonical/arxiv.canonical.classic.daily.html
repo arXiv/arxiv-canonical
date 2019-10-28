@@ -1,0 +1,527 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.daily module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.classic.util module" href="arxiv.canonical.classic.util.html" />
+    <link rel="prev" title="arxiv.canonical.classic.content module" href="arxiv.canonical.classic.content.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.classic.daily">
+<span id="arxiv-canonical-classic-daily-module"></span><h1>arxiv.canonical.classic.daily module<a class="headerlink" href="#module-arxiv.canonical.classic.daily" title="Permalink to this headline">¶</a></h1>
+<p>Parser for the daily.log file.</p>
+<p>The main goal of this implementation is parsing the log file for the purpose
+of transforming it into the arXiv Canonical format. Specifically, we want to
+use this legacy data structure to generate <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> data that can be
+serialized in the daily listing files.</p>
+<p>From the original <code class="docutils literal notranslate"><span class="pre">arXiv::Updates::DailyLog</span></code>:</p>
+<div class="highlight-plain notranslate"><div class="highlight"><pre><span></span>Module to provide information about updates to the archive
+over specified periods. This should be the only section
+of code that reads the daily.log file.
+
+ Simeon Warner - 6Jan2000...
+ 25Jan2000 - modified so that undef $startdate or $enddate select
+   the beginning or end of time respectively.
+ 25Jan2000 - modified so that by simply removing the `-&#39; from
+   and ISO8601 date we get YYYYMMDD from YYYY-MM-DD
+ 16Oct2000 - to allow easy resumption in the OAI1 interface and
+   because it seems that it might be useful in other contexts the
+   number limited behaviour has been changed. query_daily_log() and
+   hence all other routines now stop at then end of a day and
+   returns the that day (in the form YYYY-MM-DD) as the value
+   if limited, undef otherwise.
+
+Thoughts: If this is to be used on the mirror sites then we will need
+to mirror the daily log. This probably means that that file
+should be split up.
+
+ [CVS: $Id: DailyLog.pm,v 1.6 2010/03/23 03:53:09 arxiv Exp $]
+</pre></div>
+</div>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a></p>
+<dl class="class">
+<dt id="arxiv.canonical.classic.daily.DailyLogParser">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">DailyLogParser</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#DailyLogParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.DailyLogParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Parses the daily log file.</p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.DailyLogParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">for_date=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#DailyLogParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.DailyLogParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the daily log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Path to the daily log file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Each item is an <a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a> from the log file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.DailyLogParser.parse_line">
+<code class="sig-name descname">parse_line</code><span class="sig-paren">(</span><em class="sig-param">raw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#DailyLogParser.parse_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.DailyLogParser.parse_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a single line from the daily log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>raw</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – A single line.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a> instances from the line.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.classic.daily.EventData">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">EventData</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#EventData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></p>
+<p>Data about events that can be extracted from the daily log.</p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.EventData.arxiv_id">
+<em class="property">property </em><code class="sig-name descname">arxiv_id</code><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData.arxiv_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.EventData.categories">
+<em class="property">property </em><code class="sig-name descname">categories</code><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData.categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.EventData.event_date">
+<em class="property">property </em><code class="sig-name descname">event_date</code><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData.event_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.EventData.event_type">
+<em class="property">property </em><code class="sig-name descname">event_type</code><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.EventData.version">
+<em class="property">property </em><code class="sig-name descname">version</code><a class="headerlink" href="#arxiv.canonical.classic.daily.EventData.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.IDENTIFIER_RANGE">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">IDENTIFIER_RANGE</code><em class="property"> = re.compile('^(?P&lt;start_id&gt;\\d{7})\\-(?P&lt;end_id&gt;\\d{7})$')</em><a class="headerlink" href="#arxiv.canonical.classic.daily.IDENTIFIER_RANGE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The old-style format supported ranges of identifiers, e.g. <code class="docutils literal notranslate"><span class="pre">1234-1238</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.LINE">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">LINE</code><em class="property"> = re.compile('^(?P&lt;event_date&gt;\\d{6})\\|(?P&lt;archive&gt;[a-z-]+)\\|(?P&lt;data&gt;.*)$')</em><a class="headerlink" href="#arxiv.canonical.classic.daily.LINE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each line in the log file begins with a date stamp and an archive.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.classic.daily.LineParser">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">LineParser</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#LineParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.LineParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Shared behavior among newstyle and oldstyle line parsing.</p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.LineParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">e_date</em>, <em class="sig-param">archive</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#LineParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.LineParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse data from a daily log file line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.LineParser.parse_cross">
+<code class="sig-name descname">parse_cross</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#LineParser.parse_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.LineParser.parse_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for cross-list e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.LineParser.parse_new">
+<code class="sig-name descname">parse_new</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#LineParser.parse_new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.LineParser.parse_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for new e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.LineParser.parse_replace">
+<code class="sig-name descname">parse_replace</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#LineParser.parse_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.LineParser.parse_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for replacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.NEW_STYLE_CUTOVER_AFTER">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">NEW_STYLE_CUTOVER_AFTER</code><em class="property"> = datetime.date(2007, 4, 2)</em><a class="headerlink" href="#arxiv.canonical.classic.daily.NEW_STYLE_CUTOVER_AFTER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date after which the new-style format was adopted.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.classic.daily.NewStyleLineParser">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">NewStyleLineParser</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#NewStyleLineParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.NewStyleLineParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.classic.daily.LineParser" title="arxiv.canonical.classic.daily.LineParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.classic.daily.LineParser</span></code></a></p>
+<p>Parses new-style daily log lines.</p>
+<p>Starting after 2007-04-02 (<a class="reference internal" href="#arxiv.canonical.classic.daily.NEW_STYLE_CUTOVER_AFTER" title="arxiv.canonical.classic.daily.NEW_STYLE_CUTOVER_AFTER"><code class="xref py py-const docutils literal notranslate"><span class="pre">NEW_STYLE_CUTOVER_AFTER</span></code></a>), the format
+changed to put all announcement-related events on a given day on the same
+line. The three original sections of the line are preserved, but within
+each section are entries for e-prints from all archives.</p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.NewStyleLineParser.parse_cross">
+<code class="sig-name descname">parse_cross</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#NewStyleLineParser.parse_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.NewStyleLineParser.parse_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for cross-lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Literally just <code class="docutils literal notranslate"><span class="pre">&quot;arxiv&quot;</span></code>; this is a dummy place-holder, since
+new-style lines contain entries for all archives for which
+announcements occurred on a particular day.</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing cross-list entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.NewStyleLineParser.parse_new">
+<code class="sig-name descname">parse_new</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#NewStyleLineParser.parse_new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.NewStyleLineParser.parse_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for new e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Literally just <code class="docutils literal notranslate"><span class="pre">&quot;arxiv&quot;</span></code>; this is a dummy place-holder, since
+new-style lines contain entries for all archives for which
+announcements occurred on a particular day.</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing new e-print entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.NewStyleLineParser.parse_replace">
+<code class="sig-name descname">parse_replace</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#NewStyleLineParser.parse_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.NewStyleLineParser.parse_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for replaced e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Literally just <code class="docutils literal notranslate"><span class="pre">&quot;arxiv&quot;</span></code>; this is a dummy place-holder, since
+new-style lines contain entries for all archives for which
+announcements occurred on a particular day.</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing replacement entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.classic.daily.OldStyleLineParser">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">OldStyleLineParser</code><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#OldStyleLineParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.OldStyleLineParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.classic.daily.LineParser" title="arxiv.canonical.classic.daily.LineParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.classic.daily.LineParser</span></code></a></p>
+<p>Parses data from old-style log lines.</p>
+<p>The original format used a separate line for each archive. The line
+contained three sections: e-prints newly announced in that archive,
+e-prints cross-listed to that archive, and e-prints replaced either in that
+archive or with a new cross-list category in that archive. Thus there may
+be multiple lines for a given announcement day, one per archive in which
+announcement activity occurred.</p>
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.OldStyleLineParser.parse_cross">
+<code class="sig-name descname">parse_cross</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#OldStyleLineParser.parse_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.OldStyleLineParser.parse_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for cross-list e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Archive to which entries on this line apply (to which the
+e-print has been cross-listed).</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing cross-list entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.OldStyleLineParser.parse_new">
+<code class="sig-name descname">parse_new</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#OldStyleLineParser.parse_new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.OldStyleLineParser.parse_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for new e-prints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Archive to which entries on this line apply.</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing new e-print entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.classic.daily.OldStyleLineParser.parse_replace">
+<code class="sig-name descname">parse_replace</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">fragment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#OldStyleLineParser.parse_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.OldStyleLineParser.parse_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries for replacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>archive</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Archive to which entries on this line apply.</p></li>
+<li><p><strong>fragment</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Section of the line containing replacement entries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Event" title="arxiv.canonical.domain.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances from this section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.domain.identifier.html#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a>, <a class="reference internal" href="arxiv.canonical.domain.version.html#arxiv.canonical.domain.version.EventType" title="arxiv.canonical.domain.version.EventType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventType</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.SINGLE_IDENTIFIER">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">SINGLE_IDENTIFIER</code><em class="property"> = re.compile('^(\\d{7})$')</em><a class="headerlink" href="#arxiv.canonical.classic.daily.SINGLE_IDENTIFIER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric part of an old-style arXiv ID.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.SQUASHED_IDENTIFIER">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">SQUASHED_IDENTIFIER</code><em class="property"> = re.compile('(?P&lt;archive&gt;[a-z\\-]+)(?P&lt;identifier&gt;\\d{7})')</em><a class="headerlink" href="#arxiv.canonical.classic.daily.SQUASHED_IDENTIFIER" title="Permalink to this definition">¶</a></dt>
+<dd><p>The old-style format ommitted the forward slash in the old identifier.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.classic.daily.WEIRD_INVERTED_ENTRY">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">WEIRD_INVERTED_ENTRY</code><em class="property"> = re.compile('^(?P&lt;identifier&gt;\\d{7})(?:\\.\\d)?(?P&lt;archive&gt;[a-z\\-]+)(\\.[a-zA-Z\\-]+)?$')</em><a class="headerlink" href="#arxiv.canonical.classic.daily.WEIRD_INVERTED_ENTRY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pattern for a weird edge case not handled in the legacy code.</p>
+<p>Here is an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">quant</span><span class="o">-</span><span class="n">ph9902016</span> <span class="mf">9704019.0</span><span class="n">chao</span><span class="o">-</span><span class="n">dyn</span> <span class="mf">9902003.0</span><span class="n">chao</span><span class="o">-</span><span class="n">dyn</span> <span class="mf">9904021.0</span><span class="n">chao</span><span class="o">-</span><span class="n">dyn</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">quant-ph9902016</span></code> is normal. But <code class="docutils literal notranslate"><span class="pre">9704019.0chao-dyn</span></code> does not match any
+patterns in the legacy code. In this particular case (from 1999), we can infer
+that <code class="docutils literal notranslate"><span class="pre">9704019</span></code> belongs with <code class="docutils literal notranslate"><span class="pre">chao-dyn</span></code> rather than <code class="docutils literal notranslate"><span class="pre">quant-ph</span></code> because
+<code class="docutils literal notranslate"><span class="pre">quant-ph/9704019</span></code> was last updated in 1997 and this entry is in 1999 when
+<code class="docutils literal notranslate"><span class="pre">chao-dyn/9704019</span></code> was last updated.</p>
+<p>Not sure what the decimal part is supposed to mean. It does not appear to refer
+to the e-print version. I also considered the possibility that it is a range
+of some kind, e.g. <code class="docutils literal notranslate"><span class="pre">9912003.4solv-int</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">solv-int/9912003</span></code> and
+<code class="docutils literal notranslate"><span class="pre">solv-int/9912004</span></code>, but this is in a replacement section and there is only
+one version of <code class="docutils literal notranslate"><span class="pre">solv-int/9912004</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.daily.parse">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">for_date=None</em>, <em class="sig-param">cache_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the daily log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Path to the daily log file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Each item is an <a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a> from the log file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>iterable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.classic.daily.scan">
+<code class="sig-prename descclassname">arxiv.canonical.classic.daily.</code><code class="sig-name descname">scan</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">identifier</em>, <em class="sig-param">cache_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/classic/daily.html#scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.classic.daily.scan" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.classic.daily.EventData" title="arxiv.canonical.classic.daily.EventData"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.classic.html">arxiv.canonical.classic package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.classic.content.html" title="previous chapter">arxiv.canonical.classic.content module</a></li>
+      <li>Next: <a href="arxiv.canonical.classic.util.html" title="next chapter">arxiv.canonical.classic.util module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.classic.daily.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

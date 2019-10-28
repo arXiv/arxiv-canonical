@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.register.eprint module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.register.exceptions module" href="arxiv.canonical.register.exceptions.html" />
+    <link rel="prev" title="arxiv.canonical.register.core module" href="arxiv.canonical.register.core.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.register.eprint">
+<span id="arxiv-canonical-register-eprint-module"></span><h1>arxiv.canonical.register.eprint module<a class="headerlink" href="#module-arxiv.canonical.register.eprint" title="Permalink to this headline">¶</a></h1>
+<p>Provides structs for organizing e-print metadata and content in the register.</p>
+<p>The classes in this module extend <a class="reference internal" href="arxiv.canonical.register.html#arxiv.canonical.register.Base" title="arxiv.canonical.register.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a> with methods for naming
+themselves and manifests.</p>
+<dl class="class">
+<dt id="arxiv.canonical.register.eprint.RegisterDay">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.eprint.</code><code class="sig-name descname">RegisterDay</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterDay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterDay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<p>Representation of a day-block of e-prints in the canonical register.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterDay.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterDay.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.domain.block.html#arxiv.canonical.domain.block.EPrintDay" title="arxiv.canonical.domain.block.EPrintDay"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.block.EPrintDay</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterDay.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterDay.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.version.IntegrityDay" title="arxiv.canonical.integrity.version.IntegrityDay"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.version.IntegrityDay</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterDay.member_type">
+<code class="sig-name descname">member_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterDay.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#arxiv.canonical.register.eprint.RegisterEPrint" title="arxiv.canonical.register.eprint.RegisterEPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterEPrint</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterDay.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterDay.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordDay" title="arxiv.canonical.record.version.RecordDay"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.version.RecordDay</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.eprint.</code><code class="sig-name descname">RegisterEPrint</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<p>Representation of an e-print in the canonical register.</p>
+<p>Organizes a series of one or more :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.RegisterVersion`s.</p>
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_cross">
+<code class="sig-name descname">add_event_cross</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a cross-list event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_migrate">
+<code class="sig-name descname">add_event_migrate</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_migrate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_migrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a data-migration event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_migrate_metadata">
+<code class="sig-name descname">add_event_migrate_metadata</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_migrate_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_migrate_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a metadata-migration event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_new">
+<code class="sig-name descname">add_event_new</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event that results in a new version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_replace">
+<code class="sig-name descname">add_event_replace</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event that generates a replacement version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_update">
+<code class="sig-name descname">add_event_update</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event that results in an update to a version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_update_metadata">
+<code class="sig-name descname">add_event_update_metadata</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_update_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_update_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event that results in an update to metadata of a version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.add_event_withdraw">
+<code class="sig-name descname">add_event_withdraw</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">sources</em>, <em class="sig-param">event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrint.add_event_withdraw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.add_event_withdraw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event that withdraws an e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterVersion</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.domain.eprint.html#arxiv.canonical.domain.eprint.EPrint" title="arxiv.canonical.domain.eprint.EPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.eprint.EPrint</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.version.IntegrityEPrint" title="arxiv.canonical.integrity.version.IntegrityEPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.version.IntegrityEPrint</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.member_type">
+<code class="sig-name descname">member_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.register.version.html#arxiv.canonical.register.version.RegisterVersion" title="arxiv.canonical.register.version.RegisterVersion"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.version.RegisterVersion</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrint.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrint.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordEPrint" title="arxiv.canonical.record.version.RecordEPrint"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.version.RecordEPrint</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrints">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.eprint.</code><code class="sig-name descname">RegisterEPrints</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterEPrints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<p>Representation of the complete set of e-prints in the register.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrints.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrints.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.domain.block.html#arxiv.canonical.domain.block.AllEPrints" title="arxiv.canonical.domain.block.AllEPrints"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.block.AllEPrints</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrints.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrints.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.version.IntegrityEPrints" title="arxiv.canonical.integrity.version.IntegrityEPrints"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.version.IntegrityEPrints</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrints.member_type">
+<code class="sig-name descname">member_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrints.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#arxiv.canonical.register.eprint.RegisterYear" title="arxiv.canonical.register.eprint.RegisterYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterYear</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterEPrints.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterEPrints.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordEPrints" title="arxiv.canonical.record.version.RecordEPrints"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.version.RecordEPrints</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.register.eprint.RegisterMonth">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.eprint.</code><code class="sig-name descname">RegisterMonth</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterMonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterMonth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<p>Representation of a month-block in the canonical register.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterMonth.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterMonth.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.domain.block.html#arxiv.canonical.domain.block.EPrintMonth" title="arxiv.canonical.domain.block.EPrintMonth"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.block.EPrintMonth</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterMonth.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterMonth.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.version.IntegrityMonth" title="arxiv.canonical.integrity.version.IntegrityMonth"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.version.IntegrityMonth</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterMonth.member_type">
+<code class="sig-name descname">member_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterMonth.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#arxiv.canonical.register.eprint.RegisterDay" title="arxiv.canonical.register.eprint.RegisterDay"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterDay</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterMonth.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterMonth.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordMonth" title="arxiv.canonical.record.version.RecordMonth"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.version.RecordMonth</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.register.eprint.RegisterYear">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.register.eprint.</code><code class="sig-name descname">RegisterYear</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">domain</em>, <em class="sig-param">record</em>, <em class="sig-param">integrity</em>, <em class="sig-param">members=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/register/eprint.html#RegisterYear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterYear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.register.core.html#arxiv.canonical.register.core.Base" title="arxiv.canonical.register.core.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.register.core.Base</span></code></a></p>
+<p>Representation of a year-block in the canonical register.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterYear.domain_type">
+<code class="sig-name descname">domain_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterYear.domain_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.domain.block.html#arxiv.canonical.domain.block.EPrintYear" title="arxiv.canonical.domain.block.EPrintYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.domain.block.EPrintYear</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterYear.integrity_type">
+<code class="sig-name descname">integrity_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterYear.integrity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.version.IntegrityYear" title="arxiv.canonical.integrity.version.IntegrityYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.version.IntegrityYear</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterYear.member_type">
+<code class="sig-name descname">member_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterYear.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#arxiv.canonical.register.eprint.RegisterMonth" title="arxiv.canonical.register.eprint.RegisterMonth"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterMonth</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.register.eprint.RegisterYear.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.register.eprint.RegisterYear.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.version.html#arxiv.canonical.record.version.RecordYear" title="arxiv.canonical.record.version.RecordYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.version.RecordYear</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.register.html">arxiv.canonical.register package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.register.core.html" title="previous chapter">arxiv.canonical.register.core module</a></li>
+      <li>Next: <a href="arxiv.canonical.register.exceptions.html" title="next chapter">arxiv.canonical.register.exceptions module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.register.eprint.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

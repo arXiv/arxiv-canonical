@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core data structures and concepts used to describe arXiv e-prints.</span>
+
+<span class="sd">The structures in this module capture the central ideas and semantics of</span>
+<span class="sd">e-prints, their versions, and their content. It does not address things like</span>
+<span class="sd">how the canonical record is encoded in a key-value system, nor mechanisms for</span>
+<span class="sd">verifying completeness or integrity.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">Category</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">CanonicalBase</span><span class="p">,</span> <span class="n">CanonicalBaseCollection</span>
+<span class="kn">from</span> <span class="nn">.block</span> <span class="k">import</span> <span class="n">AllEPrints</span><span class="p">,</span> <span class="n">EPrintYear</span><span class="p">,</span> <span class="n">EPrintMonth</span><span class="p">,</span> <span class="n">EPrintDay</span>
+<span class="kn">from</span> <span class="nn">.content</span> <span class="k">import</span> <span class="n">ContentType</span><span class="p">,</span> <span class="n">SourceType</span><span class="p">,</span> <span class="n">available_formats_by_ext</span><span class="p">,</span> \
+    <span class="n">list_source_extensions</span>
+<span class="kn">from</span> <span class="nn">.eprint</span> <span class="k">import</span> <span class="n">EPrint</span>
+<span class="kn">from</span> <span class="nn">.file</span> <span class="k">import</span> <span class="n">CanonicalFile</span><span class="p">,</span> <span class="n">URI</span><span class="p">,</span> <span class="n">Key</span>
+<span class="kn">from</span> <span class="nn">.identifier</span> <span class="k">import</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">InvalidIdentifier</span><span class="p">,</span> <span class="n">VersionedIdentifier</span>
+<span class="kn">from</span> <span class="nn">.license</span> <span class="k">import</span> <span class="n">License</span>
+<span class="kn">from</span> <span class="nn">.listing</span> <span class="k">import</span> <span class="n">Listing</span><span class="p">,</span> <span class="n">ListingDay</span><span class="p">,</span> <span class="n">ListingMonth</span><span class="p">,</span> <span class="n">ListingYear</span><span class="p">,</span> \
+    <span class="n">AllListings</span><span class="p">,</span> <span class="n">ListingIdentifier</span>
+<span class="kn">from</span> <span class="nn">.person</span> <span class="k">import</span> <span class="n">Person</span>
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">Version</span><span class="p">,</span> <span class="n">VersionReference</span><span class="p">,</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">EventType</span><span class="p">,</span> \
+    <span class="n">EventSummary</span><span class="p">,</span> <span class="n">EventIdentifier</span>
+
+<span class="n">domain_classes</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">AllEPrints</span><span class="p">,</span>
+    <span class="n">AllListings</span><span class="p">,</span>
+    <span class="n">CanonicalFile</span><span class="p">,</span>
+    <span class="n">Category</span><span class="p">,</span>
+    <span class="n">CanonicalBase</span><span class="p">,</span>
+    <span class="n">CanonicalBaseCollection</span><span class="p">,</span>
+    <span class="n">ContentType</span><span class="p">,</span>
+    <span class="n">EPrint</span><span class="p">,</span>
+    <span class="n">EPrintDay</span><span class="p">,</span>
+    <span class="n">EPrintMonth</span><span class="p">,</span>
+    <span class="n">EPrintYear</span><span class="p">,</span>
+    <span class="n">Event</span><span class="p">,</span>
+    <span class="n">EventIdentifier</span><span class="p">,</span>
+    <span class="n">EventSummary</span><span class="p">,</span>
+    <span class="n">EventType</span><span class="p">,</span>
+    <span class="n">Identifier</span><span class="p">,</span>
+    <span class="n">InvalidIdentifier</span><span class="p">,</span>
+    <span class="n">Key</span><span class="p">,</span>
+    <span class="n">License</span><span class="p">,</span>
+    <span class="n">Listing</span><span class="p">,</span>
+    <span class="n">ListingDay</span><span class="p">,</span>
+    <span class="n">ListingIdentifier</span><span class="p">,</span>
+    <span class="n">ListingYear</span><span class="p">,</span>
+    <span class="n">ListingMonth</span><span class="p">,</span>
+    <span class="n">Metadata</span><span class="p">,</span>
+    <span class="n">Person</span><span class="p">,</span>
+    <span class="n">SourceType</span><span class="p">,</span>
+    <span class="n">URI</span><span class="p">,</span>
+    <span class="n">Version</span><span class="p">,</span>
+    <span class="n">VersionedIdentifier</span><span class="p">,</span>
+    <span class="n">VersionReference</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">domain_classes</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;All of the core domain classes in this package.&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;available_formats_by_ext&#39;</span><span class="p">,</span> <span class="s1">&#39;list_source_extensions&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Canon</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the canonical record as a whole from a domain perspective.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eprints</span><span class="p">:</span> <span class="n">AllEPrints</span><span class="p">,</span> <span class="n">listings</span><span class="p">:</span> <span class="n">AllListings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The canon is comprised of all e-prints and all listings.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eprints</span> <span class="o">=</span> <span class="n">eprints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listings</span> <span class="o">=</span> <span class="n">listings</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

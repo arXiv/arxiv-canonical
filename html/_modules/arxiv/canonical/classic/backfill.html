@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.classic.backfill &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.classic.backfill</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for backfilling the NG record from classic.</span>
+
+<span class="sd">In order to ensure a smooth transition from classic to the NG announcement</span>
+<span class="sd">process, we need to be able to initially operate both the classic and NG</span>
+<span class="sd">canonical records in parallel. This means that we need to be able to:</span>
+
+<span class="sd">1. Backfill the canonical record from the classic record, starting at the</span>
+<span class="sd">   beginning of time and running up to the present. See :func:`backfill`.</span>
+<span class="sd">2. Continuously update the canonical record from data in the classic system.</span>
+<span class="sd">   See :func:`backfill_today`.</span>
+
+<span class="sd">This module is implemented on the assumption that its functions will be</span>
+<span class="sd">executed on a machine with access to the classic filesystem, specifically to</span>
+<span class="sd">the abs/source files and daily.log file. It is agnostic, however, about the</span>
+<span class="sd">target storage medium for the canonical record. So this these functions can be</span>
+<span class="sd">used to backfill the canonical record both on local filesystems and in (for</span>
+<span class="sd">example) an S3 bucket.</span>
+
+<span class="sd">What version is this?</span>
+<span class="sd">=====================</span>
+<span class="sd">The lacuna of the classic record is an unambiguous mapping between announcement</span>
+<span class="sd">events and specific versions of an e-print. For example, if we encounter a</span>
+<span class="sd">replacement event in the daily.log file, there is no explicit indication of</span>
+<span class="sd">whether the resulting version is 2, 3, or some higher value. The abs file</span>
+<span class="sd">does not provide this information either, as only the submission date of each</span>
+<span class="sd">version is preserved (although this could at least be used as a lower bound).</span>
+<span class="sd">So, we need to get creative.</span>
+
+<span class="sd">Start at the beginning of time. Initialize a counter that keeps track of the</span>
+<span class="sd">last version number seen for each e-print identifier.</span>
+
+<span class="sd">Prior to the start of the daily.log (mid-1998): Read the abs file for each</span>
+<span class="sd">e-print, and generate a ``new`` and subsequent ``replace`` event(s) **using the</span>
+<span class="sd">submission date(s) as the announcement date(s)**.</span>
+
+<span class="sd">Read daily.log in order. Rely on the version number mapping to keep track of</span>
+<span class="sd">where we are with each e-print.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> \
+    <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">timezone</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Protocol</span>
+
+<span class="kn">from</span> <span class="nn">..domain</span> <span class="k">import</span> <span class="n">CanonicalFile</span><span class="p">,</span> <span class="n">Category</span><span class="p">,</span> <span class="n">ContentType</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">EventSummary</span><span class="p">,</span> <span class="n">EventType</span><span class="p">,</span> \
+    <span class="n">Identifier</span><span class="p">,</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">Version</span><span class="p">,</span> <span class="n">VersionedIdentifier</span>
+<span class="kn">from</span> <span class="nn">..log</span> <span class="k">import</span> <span class="n">Log</span><span class="p">,</span> <span class="n">WRITE</span>
+<span class="kn">from</span> <span class="nn">..register</span> <span class="k">import</span> <span class="n">IRegisterAPI</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="nb">abs</span><span class="p">,</span> <span class="n">daily</span><span class="p">,</span> <span class="n">content</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">PersistentIndex</span><span class="p">,</span> <span class="n">PersistentList</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LOGLEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;40&#39;</span><span class="p">)))</span>
+
+<span class="n">ET</span> <span class="o">=</span> <span class="n">timezone</span><span class="p">(</span><span class="s1">&#39;US/Eastern&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_ILoader</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interface for functions that load events from the classic record.</span>
+
+<span class="sd">    This is here mostly because the semantics for ``typing.Callable`` are</span>
+<span class="sd">    pretty limited.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">first</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">limit_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;_CF_PersistentIndex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Load events from the classic record.&quot;&quot;&quot;</span>
+
+
+<span class="n">_CF_Key</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">ContentType</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">_CF_PersistentIndex</span><span class="p">(</span><span class="n">PersistentIndex</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">_CF_Key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanonicalFile</span><span class="p">:</span>
+        <span class="n">skey</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{key[0]}</span><span class="s1">::</span><span class="si">{key[1].value}</span><span class="s1">&#39;</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CanonicalFile</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">_CF_PersistentIndex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">skey</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cf</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">_CF_Key</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">CanonicalFile</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">skey</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{key[0]}</span><span class="s1">::</span><span class="si">{key[1].value}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">_CF_PersistentIndex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">skey</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">skey</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{key[0]}</span><span class="s1">::</span><span class="si">{key[1].value}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">_CF_PersistentIndex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">skey</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="backfill"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.backfill.html#arxiv.canonical.classic.backfill.backfill">[docs]</a><span class="k">def</span> <span class="nf">backfill</span><span class="p">(</span><span class="n">register</span><span class="p">:</span> <span class="n">IRegisterAPI</span><span class="p">,</span>
+             <span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+             <span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+             <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+             <span class="n">state_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+             <span class="n">limit_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lazily backfill the canonical record from the classic record.</span>
+
+<span class="sd">    Note: you **must** consume this iterator in order for backfilling to occur.</span>
+<span class="sd">    This was implemented lazily because there is considerable I/O (including</span>
+<span class="sd">    possibly some over the network), and being able to control processing rate</span>
+<span class="sd">    at a high level was foreseen as important.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    register : :class:`IRegisterAPI`</span>
+<span class="sd">        A canonical register instance that will handle events derived from the</span>
+<span class="sd">        classic record.</span>
+<span class="sd">    daily_path : str</span>
+<span class="sd">        Absolute path to the daily.log file.</span>
+<span class="sd">    abs_path : str</span>
+<span class="sd">        Absolute path of the directory containing abs files and source</span>
+<span class="sd">        packages. Specifically, this is the directory that contains the ``ftp``</span>
+<span class="sd">        and ``orig`` subdirectories.</span>
+<span class="sd">    state_path : str</span>
+<span class="sd">        Absolute path of a writeable directory where backfill state can be</span>
+<span class="sd">        stored. This allows us to persist the backfill state, in case we need</span>
+<span class="sd">        to restart after a failure.</span>
+<span class="sd">    limit_to : set</span>
+<span class="sd">        A set of :class:`Identifier`s indicating a subset of e-prints to</span>
+<span class="sd">        backfill. If ``None`` (default) all events for all e-prints are</span>
+<span class="sd">        backfilled.</span>
+<span class="sd">    cache_path : str</span>
+<span class="sd">        If provided, a writable directory where a cache of events can be</span>
+<span class="sd">        maintained. This cuts down on spin-up time considerably.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterator</span>
+<span class="sd">        Yields :class:`Event`s that have been successfully backfilled.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_load_all</span><span class="p">,</span> <span class="n">daily_path</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span>
+                     <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_backfill</span><span class="p">(</span><span class="n">register</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">state_path</span><span class="p">,</span> <span class="n">limit_to</span><span class="o">=</span><span class="n">limit_to</span><span class="p">,</span>
+                     <span class="n">until</span><span class="o">=</span><span class="n">until</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="backfill_today"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.classic.backfill.html#arxiv.canonical.classic.backfill.backfill_today">[docs]</a><span class="k">def</span> <span class="nf">backfill_today</span><span class="p">(</span><span class="n">register</span><span class="p">:</span> <span class="n">IRegisterAPI</span><span class="p">,</span>
+                   <span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">state_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lazily backfill the canonical record from today&#39;s events in classic record.</span>
+
+<span class="sd">    This is intended to be used to keep the canonical record up to date from</span>
+<span class="sd">    the classic record on a daily basis, after the initial backfill.</span>
+
+<span class="sd">    Note: you **must** consume this iterator in order for backfilling to occur.</span>
+<span class="sd">    This was implemented lazily because there is considerable I/O (including</span>
+<span class="sd">    possibly some over the network), and being able to control processing rate</span>
+<span class="sd">    at a high level was foreseen as important.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    register : :class:`IRegisterAPI`</span>
+<span class="sd">        A canonical register instance that will handle events derived from the</span>
+<span class="sd">        classic record.</span>
+<span class="sd">    daily_path : str</span>
+<span class="sd">        Absolute path to the daily.log file.</span>
+<span class="sd">    abs_path : str</span>
+<span class="sd">        Absolute path of the directory containing abs files and source</span>
+<span class="sd">        packages. Specifically, this is the directory that contains the ``ftp``</span>
+<span class="sd">        and ``orig`` subdirectories.</span>
+<span class="sd">    state_path : str</span>
+<span class="sd">        Absolute path of a writeable directory where backfill state can be</span>
+<span class="sd">        stored. This allows us to persist the backfill state, in case we need</span>
+<span class="sd">        to restart after a failure.</span>
+<span class="sd">    cache_path : str</span>
+<span class="sd">        If provided, a writable directory where a cache of events can be</span>
+<span class="sd">        maintained. This cuts down on spin-up time considerably.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterator</span>
+<span class="sd">        Yields :class:`Event`s that have been successfully backfilled.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_load_today</span><span class="p">,</span> <span class="n">daily_path</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span>
+                     <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_backfill</span><span class="p">(</span><span class="n">register</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">state_path</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_backfill</span><span class="p">(</span><span class="n">register</span><span class="p">:</span> <span class="n">IRegisterAPI</span><span class="p">,</span>
+              <span class="n">loader</span><span class="p">:</span> <span class="n">_ILoader</span><span class="p">,</span>
+              <span class="n">state_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">limit_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">until</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="c1"># These mappings are stored on disk so that we can resume after a failure.</span>
+    <span class="c1"># They will be created now if they don&#39;t already exist.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">state_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">state_path</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">PersistentIndex</span><span class="p">()</span>
+    <span class="n">first</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">state_path</span><span class="p">,</span> <span class="s1">&#39;first.json&#39;</span><span class="p">))</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">PersistentIndex</span><span class="p">()</span>
+    <span class="n">current</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">state_path</span><span class="p">,</span> <span class="s1">&#39;current.json&#39;</span><span class="p">))</span>
+    <span class="n">cf_cache</span> <span class="o">=</span> <span class="n">_CF_PersistentIndex</span><span class="p">()</span>
+    <span class="n">cf_cache</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">state_path</span><span class="p">,</span> <span class="s1">&#39;content.json&#39;</span><span class="p">))</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">Log</span><span class="p">(</span><span class="n">state_path</span><span class="p">)</span>   <span class="c1"># The log keeps track of our progress.</span>
+
+    <span class="c1"># We may be resuming after a failure. If so, we will start right after the</span>
+    <span class="c1"># last successful event.</span>
+    <span class="n">resume_after</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">read_last_succeeded</span><span class="p">()</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">resume_after</span> <span class="k">else</span> <span class="kc">False</span>
+    <span class="n">event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Starting backfill&#39;</span><span class="p">)</span>   <span class="c1"># The logger is just for us humans.</span>
+    <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Skip until </span><span class="si">{resume_after}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Because of the format of daily.log, it&#39;s not at all straightforward</span>
+        <span class="c1"># to skip unwanted events without fully parsing them. In this</span>
+        <span class="c1"># implementation all events are loaded and we are just choosy about</span>
+        <span class="c1"># which ones we work with. At this level of the process, we are</span>
+        <span class="c1"># skipping any events that were already backfilled successfully on</span>
+        <span class="c1"># previous runs. Filtering for ``limit_to`` happens deeper.</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">(</span><span class="n">current</span><span class="o">=</span><span class="n">current</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="n">first</span><span class="p">,</span> <span class="n">limit_to</span><span class="o">=</span><span class="n">limit_to</span><span class="p">,</span>
+                            <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Got event </span><span class="si">%s</span><span class="s1"> for </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+                         <span class="n">event</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_date</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">resume_after</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span> <span class="o">==</span> <span class="n">resume_after</span><span class="o">.</span><span class="n">event_id</span><span class="p">:</span>
+                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>    <span class="c1"># Start on the next event.</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">until</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">until</span><span class="p">:</span>
+                <span class="c1"># Explicitly instructed to stop processing when this date is</span>
+                <span class="c1"># reached.</span>
+                <span class="k">break</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Handling: </span><span class="si">{event.event_date}</span><span class="s1">: </span><span class="si">{event.identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">register</span><span class="o">.</span><span class="n">add_events</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>  <span class="c1"># Add event to the canonical record!</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">log_success</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span> <span class="n">WRITE</span><span class="p">)</span>  <span class="c1"># Mark our progress.</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Successfully handled </span><span class="si">%i</span><span class="s1"> events&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">cf_cache</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>   <span class="c1"># Only save if successful.</span>
+            <span class="k">yield</span> <span class="n">event</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered unhandled exception: </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">event</span><span class="p">:</span>
+            <span class="c1"># Log lines are stored as json, so newlines in the exception should</span>
+            <span class="c1"># not cause problems.</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">log_failure</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span> <span class="n">WRITE</span><span class="p">,</span>
+                            <span class="n">message</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;Encountered error: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Keep our version and announcement-date mappings up to date on disk.</span>
+        <span class="n">first</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">current</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+
+<span class="c1"># Private functions follow in alphabetic order.</span>
+
+<span class="k">def</span> <span class="nf">_datetime_from_date</span><span class="p">(</span><span class="n">source_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">Identifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+    <span class="c1"># We are artificially coercing a date value to a datetime, which</span>
+    <span class="c1"># means that every event on a particular day will occur at</span>
+    <span class="c1"># precisely the same moment. In order to preserve event order, we</span>
+    <span class="c1"># set the microsecond part based on the arXiv ID.</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">source_date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                    <span class="n">month</span><span class="o">=</span><span class="n">source_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                    <span class="n">day</span><span class="o">=</span><span class="n">source_date</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+                    <span class="n">hour</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                    <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">microsecond</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">identifier</span><span class="o">.</span><span class="n">incremental_part</span><span class="p">),</span>
+                    <span class="n">tzinfo</span><span class="o">=</span><span class="n">ET</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_event_from_abs</span><span class="p">(</span><span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">abs_data</span><span class="p">:</span> <span class="nb">abs</span><span class="o">.</span><span class="n">AbsData</span><span class="p">,</span>
+                    <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                    <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">get_source</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">abs_data</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+    <span class="n">formats</span> <span class="o">=</span> <span class="p">{</span><span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="p">:</span> <span class="n">cf</span>
+               <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">get_formats</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span>
+                                             <span class="n">abs_data</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                             <span class="n">abs_data</span><span class="o">.</span><span class="n">source_type</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                                             <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">)}</span>
+    <span class="n">render</span> <span class="o">=</span> <span class="n">formats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+        <span class="n">announced_date</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">submitted_date</span><span class="p">,</span>
+        <span class="n">announced_date_first</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">submitted_date</span><span class="p">,</span>
+        <span class="n">submitted_date</span><span class="o">=</span><span class="n">event_date</span><span class="p">,</span>
+        <span class="n">updated_date</span><span class="o">=</span><span class="n">event_date</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">Metadata</span><span class="p">(</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">,</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">abstract</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+            <span class="n">authors</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
+            <span class="n">comments</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span>
+            <span class="n">journal_ref</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span>
+            <span class="n">report_num</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span>
+            <span class="n">doi</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+            <span class="n">msc_class</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+            <span class="n">acm_class</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">acm_class</span>
+        <span class="p">),</span>
+        <span class="n">events</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">submitter</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">submitter</span><span class="p">,</span>
+        <span class="n">proxy</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+        <span class="n">is_announced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">is_withdrawn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_legacy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+        <span class="n">render</span><span class="o">=</span><span class="n">render</span><span class="p">,</span>
+        <span class="n">formats</span><span class="o">=</span><span class="n">formats</span><span class="p">,</span>
+        <span class="n">source_type</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">source_type</span>
+    <span class="p">)</span>
+
+    <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">abs_data</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+        <span class="n">event_date</span><span class="o">=</span><span class="n">event_date</span><span class="p">,</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span>
+                    <span class="k">if</span> <span class="n">abs_data</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="k">else</span> <span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span><span class="p">),</span>
+        <span class="n">is_legacy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version</span>
+    <span class="p">)</span>
+    <span class="n">version</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">event</span>
+
+
+<span class="k">def</span> <span class="nf">_load_all</span><span class="p">(</span><span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">first</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">limit_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load all classic events, using both abs files and the daily.log.</span>
+
+<span class="sd">    Pre-daily.log events are inferred from the abs files. Events derived from</span>
+<span class="sd">    daily.log are supplemented by the abs files to infer things like version</span>
+<span class="sd">    number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    daily_path : str</span>
+<span class="sd">        Absolute path to the daily.log file.</span>
+<span class="sd">    abs_path : str</span>
+<span class="sd">        Absolute path of the directory containing abs files and source</span>
+<span class="sd">        packages. Specifically, this is the directory that contains the ``ftp``</span>
+<span class="sd">        and ``orig`` subdirectories.</span>
+<span class="sd">    current : mapping</span>
+<span class="sd">        A ``dict`` or other mutable mapping of :class:`Identifier`s onto the</span>
+<span class="sd">        most recent loaded numeric version of the corresponding e-print.</span>
+<span class="sd">    first : mapping</span>
+<span class="sd">        A ``dict`` or other mutable mapping of :class:`Identifier`s onto the</span>
+<span class="sd">        announcement date of the first version of the corresponding e-print.</span>
+<span class="sd">    limit_to : set</span>
+<span class="sd">        A set of :class:`Identifier`s indicating a subset of e-prints to load.</span>
+<span class="sd">        If ``None`` (default) all events for all e-prints are loaded.</span>
+<span class="sd">    cache_path : str</span>
+<span class="sd">        If provided, a writable directory where a cache of events can be</span>
+<span class="sd">        maintained. This cuts down on spin-up time considerably.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterator</span>
+<span class="sd">        Yields :class:`Event`s in chronological order.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">first</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Normalize all of our paths.</span>
+    <span class="n">daily_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">daily_path</span><span class="p">)</span>
+    <span class="n">cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span>
+    <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">abs_path</span><span class="p">)</span>
+    <span class="n">ps_cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">ps_cache_path</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Load events from </span><span class="si">{daily_path}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># We can&#39;t infer whether an abs file was written prior to the daily.log</span>
+    <span class="c1"># from the abs file alone. But if the e-print identifier comes prior to the</span>
+    <span class="c1"># earlier identifier for a ``new`` event in the daily.log, then we can</span>
+    <span class="c1"># be certain it is not covered in the daily.log.</span>
+    <span class="n">first_entry</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="nb">iter</span><span class="p">(</span><span class="n">daily</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">)),</span>
+        <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">first_entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Could not load the first entry from daily.log&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;First: </span><span class="si">{first_entry.event_date}</span><span class="s1">: </span><span class="si">{first_entry.arxiv_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">first_day</span> <span class="o">=</span> <span class="n">daily</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">for_date</span><span class="o">=</span><span class="n">first_entry</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+                            <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">)</span>
+    <span class="n">new_identifiers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">Identifier</span><span class="p">(</span><span class="n">ed</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">ed</span> <span class="ow">in</span> <span class="n">first_day</span>
+                              <span class="k">if</span> <span class="n">ed</span><span class="o">.</span><span class="n">event_type</span> <span class="ow">is</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Found {len(new_identifiers)} NEW events on the first day&#39;</span><span class="p">)</span>
+    <span class="n">first_identifier</span> <span class="o">=</span> <span class="n">new_identifiers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The earliest NEW identifier is </span><span class="si">{first_identifier}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># These are e-prints that were first announced prior to the beginning of</span>
+    <span class="c1"># the daily.log file, i.e. we have no ``new`` event.</span>
+    <span class="n">ids_prior_to_first_event</span> <span class="o">=</span> \
+        <span class="nb">list</span><span class="p">(</span><span class="nb">abs</span><span class="o">.</span><span class="n">iter_all</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">to_id</span><span class="o">=</span><span class="n">first_identifier</span><span class="p">))</span>
+
+    <span class="c1"># Load all of the pre-daily events at once.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loading pre-daily events for </span><span class="si">%i</span><span class="s1"> identifiers...&#39;</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">ids_prior_to_first_event</span><span class="p">))</span>
+    <span class="n">predaily_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ident</span> <span class="ow">in</span> <span class="n">ids_prior_to_first_event</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">limit_to</span> <span class="ow">and</span> <span class="n">ident</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">limit_to</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">_load_predaily</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">ident</span><span class="p">,</span>
+                                    <span class="n">current</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">,</span>
+                                    <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">):</span>
+            <span class="n">predaily_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+    <span class="n">predaily_events</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">predaily_events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;event_date&#39;</span><span class="p">))</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loaded </span><span class="si">%i</span><span class="s1"> pre-daily events&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">predaily_events</span><span class="p">))</span>
+
+    <span class="c1"># Lazily load the daily events.</span>
+    <span class="n">daily_events</span> <span class="o">=</span> <span class="n">_load_events</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">daily_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span>
+                                <span class="n">current</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">limit_to</span><span class="o">=</span><span class="n">limit_to</span><span class="p">,</span>
+                                <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">,</span>
+                                <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chain</span><span class="p">(</span><span class="n">predaily_events</span><span class="p">,</span> <span class="n">daily_events</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_load_daily_event</span><span class="p">(</span><span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                      <span class="n">event_datum</span><span class="p">:</span> <span class="n">daily</span><span class="o">.</span><span class="n">EventData</span><span class="p">,</span>
+                      <span class="n">current</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                      <span class="n">first</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">],</span>
+                      <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">_make_id</span><span class="p">(</span><span class="n">event_datum</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+
+    <span class="n">abs_datum</span> <span class="o">=</span> <span class="nb">abs</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span> <span class="o">!=</span> <span class="n">identifier</span><span class="p">:</span>  <span class="c1"># Loaded the correct abs file?</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Loaded the wrong abs file! Expected </span><span class="si">{identifier}</span><span class="s1">,&#39;</span>
+                           <span class="n">f</span><span class="s1">&#39; got </span><span class="si">{abs_datum.identifier}</span><span class="s1">. This may be because&#39;</span>
+                           <span class="n">f</span><span class="s1">&#39; the abs file for </span><span class="si">{identifier}</span><span class="s1"> is missing.&#39;</span><span class="p">)</span>
+
+    <span class="n">event</span> <span class="o">=</span> <span class="n">_make_event</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">,</span> <span class="n">event_datum</span><span class="p">,</span>
+                        <span class="n">identifier</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">)</span>
+
+    <span class="n">current</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span>
+    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">first</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">event_date</span>
+    <span class="k">return</span> <span class="n">event</span>
+
+
+<span class="k">def</span> <span class="nf">_load_events</span><span class="p">(</span><span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">current</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                 <span class="n">first</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">],</span>
+                 <span class="n">limit_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">event_datum</span> <span class="ow">in</span> <span class="n">daily</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit_to</span> <span class="ow">and</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">limit_to</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">_load_daily_event</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">event_datum</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span>
+                                <span class="n">first</span><span class="p">,</span> <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_load_predaily</span><span class="p">(</span><span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">identifier</span><span class="p">:</span> <span class="n">Identifier</span><span class="p">,</span>
+                   <span class="n">current</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                   <span class="n">first</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">],</span>
+                   <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate inferred events prior to daily.log based on abs files.</span>
+
+<span class="sd">    Approach:</span>
+
+<span class="sd">    - v1 announced date is the v1 submission date</span>
+<span class="sd">    - if there are multiple versions:</span>
+<span class="sd">      - scan the daily.log for all replacements of that e-print</span>
+<span class="sd">      - align from the most recent version, backward</span>
+<span class="sd">      - if there are any remaining versions between v1 and the lowest v from</span>
+<span class="sd">        the previous step, use the submission date for that v from the abs</span>
+<span class="sd">        file as the announced date.</span>
+<span class="sd">    - if we have explicit cross-list events, exclude those crosses from any</span>
+<span class="sd">      events that we generate here.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">abs_for_this_ident</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">abs</span><span class="o">.</span><span class="n">parse_versions</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">),</span>
+                                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">N_versions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">abs_for_this_ident</span><span class="p">)</span>
+    <span class="n">events_for_this_ident</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">daily</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span>
+                                              <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">),</span>
+                                   <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">event_date</span><span class="p">)</span>
+    <span class="c1"># These result in new versions.</span>
+    <span class="n">replacements</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">events_for_this_ident</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">REPLACED</span><span class="p">]</span>
+    <span class="c1"># These do not.</span>
+    <span class="n">crosslists</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">events_for_this_ident</span>
+                  <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">CROSSLIST</span><span class="p">]</span>
+
+    <span class="c1"># If there are more replacement events than we have abs beyond the</span>
+    <span class="c1"># first version, we&#39;re in trouble.</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">replacements</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">abs_for_this_ident</span><span class="p">)</span>
+
+    <span class="c1"># Work backward, since we do not know whether there were replacements</span>
+    <span class="c1"># prior to the start of the daily.log file.</span>
+    <span class="n">repl_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">replacements</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">repl_map</span><span class="p">[</span><span class="n">abs_for_this_ident</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+
+    <span class="c1"># Generate replacement events as needed, and remove cross-list</span>
+    <span class="c1"># categories for which we have explicit CROSSLIST events in daily.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">abs_datum</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">abs_for_this_ident</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="ow">in</span> <span class="n">repl_map</span><span class="p">:</span>
+            <span class="n">event_date</span> <span class="o">=</span> <span class="n">_datetime_from_date</span><span class="p">(</span>
+                <span class="n">repl_map</span><span class="p">[</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span><span class="p">]</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+                <span class="n">identifier</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># We don&#39;t know the announcement date, so we will fall back to</span>
+            <span class="c1"># the submission date for this abs version.</span>
+            <span class="n">event_date</span> <span class="o">=</span> <span class="n">_datetime_from_date</span><span class="p">(</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">submitted_date</span><span class="p">,</span>
+                                             <span class="n">identifier</span><span class="p">)</span>
+
+        <span class="c1"># Some of the abs categories may have been added after the</span>
+        <span class="c1"># initial new/replacement event. We want to pare out those</span>
+        <span class="c1"># secondaries, since they were not actually present.</span>
+        <span class="k">while</span> <span class="n">crosslists</span> <span class="ow">and</span> <span class="n">crosslists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">event_date</span> <span class="o">&lt;</span> <span class="n">event_date</span><span class="o">.</span><span class="n">date</span><span class="p">():</span>
+            <span class="n">cross</span> <span class="o">=</span> <span class="n">crosslists</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">last</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">secondary_classification</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">last</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">secondary_classification</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cross</span><span class="o">.</span><span class="n">categories</span>
+            <span class="p">]</span>
+
+        <span class="c1"># If we have aligned an abs version with an event from daily.log,</span>
+        <span class="c1"># we will skip it for now; we will handle all events from daily.log</span>
+        <span class="c1"># in order later on.</span>
+        <span class="k">if</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">repl_map</span><span class="p">:</span>
+            <span class="c1"># This event is inferred from the presence of an abs file.</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event_from_abs</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">,</span>
+                                          <span class="n">event_date</span><span class="p">,</span> <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">))</span>
+            <span class="n">current</span><span class="p">[</span><span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span> \
+                <span class="o">=</span> <span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span>
+            <span class="k">if</span> <span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">first</span><span class="p">[</span><span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_date</span>
+    <span class="k">return</span> <span class="n">events</span>
+
+
+<span class="k">def</span> <span class="nf">_load_today</span><span class="p">(</span><span class="n">daily_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">first</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">cache_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the events that were generated today.</span>
+
+<span class="sd">    This is a unique case, in that we are able to directly infer the version</span>
+<span class="sd">    associated with each event based on the most recent abs file for each</span>
+<span class="sd">    e-print.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    daily_path : str</span>
+<span class="sd">        Absolute path to the daily.log file.</span>
+<span class="sd">    abs_path : str</span>
+<span class="sd">        Absolute path of the directory containing abs files and source</span>
+<span class="sd">        packages. Specifically, this is the directory that contains the ``ftp``</span>
+<span class="sd">        and ``orig`` subdirectories.</span>
+<span class="sd">    first : mapping</span>
+<span class="sd">        A ``dict`` or other mutable mapping of :class:`Identifier`s onto the</span>
+<span class="sd">        announcement date of the first version of the corresponding e-print.</span>
+<span class="sd">    cache_path : str</span>
+<span class="sd">        If provided, a writable directory where a cache of events can be</span>
+<span class="sd">        maintained. This cuts down on spin-up time considerably.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterator</span>
+<span class="sd">        Yields :class:`Event`s in chronological order.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Normalize all of our paths.</span>
+    <span class="n">daily_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">daily_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cache_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span>
+    <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">abs_path</span><span class="p">)</span>
+    <span class="n">ps_cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">ps_cache_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">first</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">daily</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">daily_path</span><span class="p">,</span> <span class="n">for_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+                             <span class="n">cache_path</span><span class="o">=</span><span class="n">cache_path</span><span class="p">):</span>
+        <span class="n">abs_datum</span> <span class="o">=</span> <span class="nb">abs</span><span class="o">.</span><span class="n">parse_latest</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">_make_event</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">,</span> <span class="n">datum</span><span class="p">,</span>
+                          <span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_make_categories</span><span class="p">(</span><span class="n">event_datum</span><span class="p">:</span> <span class="n">daily</span><span class="o">.</span><span class="n">EventData</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">:</span> <span class="nb">abs</span><span class="o">.</span><span class="n">AbsData</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Category</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]]:</span>
+    <span class="k">if</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">is_new_version</span><span class="p">:</span>
+        <span class="n">primary_classification</span> <span class="o">=</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">secondary_classification</span> <span class="o">=</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">primary_classification</span> <span class="o">=</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">primary_classification</span>
+        <span class="n">secondary_classification</span> <span class="o">=</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">secondary_classification</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     raise RuntimeError(f&#39;Unxpected event type: {event_datum.event_type}&#39;)</span>
+    <span class="k">return</span> <span class="n">primary_classification</span><span class="p">,</span> <span class="n">secondary_classification</span>
+
+
+<span class="k">def</span> <span class="nf">_make_event</span><span class="p">(</span><span class="n">abs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">:</span> <span class="nb">abs</span><span class="o">.</span><span class="n">AbsData</span><span class="p">,</span>
+                <span class="n">event_datum</span><span class="p">:</span> <span class="n">daily</span><span class="o">.</span><span class="n">EventData</span><span class="p">,</span>
+                <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                <span class="n">first</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">date</span><span class="p">],</span>
+                <span class="n">cf_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CF_PersistentIndex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+
+    <span class="c1"># Look up the date that the first version of this e-print was announced.</span>
+    <span class="k">if</span> <span class="n">identifier</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">announced_date_first</span> <span class="o">=</span> <span class="n">first</span><span class="p">[</span><span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">announced_date_first</span> <span class="o">=</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">event_date</span>
+
+    <span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span> <span class="o">=</span> <span class="n">_make_categories</span><span class="p">(</span><span class="n">event_datum</span><span class="p">,</span> <span class="n">abs_datum</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">submission_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">WITHDRAWN</span><span class="p">:</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="n">EventType</span><span class="o">.</span><span class="n">WITHDRAWN</span>
+        <span class="n">is_withdrawn</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">event_type</span>
+        <span class="n">is_withdrawn</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">get_source</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+    <span class="n">formats</span> <span class="o">=</span> <span class="p">{</span><span class="n">cf</span><span class="o">.</span><span class="n">content_type</span><span class="p">:</span> <span class="n">cf</span>
+               <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">get_formats</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">ps_cache_path</span><span class="p">,</span>
+                                             <span class="n">identifier</span><span class="p">,</span> <span class="n">abs_datum</span><span class="o">.</span><span class="n">source_type</span><span class="p">,</span>
+                                             <span class="n">source</span><span class="p">,</span> <span class="n">cf_cache</span><span class="o">=</span><span class="n">cf_cache</span><span class="p">)}</span>
+    <span class="n">render</span> <span class="o">=</span> <span class="n">formats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ContentType</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">version</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+        <span class="n">announced_date</span><span class="o">=</span><span class="n">event_datum</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+        <span class="n">announced_date_first</span><span class="o">=</span><span class="n">announced_date_first</span><span class="p">,</span>
+        <span class="n">submitted_date</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">submitted_date</span><span class="p">,</span>
+        <span class="n">updated_date</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">updated_date</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">Metadata</span><span class="p">(</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">primary</span><span class="p">,</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="n">secondary</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">abstract</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+            <span class="n">authors</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
+            <span class="n">comments</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span>
+            <span class="n">journal_ref</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span>
+            <span class="n">report_num</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span>
+            <span class="n">doi</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+            <span class="n">msc_class</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+            <span class="n">acm_class</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">acm_class</span>
+        <span class="p">),</span>
+        <span class="n">events</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">submitter</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">submitter</span><span class="p">,</span>
+        <span class="n">proxy</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+        <span class="n">is_announced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">is_withdrawn</span><span class="o">=</span><span class="n">is_withdrawn</span><span class="p">,</span>
+        <span class="n">is_legacy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+        <span class="n">render</span><span class="o">=</span><span class="n">render</span><span class="p">,</span>
+        <span class="n">formats</span><span class="o">=</span><span class="n">formats</span><span class="p">,</span>
+        <span class="n">source_type</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">source_type</span>
+    <span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">abs_datum</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+        <span class="n">event_date</span><span class="o">=</span><span class="n">_datetime_from_date</span><span class="p">(</span><span class="n">event_datum</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+                                       <span class="n">identifier</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">),</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="n">event_type</span><span class="p">,</span>
+        <span class="n">is_legacy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">categories</span><span class="o">=</span><span class="n">event_datum</span><span class="o">.</span><span class="n">categories</span>
+    <span class="p">)</span>
+    <span class="n">version</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">event</span>
+
+
+<span class="k">def</span> <span class="nf">_make_id</span><span class="p">(</span><span class="n">event_datum</span><span class="p">:</span> <span class="n">daily</span><span class="o">.</span><span class="n">EventData</span><span class="p">,</span>
+             <span class="n">current</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">VersionedIdentifier</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">NEW</span><span class="p">:</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">event_datum</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">is_new_version</span><span class="p">:</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span>
+            <span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
+            <span class="n">current</span><span class="p">[</span><span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">event_datum</span><span class="o">.</span><span class="n">event_type</span><span class="p">)</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">VersionedIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span>
+            <span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
+            <span class="n">current</span><span class="p">[</span><span class="n">event_datum</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">identifier</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

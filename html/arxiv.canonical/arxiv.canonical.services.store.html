@@ -1,0 +1,455 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.services.store module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.services.stream module" href="arxiv.canonical.services.stream.html" />
+    <link rel="prev" title="arxiv.canonical.services.repository module" href="arxiv.canonical.services.repository.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.services.store">
+<span id="arxiv-canonical-services-store-module"></span><h1>arxiv.canonical.services.store module<a class="headerlink" href="#module-arxiv.canonical.services.store" title="Permalink to this headline">¶</a></h1>
+<p>Persist changes to the canonical record.</p>
+<p>Provides a <a class="reference internal" href="#arxiv.canonical.services.store.CanonicalStore" title="arxiv.canonical.services.store.CanonicalStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">CanonicalStore</span></code></a> that stores resources in S3, using
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">serialize.record</span></code> to serialize and deserialize resources.</p>
+<dl class="class">
+<dt id="arxiv.canonical.services.store.CanonicalStore">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.services.store.</code><code class="sig-name descname">CanonicalStore</code><span class="sig-paren">(</span><em class="sig-param">bucket</em>, <em class="sig-param">verify=False</em>, <em class="sig-param">region_name=None</em>, <em class="sig-param">endpoint_url=None</em>, <em class="sig-param">aws_access_key_id=None</em>, <em class="sig-param">aws_secret_access_key=None</em>, <em class="sig-param">read_only=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.ICanonicalStorage" title="arxiv.canonical.core.ICanonicalStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.core.ICanonicalStorage</span></code></a></p>
+<p>Persists the canonical record in S3.</p>
+<p>The intended pattern for working with the canonical record is to use the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">domain.CanonicalRecord</span></code> as the primary entrypoint for all
+operations. Consequently, this service offers only a single public instance
+method, <a href="#id1"><span class="problematic" id="id2">:fund:`.load_record`</span></a>.</p>
+<p>Persistence is achieved by attaching members to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">domain.CanonicalRecord</span></code>, :class`.domain.Month`, and
+<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Listing" title="arxiv.canonical.domain.Listing"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Listing</span></code></a> instances that implement reads/writes to S3. In
+this way, consumers of <code class="docutils literal notranslate"><span class="pre">arxiv.canonical.domain</span></code> can largely work directly
+with <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.CanonicalRecord</span></code>, and persistence is handled
+transparently.</p>
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.can_resolve">
+<code class="sig-name descname">can_resolve</code><span class="sig-paren">(</span><em class="sig-param">uri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.can_resolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.can_resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the implementation can resolve an URI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>uri</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">D.URI</span></code>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.inititalize">
+<code class="sig-name descname">inititalize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.inititalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.inititalize" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.is_available">
+<code class="sig-name descname">is_available</code><span class="sig-paren">(</span><em class="sig-param">retries=0</em>, <em class="sig-param">read_timeout=5</em>, <em class="sig-param">connect_timeout=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.is_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.is_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether or not we can read from/write to the store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.list_subkeys">
+<code class="sig-name descname">list_subkeys</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.list_subkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.list_subkeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the subkeys (direct descendants) of <code class="docutils literal notranslate"><span class="pre">key</span></code> in the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.URI" title="arxiv.canonical.domain.URI"><code class="xref py py-class docutils literal notranslate"><span class="pre">URI</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Items are the relative names of the descendants of <code class="docutils literal notranslate"><span class="pre">key</span></code>. For
+filesystem-based storage, this may be equivalent to <code class="docutils literal notranslate"><span class="pre">os.listdir</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)">list</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make an IO that waits to load from the record until it is read().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">D.URI</span></code>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields bytes when read. This may be a lazy IO object, so that
+reading is deferred until the latest possible time.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>IO</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.IO" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.load_entry">
+<code class="sig-name descname">load_entry</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.load_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.load_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a bitstream entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.URI" title="arxiv.canonical.domain.URI"><code class="xref py py-class docutils literal notranslate"><span class="pre">URI</span></code></a>) – Key that identifies the bitsream in the record.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><a class="reference internal" href="arxiv.canonical.record.html#arxiv.canonical.record.RecordStream" title="arxiv.canonical.record.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a> – The bitstream resource.</p></li>
+<li><p><em>str</em> – Checksum of the bitstream (URL-safe base64-encoded md5 hash).ß</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordStream" title="arxiv.canonical.record.core.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.load_manifest">
+<code class="sig-name descname">load_manifest</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.load_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.load_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an integrity manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Key" title="arxiv.canonical.domain.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a>) – Key used to identify <code class="docutils literal notranslate"><span class="pre">manifest</span></code> in storage.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.read_only">
+<em class="property">property </em><code class="sig-name descname">read_only</code><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.read_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether or not this is a read-only session.</p>
+<p>This is read-only property to discourage users of this class to mess
+with it in runtime code. Should only be set via application
+configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.store_entry">
+<code class="sig-name descname">store_entry</code><span class="sig-paren">(</span><em class="sig-param">ri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.store_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.store_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a bitstream entry in the record.</p>
+<p>This method MUST decompress the content of the entry if it is gzipped
+(as is sometimes the case in the classic system) and update the
+<code class="docutils literal notranslate"><span class="pre">CanonicalFile</span></code> (<code class="docutils literal notranslate"><span class="pre">ri.record.stream.domain</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ri</strong> (<a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.IStorableEntry" title="arxiv.canonical.core.IStorableEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">IStorableEntry</span></code></a>) – A storable bitstream.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.CanonicalStore.store_manifest">
+<code class="sig-name descname">store_manifest</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">manifest</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#CanonicalStore.store_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.CanonicalStore.store_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store an integrity manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Key" title="arxiv.canonical.domain.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a>) – Key used to identify <code class="docutils literal notranslate"><span class="pre">manifest</span></code> in storage.</p></li>
+<li><p><strong>manifest</strong> (<a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a>) – The manifest record to store.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.canonical.services.store.DoesNotExist">
+<em class="property">exception </em><code class="sig-prename descclassname">arxiv.canonical.services.store.</code><code class="sig-name descname">DoesNotExist</code><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#DoesNotExist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>The requested resource does not exist.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.services.store.InMemoryStorage">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.services.store.</code><code class="sig-name descname">InMemoryStorage</code><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.ICanonicalStorage" title="arxiv.canonical.core.ICanonicalStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.core.ICanonicalStorage</span></code></a></p>
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.can_resolve">
+<code class="sig-name descname">can_resolve</code><span class="sig-paren">(</span><em class="sig-param">uri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.can_resolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.can_resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the implementation can resolve an URI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>uri</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">D.URI</span></code>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.list_subkeys">
+<code class="sig-name descname">list_subkeys</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.list_subkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.list_subkeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the subkeys (direct descendants) of <code class="docutils literal notranslate"><span class="pre">key</span></code> in the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.URI" title="arxiv.canonical.domain.URI"><code class="xref py py-class docutils literal notranslate"><span class="pre">URI</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Items are the relative names of the descendants of <code class="docutils literal notranslate"><span class="pre">key</span></code>. For
+filesystem-based storage, this may be equivalent to <code class="docutils literal notranslate"><span class="pre">os.listdir</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)">list</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make an IO that waits to load from the record until it is read().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">D.URI</span></code>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Yields bytes when read. This may be a lazy IO object, so that
+reading is deferred until the latest possible time.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>IO</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.IO" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.load_entry">
+<code class="sig-name descname">load_entry</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.load_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.load_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a bitstream entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.URI" title="arxiv.canonical.domain.URI"><code class="xref py py-class docutils literal notranslate"><span class="pre">URI</span></code></a>) – Key that identifies the bitsream in the record.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><a class="reference internal" href="arxiv.canonical.record.html#arxiv.canonical.record.RecordStream" title="arxiv.canonical.record.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a> – The bitstream resource.</p></li>
+<li><p><em>str</em> – Checksum of the bitstream (URL-safe base64-encoded md5 hash).ß</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordStream" title="arxiv.canonical.record.core.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.load_manifest">
+<code class="sig-name descname">load_manifest</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.load_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.load_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an integrity manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Key" title="arxiv.canonical.domain.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a>) – Key used to identify <code class="docutils literal notranslate"><span class="pre">manifest</span></code> in storage.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.store_entry">
+<code class="sig-name descname">store_entry</code><span class="sig-paren">(</span><em class="sig-param">ri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.store_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.store_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a bitstream entry in the record.</p>
+<p>This method MUST decompress the content of the entry if it is gzipped
+(as is sometimes the case in the classic system) and update the
+<code class="docutils literal notranslate"><span class="pre">CanonicalFile</span></code> (<code class="docutils literal notranslate"><span class="pre">ri.record.stream.domain</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ri</strong> (<a class="reference internal" href="arxiv.canonical.core.html#arxiv.canonical.core.IStorableEntry" title="arxiv.canonical.core.IStorableEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">IStorableEntry</span></code></a>) – A storable bitstream.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.store.InMemoryStorage.store_manifest">
+<code class="sig-name descname">store_manifest</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">manifest</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/store.html#InMemoryStorage.store_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.store.InMemoryStorage.store_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store an integrity manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Key" title="arxiv.canonical.domain.Key"><code class="xref py py-class docutils literal notranslate"><span class="pre">Key</span></code></a>) – Key used to identify <code class="docutils literal notranslate"><span class="pre">manifest</span></code> in storage.</p></li>
+<li><p><strong>manifest</strong> (<a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a>) – The manifest record to store.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.services.html">arxiv.canonical.services package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.services.repository.html" title="previous chapter">arxiv.canonical.services.repository module</a></li>
+      <li>Next: <a href="arxiv.canonical.services.stream.html" title="next chapter">arxiv.canonical.services.stream module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.services.store.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

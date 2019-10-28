@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.record.core &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.record.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Base classes and core concepts for :mod:`arxiv.canonical.record`.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABC</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="k">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> \
+    <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> \
+    <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">from</span> <span class="nn">..serialize.decoder</span> <span class="k">import</span> <span class="n">CanonicalDecoder</span>
+<span class="kn">from</span> <span class="nn">..serialize.encoder</span> <span class="k">import</span> <span class="n">CanonicalEncoder</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">domain</span> <span class="k">as</span> <span class="n">D</span>
+<span class="kn">from</span> <span class="nn">..util</span> <span class="k">import</span> <span class="n">GenericMonoDict</span>
+
+<span class="n">Year</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="n">Month</span> <span class="o">=</span> <span class="nb">int</span>
+<span class="n">YearMonth</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="RecordStream"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordStream">[docs]</a><span class="k">class</span> <span class="nc">RecordStream</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A single bitstream in the record.&quot;&quot;&quot;</span>
+
+    <span class="n">domain</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span>
+
+    <span class="n">content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]</span>
+    <span class="sd">&quot;&quot;&quot;Raw content of the entry.&quot;&quot;&quot;</span>
+
+    <span class="n">content_type</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">ContentType</span>
+    <span class="sd">&quot;&quot;&quot;MIME-type of the content.&quot;&quot;&quot;</span>
+
+    <span class="n">size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="sd">&quot;&quot;&quot;Size of ``content`` in bytes.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="RecordEntryMembers"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordEntryMembers">[docs]</a><span class="k">class</span> <span class="nc">RecordEntryMembers</span><span class="p">(</span><span class="n">GenericMonoDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;RecordEntry&#39;</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dict that returns only :class: `.RecordEntry` instances.</span>
+
+<span class="sd">    Consistent with ``Mapping[str, RecordEntry]``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RecordEntry&#39;</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">RecordEntry</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
+<span class="n">_EDomain</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;_EDomain&#39;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">D</span><span class="o">.</span><span class="n">CanonicalBase</span><span class="p">)</span>
+<span class="n">_Self</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;_Self&#39;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s1">&#39;RecordEntry&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RecordEntry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordEntry">[docs]</a><span class="k">class</span> <span class="nc">RecordEntry</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">_EDomain</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An entry in the canonical record.</span>
+
+<span class="sd">    Comprised of a :class:`.RecordStream` and a domain representation of the</span>
+<span class="sd">    entry (i.e. the application-level interpretation of the stream).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span>
+    <span class="sd">&quot;&quot;&quot;Full key (path) at which the entry is stored.&quot;&quot;&quot;</span>
+    <span class="n">domain</span><span class="p">:</span> <span class="n">_EDomain</span>
+    <span class="n">stream</span><span class="p">:</span> <span class="n">RecordStream</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">RecordStream</span><span class="p">,</span> <span class="n">domain</span><span class="p">:</span> <span class="n">_EDomain</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fname</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="RecordEntry.from_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordEntry.from_domain">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_domain</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Self</span><span class="p">],</span> <span class="n">d</span><span class="p">:</span> <span class="n">_EDomain</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Self</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must be implemented by child class&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecordEntry.to_domain"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordEntry.to_domain">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_domain</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">RecordStream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_EDomain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must be implemented by child class&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># These TypeVars are used as placeholders in the generic RecordBase class,</span>
+<span class="c1"># below. To learn more about TypeVars and Generics, see</span>
+<span class="c1"># https://mypy.readthedocs.io/en/latest/generics.html</span>
+<span class="n">Name</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;Name&#39;</span><span class="p">)</span>
+<span class="n">MemberName</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;MemberName&#39;</span><span class="p">)</span>
+<span class="n">Member</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;Member&#39;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="s1">&#39;RecordBase&#39;</span><span class="p">,</span> <span class="n">RecordEntry</span><span class="p">])</span>
+<span class="n">Domain</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;Domain&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RecordBase"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordBase">[docs]</a><span class="k">class</span> <span class="nc">RecordBase</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">Name</span><span class="p">,</span> <span class="n">MemberName</span><span class="p">,</span> <span class="n">Member</span><span class="p">,</span> <span class="n">Domain</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic base class for record collections in this module.</span>
+
+<span class="sd">    This produces a uniform protocol for record collections, while allowing</span>
+<span class="sd">    name, member, and member name types to vary across collection subclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Name</span><span class="p">,</span>
+                 <span class="n">members</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">MemberName</span><span class="p">,</span> <span class="n">Member</span><span class="p">],</span>
+                 <span class="n">domain</span><span class="p">:</span> <span class="n">Domain</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Register the name and members of this record instance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="o">=</span> <span class="n">members</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span>
+
+<div class="viewcode-block" id="RecordBase.make_manifest_key"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.record.core.html#arxiv.canonical.integrity.core.RecordBase.make_manifest_key">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">D</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="sd">&quot;&quot;&quot;Generate a full key that can be used to store a manifest.&quot;&quot;&quot;</span>
+        <span class="o">...</span>  <span class="c1"># pylint: disable=pointless-statement ; this is a stub.</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../record.html">arxiv.canonical.record</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.integrity.core module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.integrity.exceptions module" href="arxiv.canonical.integrity.exceptions.html" />
+    <link rel="prev" title="arxiv.canonical.integrity.checksum module" href="arxiv.canonical.integrity.checksum.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.integrity.core">
+<span id="arxiv-canonical-integrity-core-module"></span><h1>arxiv.canonical.integrity.core module<a class="headerlink" href="#module-arxiv.canonical.integrity.core" title="Permalink to this headline">¶</a></h1>
+<p>Base classes and concepts for the integrity system.</p>
+<dl class="class">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.integrity.core.</code><code class="sig-name descname">IntegrityBase</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">record=None</em>, <em class="sig-param">members=None</em>, <em class="sig-param">manifest=None</em>, <em class="sig-param">checksum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Generic" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></a></p>
+<p>Generic base class for all integrity collections.</p>
+<p>Provides a uniform protocol for integrity collections, while allowing
+the name, record, member name, and member types to vary from subclass
+to subclass.</p>
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.calculate_checksum">
+<code class="sig-name descname">calculate_checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.calculate_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.calculate_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.checksum">
+<em class="property">property </em><code class="sig-name descname">checksum</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The checksum of this integrity collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.extend_manifest">
+<code class="sig-name descname">extend_manifest</code><span class="sig-paren">(</span><em class="sig-param">member</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.extend_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.extend_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.from_record">
+<em class="property">classmethod </em><code class="sig-name descname">from_record</code><span class="sig-paren">(</span><em class="sig-param">record</em>, <em class="sig-param">checksum=None</em>, <em class="sig-param">calculate_new_checksum=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.from_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.from_record" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.is_valid">
+<em class="property">property </em><code class="sig-name descname">is_valid</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether or not this collection has a valid checksum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.iter_members">
+<code class="sig-name descname">iter_members</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.iter_members"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.iter_members" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[~_Member]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.make_manifest">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest</code><span class="sig-paren">(</span><em class="sig-param">members</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.make_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.make_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a <a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a> for this integrity collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.make_manifest_entry">
+<em class="property">classmethod </em><code class="sig-name descname">make_manifest_entry</code><span class="sig-paren">(</span><em class="sig-param">member</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.make_manifest_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.make_manifest_entry" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestEntry" title="arxiv.canonical.manifest.ManifestEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManifestEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.manifest">
+<em class="property">property </em><code class="sig-name descname">manifest</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a> of this integrity collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest" title="arxiv.canonical.manifest.Manifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manifest</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.manifest_name">
+<em class="property">property </em><code class="sig-name descname">manifest_name</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.manifest_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of this object for a parent manifest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.member_type">
+<code class="sig-name descname">member_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.member_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The type of members contained by an instance of a register class.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.members">
+<em class="property">property </em><code class="sig-name descname">members</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.members" title="Permalink to this definition">¶</a></dt>
+<dd><p>The members of this collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Mapping" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[~_MemberName, ~_Member]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.number_of_events">
+<em class="property">property </em><code class="sig-name descname">number_of_events</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.number_of_events" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.number_of_versions">
+<em class="property">property </em><code class="sig-name descname">number_of_versions</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.number_of_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>rtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.record">
+<em class="property">property </em><code class="sig-name descname">record</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>The record associated with this collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Record</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.set_record">
+<code class="sig-name descname">set_record</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.set_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.set_record" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.update_checksum">
+<code class="sig-name descname">update_checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.update_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.update_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the checksum for this record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityBase.update_or_extend_manifest">
+<code class="sig-name descname">update_or_extend_manifest</code><span class="sig-paren">(</span><em class="sig-param">member</em>, <em class="sig-param">checksum</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityBase.update_or_extend_manifest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityBase.update_or_extend_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the checksum on a manifest entry, or add a new entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntry">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.integrity.core.</code><code class="sig-name descname">IntegrityEntry</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">record=None</em>, <em class="sig-param">members=None</em>, <em class="sig-param">manifest=None</em>, <em class="sig-param">checksum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.integrity.core.IntegrityEntryBase" title="arxiv.canonical.integrity.core.IntegrityEntryBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.core.IntegrityEntryBase</span></code></a></p>
+<p>Integrity concept for a single entry in the record.</p>
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntry.calculate_checksum">
+<code class="sig-name descname">calculate_checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityEntry.calculate_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntry.calculate_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntry.from_record">
+<em class="property">classmethod </em><code class="sig-name descname">from_record</code><span class="sig-paren">(</span><em class="sig-param">record</em>, <em class="sig-param">checksum=None</em>, <em class="sig-param">calculate_new_checksum=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityEntry.from_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntry.from_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate an <a class="reference internal" href="#arxiv.canonical.integrity.core.IntegrityEntry" title="arxiv.canonical.integrity.core.IntegrityEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegrityEntry</span></code></a> from a :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.RecordEntry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntry.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntry.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordEntry" title="arxiv.canonical.record.core.RecordEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.core.RecordEntry</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntryBase">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.integrity.core.</code><code class="sig-name descname">IntegrityEntryBase</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">record=None</em>, <em class="sig-param">members=None</em>, <em class="sig-param">manifest=None</em>, <em class="sig-param">checksum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityEntryBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntryBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.canonical.integrity.core.IntegrityBase" title="arxiv.canonical.integrity.core.IntegrityBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.core.IntegrityBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.integrity.core.IntegrityEntryMembers">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.integrity.core.</code><code class="sig-name descname">IntegrityEntryMembers</code><a class="reference internal" href="../_modules/arxiv/canonical/integrity/core.html#IntegrityEntryMembers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.core.IntegrityEntryMembers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.util.html#arxiv.canonical.util.GenericMonoDict" title="arxiv.canonical.util.GenericMonoDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.util.GenericMonoDict</span></code></a></p>
+<p>A dict that returns only :class: <cite>.IntegrityEntry</cite> instances.</p>
+<p>Consistent with <code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">IntegrityEntry]</span></code>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.integrity.html">arxiv.canonical.integrity package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.integrity.checksum.html" title="previous chapter">arxiv.canonical.integrity.checksum module</a></li>
+      <li>Next: <a href="arxiv.canonical.integrity.exceptions.html" title="next chapter">arxiv.canonical.integrity.exceptions module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.integrity.core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

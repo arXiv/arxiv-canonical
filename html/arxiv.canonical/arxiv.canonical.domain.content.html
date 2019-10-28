@@ -1,0 +1,424 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.content module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.domain.eprint module" href="arxiv.canonical.domain.eprint.html" />
+    <link rel="prev" title="arxiv.canonical.domain.block module" href="arxiv.canonical.domain.block.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.domain.content">
+<span id="arxiv-canonical-domain-content-module"></span><h1>arxiv.canonical.domain.content module<a class="headerlink" href="#module-arxiv.canonical.domain.content" title="Permalink to this headline">¶</a></h1>
+<p>Core concepts for characterizing bitstream/version content.</p>
+<dl class="class">
+<dt id="arxiv.canonical.domain.content.ContentType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">ContentType</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Characterization of the content type of an individual bitstream.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.abs">
+<code class="sig-name descname">abs</code><em class="property"> = 'abs'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.dvi">
+<code class="sig-name descname">dvi</code><em class="property"> = 'dvi'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.dvi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.ContentType.ext">
+<em class="property">property </em><code class="sig-name descname">ext</code><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The preferred filename extension for this <a class="reference internal" href="#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.from_filename">
+<code class="sig-name descname">from_filename</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><em class="property"> = &lt;bound method ContentType.from_filename of &lt;enum 'ContentType'&gt;&gt;</em><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.from_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.from_mimetype">
+<code class="sig-name descname">from_mimetype</code><span class="sig-paren">(</span><em class="sig-param">mime</em><span class="sig-paren">)</span><em class="property"> = &lt;bound method ContentType.from_mimetype of &lt;enum 'ContentType'&gt;&gt;</em><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.from_mimetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.from_mimetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.html">
+<code class="sig-name descname">html</code><em class="property"> = 'html'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.json">
+<code class="sig-name descname">json</code><em class="property"> = 'json'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.ContentType.make_filename">
+<code class="sig-name descname">make_filename</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">is_gzipped=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#ContentType.make_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.make_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a filename for a bitstream with this <a class="reference internal" href="#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.ContentType.mime_type">
+<em class="property">property </em><code class="sig-name descname">mime_type</code><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.mime_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MIME content type for this <a class="reference internal" href="#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.pdf">
+<code class="sig-name descname">pdf</code><em class="property"> = 'pdf'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.ps">
+<code class="sig-name descname">ps</code><em class="property"> = 'ps'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.ps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.tar">
+<code class="sig-name descname">tar</code><em class="property"> = 'tar'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.tar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.ContentType.tex">
+<code class="sig-name descname">tex</code><em class="property"> = 'tex'</em><a class="headerlink" href="#arxiv.canonical.domain.content.ContentType.tex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.canonical.domain.content.DISSEMINATION_FORMATS_BY_SOURCE_EXT">
+<code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">DISSEMINATION_FORMATS_BY_SOURCE_EXT</code><em class="property"> = [('.tar.gz', None), ('.tar', None), ('.dvi.gz', None), ('.dvi', None), ('.pdf', [&lt;ContentType.pdf: 'pdf'&gt;]), ('.ps.gz', [&lt;ContentType.pdf: 'pdf'&gt;, &lt;ContentType.ps: 'ps'&gt;]), ('.ps', [&lt;ContentType.pdf: 'pdf'&gt;, &lt;ContentType.ps: 'ps'&gt;]), ('.html.gz', [&lt;ContentType.html: 'html'&gt;]), ('.html', [&lt;ContentType.html: 'html'&gt;]), ('.gz', None)]</em><a class="headerlink" href="#arxiv.canonical.domain.content.DISSEMINATION_FORMATS_BY_SOURCE_EXT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dissemination formats that can be inferred from source file extension.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is largely to support format discovery in classic. In the NG
+canonical record, this should all be explicit.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.content.SourceFileType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">SourceFileType</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#SourceFileType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Source file types are represented by single-character codes.</p>
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.Ancillary">
+<code class="sig-name descname">Ancillary</code><em class="property"> = 'A'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.Ancillary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission includes ancillary files in the /anc directory.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.DCPilot">
+<code class="sig-name descname">DCPilot</code><em class="property"> = 'B'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.DCPilot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission has associated data in the DC pilot system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.DOCX">
+<code class="sig-name descname">DOCX</code><em class="property"> = 'X'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.DOCX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission in Microsoft DOCX (Office Open XML) format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.HTML">
+<code class="sig-name descname">HTML</code><em class="property"> = 'H'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.HTML" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-file HTML submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.Ignore">
+<code class="sig-name descname">Ignore</code><em class="property"> = 'I'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.Ignore" title="Permalink to this definition">¶</a></dt>
+<dd><p>All files auto ignore. No paper available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.ODF">
+<code class="sig-name descname">ODF</code><em class="property"> = 'O'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.ODF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission in Open Document Format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.PDFLaTeX">
+<code class="sig-name descname">PDFLaTeX</code><em class="property"> = 'D'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.PDFLaTeX" title="Permalink to this definition">¶</a></dt>
+<dd><p>A TeX submission that must be processed with PDFlatex.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.PDFOnly">
+<code class="sig-name descname">PDFOnly</code><em class="property"> = 'F'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.PDFOnly" title="Permalink to this definition">¶</a></dt>
+<dd><p>PDF-only with .tar.gz package (likely because of anc files).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.PostscriptOnly">
+<code class="sig-name descname">PostscriptOnly</code><em class="property"> = 'P'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.PostscriptOnly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-file PS submission.</p>
+<p>It is not necessary to indicate P with single file PS since in this case
+the source file has .ps.gz extension.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.domain.content.SourceFileType.SourceEncrypted">
+<code class="sig-name descname">SourceEncrypted</code><em class="property"> = 'S'</em><a class="headerlink" href="#arxiv.canonical.domain.content.SourceFileType.SourceEncrypted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Source is encrypted and should not be made available.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.content.SourceType">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">SourceType</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#SourceType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>Characterizes a version source package.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.available_formats">
+<em class="property">property </em><code class="sig-name descname">available_formats</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.available_formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the available dissemination formats for this source type.</p>
+<p>Depending on the original source type, we may not be able to provide
+all supported formats.</p>
+<p>This does not include the source format. Note also that this does
+<strong>not</strong> enforce rules about what should be displayed as an option
+or provided to end users.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_docx">
+<em class="property">property </em><code class="sig-name descname">has_docx</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_docx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has DOCX content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_encrypted_source">
+<em class="property">property </em><code class="sig-name descname">has_encrypted_source</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_encrypted_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source is encryped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_html">
+<em class="property">property </em><code class="sig-name descname">has_html</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has HTML content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_ignore">
+<em class="property">property </em><code class="sig-name descname">has_ignore</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_ignore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source content should be ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_odf">
+<em class="property">property </em><code class="sig-name descname">has_odf</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_odf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has ODF content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_pdf_only">
+<em class="property">property </em><code class="sig-name descname">has_pdf_only</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_pdf_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source contains only a PDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_pdflatex">
+<em class="property">property </em><code class="sig-name descname">has_pdflatex</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_pdflatex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has PDFLaTeX content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.content.SourceType.has_ps_only">
+<em class="property">property </em><code class="sig-name descname">has_ps_only</code><a class="headerlink" href="#arxiv.canonical.domain.content.SourceType.has_ps_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the source has postcript content only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.domain.content.available_formats_by_ext">
+<code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">available_formats_by_ext</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#available_formats_by_ext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.available_formats_by_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to determine the available dissemination formats by file extension.</p>
+<p>It sometimes (but not always) possible to infer the available dissemination
+formats based on the filename extension of the source package.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is largely to support format discovery in classic. In the NG
+canonical record, this should all be explicit.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.canonical.domain.content.ContentType" title="arxiv.canonical.domain.content.ContentType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContentType</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.canonical.domain.content.list_source_extensions">
+<code class="sig-prename descclassname">arxiv.canonical.domain.content.</code><code class="sig-name descname">list_source_extensions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/content.html#list_source_extensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.content.list_source_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the known filename extensions for source files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.domain.html">arxiv.canonical.domain package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.domain.block.html" title="previous chapter">arxiv.canonical.domain.block module</a></li>
+      <li>Next: <a href="arxiv.canonical.domain.eprint.html" title="next chapter">arxiv.canonical.domain.eprint module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.domain.content.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

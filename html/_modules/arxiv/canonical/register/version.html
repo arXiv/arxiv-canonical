@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.register.version &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.register.version</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">ICanonicalSource</span><span class="p">,</span> <span class="n">_Self</span><span class="p">,</span>
+                   <span class="n">dereference</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.file</span> <span class="k">import</span> <span class="n">RegisterFile</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">RegisterMetadata</span>
+
+
+<div class="viewcode-block" id="RegisterVersion"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.version.html#arxiv.canonical.register.RegisterVersion">[docs]</a><span class="k">class</span> <span class="nc">RegisterVersion</span><span class="p">(</span><span class="n">Base</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                           <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">,</span>
+                           <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="p">,</span>
+                           <span class="n">I</span><span class="o">.</span><span class="n">IntegrityVersion</span><span class="p">,</span>
+                           <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">Union</span><span class="p">[</span><span class="n">RegisterFile</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">]]):</span>
+    <span class="n">domain_type</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span>
+    <span class="n">integrity_type</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityVersion</span>
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">RegisterFile</span>
+
+<div class="viewcode-block" id="RegisterVersion.create"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.version.html#arxiv.canonical.register.RegisterVersion.create">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+               <span class="n">d</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">,</span> <span class="n">save_members</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RegisterVersion&#39;</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">from_domain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">dereference</span><span class="p">,</span> <span class="n">sources</span><span class="p">))</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityVersion</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">calculate_new_checksum</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="n">RegisterVersion</span><span class="o">.</span><span class="n">_get_v_members</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">save_members</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">integrity</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">members</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegisterVersion.load"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.version.html#arxiv.canonical.register.RegisterVersion.load">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Self</span><span class="p">],</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+             <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+             <span class="n">identifier</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+             <span class="n">checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Self</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load an e-print :class:`.Version` from s.</span>
+
+<span class="sd">        This method is overridden since it uses a different member mapping</span>
+<span class="sd">        struct than higher-level collection types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Most of the data needed to reconstitute the Version is in the</span>
+        <span class="c1"># metadata record.</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">stream</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_entry</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="o">.</span><span class="n">to_domain</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>   <span class="c1"># self.load</span>
+        <span class="n">_r</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="c1"># The manifest provides pre-calculated checksums for version members</span>
+        <span class="c1"># (source, render, other formats, etc).</span>
+        <span class="n">manifest</span> \
+            <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_manifest</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_manifest_key</span><span class="p">(</span><span class="n">identifier</span><span class="p">))</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">from_domain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">dereference</span><span class="p">,</span> <span class="n">sources</span><span class="p">),</span>
+                                        <span class="n">metadata</span><span class="o">=</span><span class="n">_r</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityVersion</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span>
+            <span class="n">r</span><span class="p">,</span>
+            <span class="n">checksum</span><span class="o">=</span><span class="n">checksum</span><span class="p">,</span>
+            <span class="n">calculate_new_checksum</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">checksum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">manifest</span><span class="o">=</span><span class="n">manifest</span>
+        <span class="p">)</span>
+        <span class="c1"># This just makes references to the members based on what is already</span>
+        <span class="c1"># loaded in the IntegrityVersion.</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="n">RegisterVersion</span><span class="o">.</span><span class="n">_get_v_members</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">integrity</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                   <span class="n">members</span><span class="o">=</span><span class="n">members</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_v_members</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                       <span class="n">integrity</span><span class="p">:</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityVersion</span><span class="p">,</span>
+                       <span class="n">save_members</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">RegisterFile</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Describe members of this version.</span>
+
+<span class="sd">        This is a little different from the base ``_get_members()`` method,</span>
+<span class="sd">        in that we are working from an Integrity object rather than a manifest</span>
+<span class="sd">        alone.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">members</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">RegisterFile</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">member</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">RegisterFile</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">]</span>
+        <span class="n">meta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">I</span><span class="o">.</span><span class="n">IntegrityMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i_member</span> <span class="ow">in</span> <span class="n">integrity</span><span class="o">.</span><span class="n">iter_members</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordFile</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityEntry</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">CanonicalFile</span><span class="p">)</span>
+                <span class="n">member</span> <span class="o">=</span> <span class="n">RegisterFile</span><span class="p">(</span><span class="n">i_member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                      <span class="n">domain</span><span class="o">=</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                      <span class="n">record</span><span class="o">=</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="p">,</span>
+                                      <span class="n">integrity</span><span class="o">=</span><span class="n">i_member</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i_member</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">IntegrityMetadata</span><span class="p">)</span>
+                <span class="c1"># Defer handling the metadata member until the end (see below).</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="n">i_member</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">save_members</span><span class="p">:</span>
+                <span class="n">member</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">members</span><span class="p">[</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
+
+        <span class="c1"># We have deferred handling the metadata until the end, since (if we</span>
+        <span class="c1"># are saving members, especially for the first time) it is possible</span>
+        <span class="c1"># that some of the other members will have changed during the storage</span>
+        <span class="c1"># process due to gzip decompression.</span>
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No IntegrityMetadata member&#39;</span><span class="p">)</span>
+        <span class="n">meta_record</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">record</span>
+        <span class="c1"># If we are currently saving, we need to rebuild the metadata record</span>
+        <span class="c1"># that will be stored.</span>
+        <span class="k">if</span> <span class="n">save_members</span><span class="p">:</span>
+            <span class="n">meta_record</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="o">.</span><span class="n">from_domain</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">set_record</span><span class="p">(</span><span class="n">meta_record</span><span class="p">)</span>
+        <span class="n">member</span> <span class="o">=</span> <span class="n">RegisterMetadata</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                  <span class="n">domain</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                  <span class="n">record</span><span class="o">=</span><span class="n">meta_record</span><span class="p">,</span>
+                                  <span class="n">integrity</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_members</span><span class="p">:</span>
+            <span class="n">member</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">members</span><span class="p">[</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
+        <span class="k">return</span> <span class="n">members</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">member_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="RegisterVersion.update"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.version.html#arxiv.canonical.register.RegisterVersion.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span> <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ICanonicalSource</span><span class="p">],</span>
+               <span class="n">version</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">Version</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update a version in place.</span>
+
+<span class="sd">        Removes any members (files) not in the passed ``Version``, and retains</span>
+<span class="sd">        and ignores members without any content (assumes that this is a partial</span>
+<span class="sd">        update). Saves any new/changed members, and updates the manifest.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">save_members</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># assert self.members is not None and new_version.members is not None</span>
+        <span class="n">to_remove</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">member_names</span> <span class="o">-</span> <span class="n">new_version</span><span class="o">.</span><span class="n">member_names</span>
+
+        <span class="n">to_add</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">new_version</span><span class="o">.</span><span class="n">members</span>
+                  <span class="c1"># Ignore any members without content, as this may be a</span>
+                  <span class="c1"># partial update only.</span>
+                  <span class="k">if</span> <span class="n">new_version</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">domain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="c1"># Select members not already present, or...</span>
+                    <span class="ow">and</span> <span class="p">(</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span>
+                         <span class="c1"># ...that appear to have changed.</span>
+                         <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">integrity</span><span class="o">.</span><span class="n">checksum</span>
+                            <span class="o">!=</span> <span class="n">new_version</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">integrity</span><span class="o">.</span><span class="n">checksum</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">altered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">to_add</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_version</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">altered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_members</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">altered</span><span class="p">)</span>   <span class="c1"># Updates our manifest.</span></div>
+
+<div class="viewcode-block" id="RegisterVersion.save_members"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.register.version.html#arxiv.canonical.register.RegisterVersion.save_members">[docs]</a>    <span class="k">def</span> <span class="nf">save_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">ICanonicalStorage</span><span class="p">,</span>
+                     <span class="n">members</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RegisterFile</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Save members that have changed, and update our manifest.&quot;&quot;&quot;</span>
+        <span class="n">meta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RegisterMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">RegisterMetadata</span><span class="p">):</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="n">member</span>
+            <span class="n">checksum</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">checksum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integrity</span><span class="o">.</span><span class="n">update_or_extend_manifest</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">integrity</span><span class="p">,</span>
+                                                     <span class="n">checksum</span><span class="p">)</span>
+
+        <span class="c1"># We have deferred handling the metadata until the end, since it is</span>
+        <span class="c1"># possible that some of the other members will have changed during the</span>
+        <span class="c1"># storage process due to gzip decompression.</span>
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No RegisterMetadata member&#39;</span><span class="p">)</span>
+        <span class="n">meta</span><span class="o">.</span><span class="n">record</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordMetadata</span><span class="o">.</span><span class="n">from_domain</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="n">meta</span><span class="o">.</span><span class="n">integrity</span><span class="o">.</span><span class="n">set_record</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">checksum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrity</span><span class="o">.</span><span class="n">update_or_extend_manifest</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">integrity</span><span class="p">,</span> <span class="n">checksum</span><span class="p">)</span></div></div>
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

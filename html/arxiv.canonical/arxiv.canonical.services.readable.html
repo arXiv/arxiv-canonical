@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.services.readable module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.services.remote module" href="arxiv.canonical.services.remote.html" />
+    <link rel="prev" title="arxiv.canonical.services.filesystem module" href="arxiv.canonical.services.filesystem.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.services.readable">
+<span id="arxiv-canonical-services-readable-module"></span><h1>arxiv.canonical.services.readable module<a class="headerlink" href="#module-arxiv.canonical.services.readable" title="Permalink to this headline">¶</a></h1>
+<p>Provides <a class="reference internal" href="#arxiv.canonical.services.readable.BytesIOProxy" title="arxiv.canonical.services.readable.BytesIOProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIOProxy</span></code></a>.</p>
+<dl class="class">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.services.readable.</code><code class="sig-name descname">BytesIOProxy</code><span class="sig-paren">(</span><em class="sig-param">read</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_io.BytesIO</span></code></p>
+<p>A readable object that wraps a <code class="docutils literal notranslate"><span class="pre">read()</span></code> callable.</p>
+<p>This gives us lazy, proxied read access to a (presumably expensive)
+resource that is consistent with <code class="docutils literal notranslate"><span class="pre">io.IOBase</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush and close this stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.fileno">
+<code class="sig-name descname">fileno</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.fileno"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.fileno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the underlying file descriptor of the stream if it exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.flush">
+<code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.flush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush the write buffers of the stream if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.isatty">
+<code class="sig-name descname">isatty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.isatty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.isatty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the stream is interactive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">size=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read from the stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.readable">
+<code class="sig-name descname">readable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.readable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.readable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the stream can be read from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.readline">
+<code class="sig-name descname">readline</code><span class="sig-paren">(</span><em class="sig-param">size=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.readline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.readline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return one line from the stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.readlines">
+<code class="sig-name descname">readlines</code><span class="sig-paren">(</span><em class="sig-param">hint=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.readlines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.readlines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return a list of lines from the stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.seek">
+<code class="sig-name descname">seek</code><span class="sig-paren">(</span><em class="sig-param">offset</em>, <em class="sig-param">whence=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.seek"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.seek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the stream position to the given byte offset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.seekable">
+<code class="sig-name descname">seekable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.seekable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.seekable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the stream supports random access.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.tell">
+<code class="sig-name descname">tell</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.tell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.tell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current stream position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.truncate">
+<code class="sig-name descname">truncate</code><span class="sig-paren">(</span><em class="sig-param">size=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.truncate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.truncate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Truncation is not supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.writable">
+<code class="sig-name descname">writable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.writable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writing is not supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.BytesIOProxy.writelines">
+<code class="sig-name descname">writelines</code><span class="sig-paren">(</span><em class="sig-param">lines</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#BytesIOProxy.writelines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.BytesIOProxy.writelines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writing is not supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.services.readable.</code><code class="sig-name descname">IterReadWrapper</code><span class="sig-paren">(</span><em class="sig-param">iter_content</em>, <em class="sig-param">size=4096</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_io.BytesIO</span></code></p>
+<p>Wraps a response body streaming iterator to provide <code class="docutils literal notranslate"><span class="pre">read()</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">size=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read from the content stream, loading more content if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper.readable">
+<code class="sig-name descname">readable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper.readable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper.readable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate that it <em>is</em> a readable stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[True]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper.seek">
+<code class="sig-name descname">seek</code><span class="sig-paren">(</span><em class="sig-param">offset</em>, <em class="sig-param">whence=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper.seek"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper.seek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the stream position to the given byte offset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper.seekable">
+<code class="sig-name descname">seekable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper.seekable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper.seekable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate that this is a seekable stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[True]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.readable.IterReadWrapper.tell">
+<code class="sig-name descname">tell</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/readable.html#IterReadWrapper.tell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.readable.IterReadWrapper.tell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current stream position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.services.html">arxiv.canonical.services package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.services.filesystem.html" title="previous chapter">arxiv.canonical.services.filesystem module</a></li>
+      <li>Next: <a href="arxiv.canonical.services.remote.html" title="next chapter">arxiv.canonical.services.remote module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.services.readable.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

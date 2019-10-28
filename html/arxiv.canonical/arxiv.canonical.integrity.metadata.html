@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.integrity.metadata module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.integrity.preservation module" href="arxiv.canonical.integrity.preservation.html" />
+    <link rel="prev" title="arxiv.canonical.integrity.listing module" href="arxiv.canonical.integrity.listing.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.integrity.metadata">
+<span id="arxiv-canonical-integrity-metadata-module"></span><h1>arxiv.canonical.integrity.metadata module<a class="headerlink" href="#module-arxiv.canonical.integrity.metadata" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="arxiv.canonical.integrity.metadata.IntegrityMetadata">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.integrity.metadata.</code><code class="sig-name descname">IntegrityMetadata</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">record=None</em>, <em class="sig-param">members=None</em>, <em class="sig-param">manifest=None</em>, <em class="sig-param">checksum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/metadata.html#IntegrityMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.metadata.IntegrityMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.integrity.core.html#arxiv.canonical.integrity.core.IntegrityEntryBase" title="arxiv.canonical.integrity.core.IntegrityEntryBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.integrity.core.IntegrityEntryBase</span></code></a></p>
+<p>Integrity entry for a metadata bitstream in the record.</p>
+<dl class="method">
+<dt id="arxiv.canonical.integrity.metadata.IntegrityMetadata.calculate_checksum">
+<code class="sig-name descname">calculate_checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/metadata.html#IntegrityMetadata.calculate_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.metadata.IntegrityMetadata.calculate_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.integrity.metadata.IntegrityMetadata.from_record">
+<em class="property">classmethod </em><code class="sig-name descname">from_record</code><span class="sig-paren">(</span><em class="sig-param">record</em>, <em class="sig-param">checksum=None</em>, <em class="sig-param">calculate_new_checksum=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/integrity/metadata.html#IntegrityMetadata.from_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.integrity.metadata.IntegrityMetadata.from_record" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~_Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.integrity.metadata.IntegrityMetadata.record_type">
+<code class="sig-name descname">record_type</code><a class="headerlink" href="#arxiv.canonical.integrity.metadata.IntegrityMetadata.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="arxiv.canonical.record.metadata.html#arxiv.canonical.record.metadata.RecordMetadata" title="arxiv.canonical.record.metadata.RecordMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.record.metadata.RecordMetadata</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.integrity.html">arxiv.canonical.integrity package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.integrity.listing.html" title="previous chapter">arxiv.canonical.integrity.listing module</a></li>
+      <li>Next: <a href="arxiv.canonical.integrity.preservation.html" title="next chapter">arxiv.canonical.integrity.preservation module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.integrity.metadata.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

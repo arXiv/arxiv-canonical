@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.version &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.domain.version</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides the core domain concept and logic for individual versions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">from</span> <span class="nn">base64</span> <span class="k">import</span> <span class="n">urlsafe_b64decode</span><span class="p">,</span> <span class="n">urlsafe_b64encode</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableSequence</span><span class="p">,</span> \
+    <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="k">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span> <span class="nn">backports.datetime_fromisoformat</span> <span class="k">import</span> <span class="n">MonkeyPatch</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="k">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">Category</span>  <span class="c1"># pylint: disable=no-name-in-module</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">CanonicalBase</span>
+<span class="kn">from</span> <span class="nn">.content</span> <span class="k">import</span> <span class="n">ContentType</span><span class="p">,</span> <span class="n">SourceType</span>
+<span class="kn">from</span> <span class="nn">.identifier</span> <span class="k">import</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">VersionedIdentifier</span>
+<span class="kn">from</span> <span class="nn">.person</span> <span class="k">import</span> <span class="n">Person</span>
+<span class="kn">from</span> <span class="nn">.file</span> <span class="k">import</span> <span class="n">CanonicalFile</span>
+<span class="kn">from</span> <span class="nn">.license</span> <span class="k">import</span> <span class="n">License</span>
+
+<span class="n">MonkeyPatch</span><span class="o">.</span><span class="n">patch_fromisoformat</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Metadata"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Metadata">[docs]</a><span class="k">class</span> <span class="nc">Metadata</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter-provided descriptive metadata for a version.&quot;&quot;&quot;</span>
+
+    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Category</span>
+    <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">abstract</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">license</span><span class="p">:</span> <span class="n">License</span>
+    <span class="n">comments</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">journal_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">report_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">doi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">msc_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">acm_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Category</span><span class="p">,</span>
+                 <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">],</span>
+                 <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">abstract</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">license</span><span class="p">:</span> <span class="n">License</span><span class="p">,</span>
+                 <span class="n">comments</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">journal_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">report_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">doi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">msc_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">acm_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">primary_classification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span> <span class="o">=</span> <span class="n">secondary_classification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span> <span class="o">=</span> <span class="n">abstract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="n">authors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">license</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal_ref</span> <span class="o">=</span> <span class="n">journal_ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report_num</span> <span class="o">=</span> <span class="n">report_num</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="n">doi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msc_class</span> <span class="o">=</span> <span class="n">msc_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acm_class</span> <span class="o">=</span> <span class="n">acm_class</span>
+
+<div class="viewcode-block" id="Metadata.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Metadata.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;Metadata&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute from a native dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">Category</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">]),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">Category</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;secondary_classification&#39;</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="n">abstract</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">],</span>
+            <span class="n">authors</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;authors&#39;</span><span class="p">],</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">License</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">]),</span>
+            <span class="n">comments</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;comments&#39;</span><span class="p">),</span>
+            <span class="n">journal_ref</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">),</span>
+            <span class="n">report_num</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;report_num&#39;</span><span class="p">),</span>
+            <span class="n">doi</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;doi&#39;</span><span class="p">),</span>
+            <span class="n">msc_class</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;msc_class&#39;</span><span class="p">),</span>
+            <span class="n">acm_class</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;acm_class&#39;</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_categories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;All classification categories for this version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span>
+
+<div class="viewcode-block" id="Metadata.add_secondaries"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Metadata.add_secondaries">[docs]</a>    <span class="k">def</span> <span class="nf">add_secondaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">new_secondaries</span><span class="p">:</span> <span class="n">Category</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add cross-list categories for this version.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">new_secondaries</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">category</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Metadata.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Metadata.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;primary_classification&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">),</span>
+            <span class="s1">&#39;secondary_classification&#39;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span>
+            <span class="p">],</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+            <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+            <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span>
+            <span class="s1">&#39;journal_ref&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span>
+            <span class="s1">&#39;report_num&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span>
+            <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+            <span class="s1">&#39;msc_class&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+            <span class="s1">&#39;acm_class&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acm_class</span>
+        <span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="VersionReference"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.VersionReference">[docs]</a><span class="k">class</span> <span class="nc">VersionReference</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An abridged reference to a particular :class:`Version`.&quot;&quot;&quot;</span>
+
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span>
+    <span class="sd">&quot;&quot;&quot;Identifier of the version.&quot;&quot;&quot;</span>
+
+    <span class="n">announced_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="sd">&quot;&quot;&quot;Date on which the version was announced.&quot;&quot;&quot;</span>
+
+    <span class="n">submitted_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="sd">&quot;&quot;&quot;Date on which the version was submitted.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">announced_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                 <span class="n">submitted_date</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">announced_date</span> <span class="o">=</span> <span class="n">announced_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitted_date</span> <span class="o">=</span> <span class="n">submitted_date</span>
+
+<div class="viewcode-block" id="VersionReference.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.VersionReference.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;VersionReference&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute from a native dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]),</span>
+            <span class="n">announced_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;announced_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>  <span class="c1"># type: ignore; pylint: disable=no-member</span>
+            <span class="n">submitted_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;submitted_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>  <span class="c1"># type: ignore; pylint: disable=no-member</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="VersionReference.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.VersionReference.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span>
+            <span class="s1">&#39;announced_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">announced_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;submitted_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitted_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="Version"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Version">[docs]</a><span class="k">class</span> <span class="nc">Version</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a single version of an arXiv e-print in the record.&quot;&quot;&quot;</span>
+
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span>
+    <span class="sd">&quot;&quot;&quot;Unique arXiv identifier for the version.&quot;&quot;&quot;</span>
+
+    <span class="n">announced_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="sd">&quot;&quot;&quot;Day on which this version was announced.&quot;&quot;&quot;</span>
+
+    <span class="n">announced_date_first</span><span class="p">:</span> <span class="n">date</span>
+    <span class="sd">&quot;&quot;&quot;Day on which the first version of the e-print was announced.&quot;&quot;&quot;</span>
+
+    <span class="n">submitted_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="sd">&quot;&quot;&quot;Timestamp when this version was submitted to arXiv.&quot;&quot;&quot;</span>
+
+    <span class="n">updated_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="sd">&quot;&quot;&quot;The last time the record for this version was changed.&quot;&quot;&quot;</span>
+
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span>
+    <span class="sd">&quot;&quot;&quot;Submitter-provided descriptive metadata for the version.&quot;&quot;&quot;</span>
+
+    <span class="n">events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;EventSummary&#39;</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;Events that are specific to this version of the e-print.&quot;&quot;&quot;</span>
+
+    <span class="n">previous_versions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VersionReference</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;References to previous versions of the e-print.&quot;&quot;&quot;</span>
+
+    <span class="n">submitter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Person</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;Person responsible for submitting this version.&quot;&quot;&quot;</span>
+
+    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;The proxy that deposited the version on behalf of the submitter.&quot;&quot;&quot;</span>
+
+    <span class="n">is_announced</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot;Indicate whether or not the version is announced.&quot;&quot;&quot;</span>
+
+    <span class="n">is_withdrawn</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot;Indicate whether or not the version is withdrawn.&quot;&quot;&quot;</span>
+
+    <span class="n">reason_for_withdrawal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;The reason for the withdrawal of the e-print.&quot;&quot;&quot;</span>
+
+    <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot;Indicate whether this record was populated from the legacy system.&quot;&quot;&quot;</span>
+
+    <span class="n">source</span><span class="p">:</span> <span class="n">CanonicalFile</span>
+    <span class="sd">&quot;&quot;&quot;The original user-submitted source package.&quot;&quot;&quot;</span>
+
+    <span class="n">render</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CanonicalFile</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Human-readable representation of the e-print.</span>
+
+<span class="sd">    Usually a PDF generated from the source, but may also be a user-provided</span>
+<span class="sd">    PDF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">source_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceType</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;Internal code for the source type.&quot;&quot;&quot;</span>
+
+    <span class="n">formats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">CanonicalFile</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;Dissemination formats for this version.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">announced_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                 <span class="n">announced_date_first</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                 <span class="n">submitted_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">updated_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">,</span>
+                 <span class="n">source</span><span class="p">:</span> <span class="n">CanonicalFile</span><span class="p">,</span>
+                 <span class="n">events</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s1">&#39;EventSummary&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">previous_versions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">VersionReference</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">submitter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Person</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">is_announced</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">is_withdrawn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">reason_for_withdrawal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">source_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">render</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CanonicalFile</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">formats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">CanonicalFile</span><span class="p">]</span> <span class="o">=</span> <span class="p">{})</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">announced_date</span> <span class="o">=</span> <span class="n">announced_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">announced_date_first</span> <span class="o">=</span> <span class="n">announced_date_first</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitted_date</span> <span class="o">=</span> <span class="n">submitted_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_date</span> <span class="o">=</span> <span class="n">updated_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">events</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_versions</span> <span class="o">=</span> <span class="n">previous_versions</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">submitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">proxy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_announced</span> <span class="o">=</span> <span class="n">is_announced</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_withdrawn</span> <span class="o">=</span> <span class="n">is_withdrawn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason_for_withdrawal</span> <span class="o">=</span> <span class="n">reason_for_withdrawal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span> <span class="o">=</span> <span class="n">is_legacy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render</span> <span class="o">=</span> <span class="n">render</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span> <span class="o">=</span> <span class="n">source_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">formats</span> <span class="o">=</span> <span class="n">formats</span>
+
+<div class="viewcode-block" id="Version.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Version.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;Version&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute from a native dict.&quot;&quot;&quot;</span>
+        <span class="n">source_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;source_type&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;source_type&#39;</span><span class="p">]:</span>
+            <span class="n">source_type</span> <span class="o">=</span> <span class="n">SourceType</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;source_type&#39;</span><span class="p">])</span>
+
+        <span class="n">render</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CanonicalFile</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;render&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">]:</span>
+            <span class="n">render</span> <span class="o">=</span> <span class="n">CanonicalFile</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]),</span>
+            <span class="n">announced_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;announced_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">announced_date_first</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;announced_date_first&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">submitted_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;submitted_date&#39;</span><span class="p">]),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">updated_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;updated_date&#39;</span><span class="p">]),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">Metadata</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]),</span>
+            <span class="n">events</span><span class="o">=</span><span class="p">[</span><span class="n">EventSummary</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">]],</span>
+            <span class="n">previous_versions</span><span class="o">=</span><span class="p">[</span><span class="n">VersionReference</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;previous_versions&#39;</span><span class="p">]],</span>
+            <span class="n">submitter</span><span class="o">=</span><span class="n">Person</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;submitter&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;submitter&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">proxy</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">),</span>
+            <span class="n">is_announced</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;is_announced&#39;</span><span class="p">],</span>
+            <span class="n">is_withdrawn</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;is_withdrawn&#39;</span><span class="p">],</span>
+            <span class="n">reason_for_withdrawal</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reason_for_withdrawal&#39;</span><span class="p">),</span>
+            <span class="n">is_legacy</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;is_legacy&#39;</span><span class="p">],</span>
+            <span class="n">render</span><span class="o">=</span><span class="n">render</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">CanonicalFile</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]),</span>
+            <span class="n">source_type</span><span class="o">=</span><span class="n">source_type</span><span class="p">,</span>
+            <span class="n">formats</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">ContentType</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]):</span>
+                    <span class="n">CanonicalFile</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;formats&#39;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">}</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Numer of events described by this object (0).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Number of versions described by this object (1).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="c1"># TODO: do we still need this? Holdover from classic.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size_kilobytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Size of the source package in kb.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">size_bytes</span> <span class="o">/</span> <span class="mi">1_028</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Version.get_format"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Version.get_format">[docs]</a>    <span class="k">def</span> <span class="nf">get_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desired_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CanonicalFile</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get a particular dissemination format for this version.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">desired_format</span> <span class="o">==</span> <span class="s1">&#39;source&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span>
+        <span class="k">if</span> <span class="n">desired_format</span> <span class="o">==</span> <span class="s1">&#39;render&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">formats</span><span class="p">[</span><span class="n">ContentType</span><span class="p">(</span><span class="n">desired_format</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Unknown format: </span><span class="si">{desired_format}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Format </span><span class="si">{desired_format}</span><span class="s1"> not available&#39;</span>
+                           <span class="n">f</span><span class="s1">&#39; for </span><span class="si">{self.identifier}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+<div class="viewcode-block" id="Version.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Version.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span>
+            <span class="s1">&#39;announced_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">announced_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;announced_date_first&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">announced_date_first</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;submitted_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitted_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;updated_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;events&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">],</span>
+            <span class="s1">&#39;previous_versions&#39;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_versions</span>
+            <span class="p">],</span>
+            <span class="s1">&#39;submitter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+            <span class="s1">&#39;is_announced&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_announced</span><span class="p">,</span>
+            <span class="s1">&#39;is_withdrawn&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_withdrawn</span><span class="p">,</span>
+            <span class="s1">&#39;reason_for_withdrawal&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason_for_withdrawal</span><span class="p">,</span>
+            <span class="s1">&#39;is_legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span><span class="p">,</span>
+            <span class="s1">&#39;render&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;source_type&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_type</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="n">fmt</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="p">}</span> <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">]</span>
+        <span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="EventIdentifier"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventIdentifier">[docs]</a><span class="k">class</span> <span class="nc">EventIdentifier</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unique identifier for an :class:`.Event`.&quot;&quot;&quot;</span>
+
+    <span class="n">version_id</span><span class="p">:</span> <span class="n">VersionedIdentifier</span>
+    <span class="sd">&quot;&quot;&quot;Identifier of the :class:`.Version` to which the event pertains.&quot;&quot;&quot;</span>
+
+    <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="sd">&quot;&quot;&quot;Timestamp of the event.&quot;&quot;&quot;</span>
+
+    <span class="n">shard</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;Shard ID for the event.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">decoded</span> <span class="o">=</span> <span class="n">urlsafe_b64decode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">version_id_raw</span><span class="p">,</span> <span class="n">event_date_raw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shard</span> <span class="o">=</span> <span class="n">decoded</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version_id</span> <span class="o">=</span> <span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">version_id_raw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">event_date_raw</span><span class="p">)</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+
+<div class="viewcode-block" id="EventIdentifier.from_parts"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventIdentifier.from_parts">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_parts</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span> <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                   <span class="n">shard</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;EventIdentifier&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a event identifier from its parts.&quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{identifier}</span><span class="s1">::</span><span class="si">{event_date}</span><span class="s1">::</span><span class="si">{shard}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">urlsafe_b64encode</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="EventType"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventType">[docs]</a><span class="k">class</span> <span class="nc">EventType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Supported event types.&quot;&quot;&quot;</span>
+
+    <span class="n">NEW</span> <span class="o">=</span> <span class="s1">&#39;new&#39;</span>
+    <span class="n">UPDATED</span> <span class="o">=</span> <span class="s1">&#39;update&#39;</span>
+    <span class="n">UPDATED_METADATA</span> <span class="o">=</span> <span class="s1">&#39;update_metadata&#39;</span>
+    <span class="n">REPLACED</span> <span class="o">=</span> <span class="s1">&#39;replace&#39;</span>
+    <span class="n">CROSSLIST</span> <span class="o">=</span> <span class="s1">&#39;cross&#39;</span>
+    <span class="n">JREF</span> <span class="o">=</span> <span class="s1">&#39;jref&#39;</span>    <span class="c1"># Deprecated.</span>
+    <span class="n">WITHDRAWN</span> <span class="o">=</span> <span class="s1">&#39;withdraw&#39;</span>
+    <span class="n">MIGRATE</span> <span class="o">=</span> <span class="s1">&#39;migrate&#39;</span>
+    <span class="n">MIGRATE_METADATA</span> <span class="o">=</span> <span class="s1">&#39;migrate_metadata&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_new_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indicate whether or not this event type results in a new version.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">NEW</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPLACED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">WITHDRAWN</span><span class="p">]</span></div>
+
+
+<span class="k">class</span> <span class="nc">_EventBase</span><span class="p">(</span><span class="n">CanonicalBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Core attributes of an event and its summary.&quot;&quot;&quot;</span>
+
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span>
+    <span class="sd">&quot;&quot;&quot;Identifier of the :class:`.Version` to which the event pertains.&quot;&quot;&quot;</span>
+
+    <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="sd">&quot;&quot;&quot;Timestamp of the event.&quot;&quot;&quot;</span>
+
+    <span class="n">event_type</span><span class="p">:</span> <span class="n">EventType</span>
+    <span class="sd">&quot;&quot;&quot;The type of this event.&quot;&quot;&quot;</span>
+
+    <span class="n">categories</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Categories related to this event.</span>
+
+<span class="sd">    This is an artifact of the format of the legacy daily.log file, and may no</span>
+<span class="sd">    longer be particularly useful.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Additional information about the event.</span>
+
+<span class="sd">    This is currently not used for anything, but could provide a space for</span>
+<span class="sd">    administrative notes or other information about updates not captured in</span>
+<span class="sd">    the event ontology and version metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot;Indicate whether this event was populated from the legacy record.&quot;&quot;&quot;</span>
+
+    <span class="n">event_agent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1"># TODO: do we need this?</span>
+    <span class="sd">&quot;&quot;&quot;Agent that generated the event.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">event_type</span><span class="p">:</span> <span class="n">EventType</span><span class="p">,</span>
+                 <span class="n">categories</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">event_agent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_date</span> <span class="o">=</span> <span class="n">event_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="n">event_type</span>
+        <span class="k">if</span> <span class="n">categories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">categories</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">categories</span> <span class="o">=</span> <span class="n">categories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span> <span class="o">=</span> <span class="n">is_legacy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_agent</span> <span class="o">=</span> <span class="n">event_agent</span>
+
+
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="n">_EventBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An announcement-related event.&quot;&quot;&quot;</span>
+
+    <span class="n">version</span><span class="p">:</span> <span class="n">Version</span>
+    <span class="sd">&quot;&quot;&quot;The current state of the version (i.e. after the event).&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">event_type</span><span class="p">:</span> <span class="n">EventType</span><span class="p">,</span>
+                 <span class="n">version</span><span class="p">:</span> <span class="n">Version</span><span class="p">,</span>
+                 <span class="n">categories</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">event_agent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Event</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">event_date</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span>
+                                    <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">,</span>
+                                    <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+                                    <span class="n">is_legacy</span><span class="o">=</span><span class="n">is_legacy</span><span class="p">,</span>
+                                    <span class="n">event_agent</span><span class="o">=</span><span class="n">event_agent</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Event.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Event.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;Event&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute from a native dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]),</span>
+            <span class="n">event_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;event_date&#39;</span><span class="p">]),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">EventType</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;event_type&#39;</span><span class="p">]),</span>
+            <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">Category</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]],</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">Version</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]),</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span>
+            <span class="n">is_legacy</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;is_legacy&#39;</span><span class="p">],</span>
+            <span class="n">event_agent</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;event_agent&#39;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Event.get_default_shard"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Event.get_default_shard">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_default_shard</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the default listing shard for this event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;listing&#39;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">event_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventIdentifier</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The unique identifier for this event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">EventIdentifier</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">shard</span><span class="p">)</span>
+
+    <span class="c1"># 2019-09-02: There is not currently a driver for sharding listings, but it</span>
+    <span class="c1"># is easier to add support for it now then to retrofit later (YAGNI be</span>
+    <span class="c1"># darned). We can readily imagine, for example, wanting to shard by event</span>
+    <span class="c1"># type or by primary category. If there is more than one possible return</span>
+    <span class="c1"># value for this function (as a function of the event data), then multiple</span>
+    <span class="c1"># listing files will be created accordingly.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shard</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The shard name for this event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_shard</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;EventSummary&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;A summary of this event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">EventSummary</span><span class="p">(</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+            <span class="n">event_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_date</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+            <span class="n">categories</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">is_legacy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span><span class="p">,</span>
+            <span class="n">event_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_agent</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Event.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.Event.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span>
+            <span class="s1">&#39;event_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s1">&#39;categories&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">],</span>
+            <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s1">&#39;is_legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span><span class="p">,</span>
+            <span class="s1">&#39;event_agent&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_agent</span><span class="p">,</span>
+            <span class="s1">&#39;event_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_id</span>
+        <span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="EventSummary"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventSummary">[docs]</a><span class="k">class</span> <span class="nc">EventSummary</span><span class="p">(</span><span class="n">_EventBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A lightweight description of an event.</span>
+
+<span class="sd">    This has all of the data of the original :class:`.Event` except for the</span>
+<span class="sd">    state of the e-print version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">event_id</span><span class="p">:</span> <span class="n">EventIdentifier</span>
+    <span class="sd">&quot;&quot;&quot;Unique identifier for the event.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="n">VersionedIdentifier</span><span class="p">,</span>
+                 <span class="n">event_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                 <span class="n">event_type</span><span class="p">:</span> <span class="n">EventType</span><span class="p">,</span>
+                 <span class="n">event_id</span><span class="p">:</span> <span class="n">EventIdentifier</span><span class="p">,</span>
+                 <span class="n">categories</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Category</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">is_legacy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">event_agent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_id</span> <span class="o">=</span> <span class="n">event_id</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">EventSummary</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">event_date</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span>
+                                           <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">,</span>
+                                           <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+                                           <span class="n">is_legacy</span><span class="o">=</span><span class="n">is_legacy</span><span class="p">,</span>
+                                           <span class="n">event_agent</span><span class="o">=</span><span class="n">event_agent</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EventSummary.from_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventSummary.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;EventSummary&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstitute from a native dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="n">VersionedIdentifier</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]),</span>
+            <span class="n">event_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;event_date&#39;</span><span class="p">]),</span>  <span class="c1"># type: ignore ; pylint: disable=no-member</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">EventType</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;event_type&#39;</span><span class="p">]),</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="n">EventIdentifier</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;event_id&#39;</span><span class="p">]),</span>
+            <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">Category</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]],</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span>
+            <span class="n">is_legacy</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;is_legacy&#39;</span><span class="p">],</span>
+            <span class="n">event_agent</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;event_agent&#39;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventSummary.to_dict"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.domain.version.html#arxiv.canonical.domain.EventSummary.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a native dict representation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span>
+            <span class="s1">&#39;event_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s1">&#39;categories&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">],</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s1">&#39;is_legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_legacy</span><span class="p">,</span>
+            <span class="s1">&#39;event_agent&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_agent</span><span class="p">,</span>
+            <span class="s1">&#39;event_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_id</span>
+        <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../domain.html">arxiv.canonical.domain</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

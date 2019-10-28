@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.integrity.version &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.integrity.version</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">..manifest</span> <span class="k">import</span> <span class="n">ManifestEntry</span><span class="p">,</span> <span class="n">Manifest</span><span class="p">,</span> <span class="n">checksum_from_manifest</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="p">(</span><span class="n">IntegrityBase</span><span class="p">,</span> <span class="n">IntegrityEntryBase</span><span class="p">,</span> <span class="n">IntegrityEntryMembers</span><span class="p">,</span>
+                   <span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">_Self</span><span class="p">,</span> <span class="n">Year</span><span class="p">,</span> <span class="n">Month</span><span class="p">,</span> <span class="n">YearMonth</span><span class="p">,</span>
+                   <span class="n">calculate_checksum</span><span class="p">,</span> <span class="n">GenericMonoDict</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.metadata</span> <span class="k">import</span> <span class="n">IntegrityMetadata</span>
+
+<span class="n">_VersionMember</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">IntegrityMetadata</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="IntegrityVersionMembers"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityVersionMembers">[docs]</a><span class="k">class</span> <span class="nc">IntegrityVersionMembers</span><span class="p">(</span><span class="n">GenericMonoDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_VersionMember</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Member mapping that supports IntegrityEntry and IntegrityMetadata.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_VersionMember</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">IntegrityEntry</span><span class="p">,</span> <span class="n">IntegrityMetadata</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="IntegrityVersion"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityVersion">[docs]</a><span class="k">class</span> <span class="nc">IntegrityVersion</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                                     <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="p">,</span>
+                                     <span class="nb">str</span><span class="p">,</span>
+                                     <span class="n">_VersionMember</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Integrity collection for an e-print version.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IntegrityVersion.from_record"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityVersion.from_record">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_record</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_Self</span><span class="p">],</span> <span class="n">version</span><span class="p">:</span> <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="p">,</span>
+                    <span class="n">checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">calculate_new_checksum</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">manifest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Manifest</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Self</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an :class:`.IntegrityVersion` from a :class:`.RecordVersion`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        version : :class:`.RecordVersion`</span>
+<span class="sd">            The record for which this integrity object is to be generated.</span>
+<span class="sd">        checksum : str or None</span>
+<span class="sd">        manifest : dict</span>
+<span class="sd">            If provided, checksum values for member files will be retrieved</span>
+<span class="sd">            from this manifest. Otherwise they will be calculated from the</span>
+<span class="sd">            file content.</span>
+<span class="sd">        calculate_new_checksum : bool</span>
+<span class="sd">            If ``True``, a new checksum will be calculated from the manifest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`.IntegrityVersion`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">calculate_new_checksum_for_members</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">manifest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">render_checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">source_checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">format_checksums</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">manifest</span><span class="p">:</span>
+            <span class="n">source_checksum</span> <span class="o">=</span> <span class="n">checksum_from_manifest</span><span class="p">(</span>
+                <span class="n">manifest</span><span class="p">,</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span>
+                    <span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                    <span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">filename</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">format_checksums</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">fmt</span><span class="p">:</span> <span class="n">checksum_from_manifest</span><span class="p">(</span>
+                    <span class="n">manifest</span><span class="p">,</span>
+                    <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                             <span class="n">cf</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+                <span class="p">)</span> <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="p">:</span>
+                <span class="n">render_checksum</span> <span class="o">=</span> <span class="n">checksum_from_manifest</span><span class="p">(</span>
+                    <span class="n">manifest</span><span class="p">,</span>
+                    <span class="n">R</span><span class="o">.</span><span class="n">RecordVersion</span><span class="o">.</span><span class="n">make_key</span><span class="p">(</span>
+                        <span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                        <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">filename</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="n">formats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">fmt</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">IntegrityEntry</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span>
+                <span class="n">cf</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="n">format_checksums</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fmt</span><span class="p">),</span>
+                <span class="n">calculate_new_checksum</span><span class="o">=</span><span class="n">calculate_new_checksum_for_members</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="p">:</span>
+            <span class="n">formats</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntegrityEntry</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span>
+                <span class="n">version</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="n">render_checksum</span><span class="p">,</span>
+                <span class="n">calculate_new_checksum</span><span class="o">=</span><span class="n">calculate_new_checksum_for_members</span>
+            <span class="p">)</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="n">IntegrityVersionMembers</span><span class="p">(</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">IntegrityMetadata</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">IntegrityEntry</span><span class="o">.</span><span class="n">from_record</span><span class="p">(</span>
+                <span class="n">version</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="n">source_checksum</span><span class="p">,</span>
+                <span class="n">calculate_new_checksum</span><span class="o">=</span><span class="n">calculate_new_checksum_for_members</span>
+            <span class="p">),</span>
+            <span class="o">**</span><span class="n">formats</span>
+        <span class="p">)</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_manifest</span><span class="p">(</span><span class="n">members</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">calculate_new_checksum</span><span class="p">:</span>
+            <span class="n">checksum</span> <span class="o">=</span> <span class="n">calculate_checksum</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">members</span><span class="p">,</span>
+                   <span class="n">manifest</span><span class="o">=</span><span class="n">manifest</span><span class="p">,</span> <span class="n">checksum</span><span class="o">=</span><span class="n">checksum</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntegrityVersion.make_manifest"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityVersion.make_manifest">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">members</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_VersionMember</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Manifest</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Make a :class:`.Manifest` for this integrity collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Manifest</span><span class="p">(</span>
+            <span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">make_manifest_entry</span><span class="p">(</span><span class="n">members</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">members</span><span class="p">],</span>
+            <span class="n">number_of_events</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">number_of_events_by_type</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">number_of_versions</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntegrityVersion.make_manifest_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityVersion.make_manifest_entry">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_entry</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">member</span><span class="p">:</span> <span class="n">_VersionMember</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManifestEntry</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ManifestEntry</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">manifest_name</span><span class="p">,</span>
+            <span class="n">checksum</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
+            <span class="n">size_bytes</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">size_bytes</span><span class="p">,</span>
+            <span class="n">mime_type</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">mime_type</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntegrityMetadata</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">],</span> <span class="n">IntegrityMetadata</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IntegrityEntry</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s1">&#39;render&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">],</span> <span class="n">IntegrityEntry</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;render&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntegrityEntry</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">IntegrityEntry</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">formats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">,</span> <span class="n">IntegrityEntry</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">D</span><span class="o">.</span><span class="n">ContentType</span><span class="p">(</span><span class="n">fmt</span><span class="p">):</span> <span class="n">cf</span> <span class="k">for</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">cf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;render&#39;</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">IntegrityEntry</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="IntegrityEPrint"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityEPrint">[docs]</a><span class="k">class</span> <span class="nc">IntegrityEPrint</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                                    <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrint</span><span class="p">,</span>
+                                    <span class="n">D</span><span class="o">.</span><span class="n">VersionedIdentifier</span><span class="p">,</span>
+                                    <span class="n">IntegrityVersion</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Integrity collection for an :class:`.EPrint`.&quot;&quot;&quot;</span>
+
+    <span class="n">member_type</span> <span class="o">=</span> <span class="n">IntegrityVersion</span>
+
+<div class="viewcode-block" id="IntegrityEPrint.make_manifest_entry"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityEPrint.make_manifest_entry">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_manifest_entry</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">member</span><span class="p">:</span> <span class="n">IntegrityVersion</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManifestEntry</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ManifestEntry</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">manifest_name</span><span class="p">,</span>
+                             <span class="n">checksum</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
+                             <span class="n">number_of_versions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">number_of_events</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                             <span class="n">number_of_events_by_type</span><span class="o">=</span><span class="p">{})</span></div></div>
+
+
+<div class="viewcode-block" id="IntegrityDay"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityDay">[docs]</a><span class="k">class</span> <span class="nc">IntegrityDay</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="n">date</span><span class="p">,</span>
+                                 <span class="n">R</span><span class="o">.</span><span class="n">RecordDay</span><span class="p">,</span>
+                                 <span class="n">D</span><span class="o">.</span><span class="n">Identifier</span><span class="p">,</span>
+                                 <span class="n">IntegrityEPrint</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrity collection for e-prints associated with a single day.</span>
+
+<span class="sd">    Specifically, this includes all versions of e-prints the first version of</span>
+<span class="sd">    which was announced on this day.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">day</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The numeric day represented by this collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="IntegrityMonth"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityMonth">[docs]</a><span class="k">class</span> <span class="nc">IntegrityMonth</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="n">YearMonth</span><span class="p">,</span>
+                                   <span class="n">R</span><span class="o">.</span><span class="n">RecordMonth</span><span class="p">,</span>
+                                   <span class="n">date</span><span class="p">,</span>
+                                   <span class="n">IntegrityDay</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrity collection for e-prints associated with a single month.</span>
+
+<span class="sd">    Specifically, this includes all versions of e-prints the first version of</span>
+<span class="sd">    which was announced in this month.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">manifest_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The name to use for this record in a parent manifest.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.year}</span><span class="s1">-{str(self.month).zfill(2)}&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">month</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Month</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The numeric month represented by this collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Year</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The numeric year represented by this collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="IntegrityYear"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityYear">[docs]</a><span class="k">class</span> <span class="nc">IntegrityYear</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="n">Year</span><span class="p">,</span>
+                                  <span class="n">R</span><span class="o">.</span><span class="n">RecordYear</span><span class="p">,</span>
+                                  <span class="n">YearMonth</span><span class="p">,</span>
+                                  <span class="n">IntegrityMonth</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrity collection for e-prints associated with a single year.</span>
+
+<span class="sd">    Specifically, this includes all versions of e-prints the first version of</span>
+<span class="sd">    which was announced in this year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">year</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Year</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The numeric year represented by this collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="IntegrityEPrints"><a class="viewcode-back" href="../../../../arxiv.canonical/arxiv.canonical.integrity.version.html#arxiv.canonical.integrity.IntegrityEPrints">[docs]</a><span class="k">class</span> <span class="nc">IntegrityEPrints</span><span class="p">(</span><span class="n">IntegrityBase</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span>
+                                     <span class="n">R</span><span class="o">.</span><span class="n">RecordEPrints</span><span class="p">,</span>
+                                     <span class="n">Year</span><span class="p">,</span>
+                                     <span class="n">IntegrityYear</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Integrity collection for all e-prints in the canonical record.&quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../integrity.html">arxiv.canonical.integrity</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

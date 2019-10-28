@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.domain.identifier module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.domain.license module" href="arxiv.canonical.domain.license.html" />
+    <link rel="prev" title="arxiv.canonical.domain.file module" href="arxiv.canonical.domain.file.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.domain.identifier">
+<span id="arxiv-canonical-domain-identifier-module"></span><h1>arxiv.canonical.domain.identifier module<a class="headerlink" href="#module-arxiv.canonical.domain.identifier" title="Permalink to this headline">¶</a></h1>
+<p>Provides the concept of an arXiv identifier.</p>
+<dl class="class">
+<dt id="arxiv.canonical.domain.identifier.Identifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.identifier.</code><code class="sig-name descname">Identifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#Identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>An arXiv e-print identifier.</p>
+<p>Supports both old-style (<code class="docutils literal notranslate"><span class="pre">archive.category/YYMMNNN</span></code>) and new-style
+(<code class="docutils literal notranslate"><span class="pre">YYMM.NNNNN</span></code>) identifiers.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.category_part">
+<em class="property">property </em><code class="sig-name descname">category_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.category_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>For old-style identifiers, conveys the primary category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">month</em>, <em class="sig-param">inc</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#Identifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new-style identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.incremental_part">
+<em class="property">property </em><code class="sig-name descname">incremental_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.incremental_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part of the identifier that is incremental.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Month in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.numeric_part">
+<em class="property">property </em><code class="sig-name descname">numeric_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.numeric_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The entire numeric component of the identifier.</p>
+<p>For new-style identifiers, this is the entire identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Year in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.Identifier.yymm">
+<em class="property">property </em><code class="sig-name descname">yymm</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.Identifier.yymm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric part conveying the original announcement year and month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.canonical.domain.identifier.InvalidIdentifier">
+<em class="property">exception </em><code class="sig-prename descclassname">arxiv.canonical.domain.identifier.</code><code class="sig-name descname">InvalidIdentifier</code><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#InvalidIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.identifier.InvalidIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<p>A value was encountered that is not a valid arXiv identifier.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.domain.identifier.</code><code class="sig-name descname">VersionedIdentifier</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#VersionedIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+<p>An arXiv identifier for a specific <a class="reference internal" href="arxiv.canonical.domain.html#arxiv.canonical.domain.Version" title="arxiv.canonical.domain.Version"><code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code></a>.</p>
+<p>This is an <a class="reference internal" href="#arxiv.canonical.domain.identifier.Identifier" title="arxiv.canonical.domain.identifier.Identifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifier</span></code></a> with a version (<code class="docutils literal notranslate"><span class="pre">v{N}</span></code>) affix.</p>
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.category_part">
+<em class="property">property </em><code class="sig-name descname">category_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.category_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>For old-style identifiers, conveys the primary category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.from_parts">
+<em class="property">classmethod </em><code class="sig-name descname">from_parts</code><span class="sig-paren">(</span><em class="sig-param">arxiv_id</em>, <em class="sig-param">version</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/domain/identifier.html#VersionedIdentifier.from_parts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.from_parts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new-style versioned identifier from its parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.domain.identifier.VersionedIdentifier" title="arxiv.canonical.domain.identifier.VersionedIdentifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">VersionedIdentifier</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.incremental_part">
+<em class="property">property </em><code class="sig-name descname">incremental_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.incremental_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part of the identifier that is incremental.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.is_old_style">
+<em class="property">property </em><code class="sig-name descname">is_old_style</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.is_old_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether this is an old-style identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.month">
+<em class="property">property </em><code class="sig-name descname">month</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.month" title="Permalink to this definition">¶</a></dt>
+<dd><p>Month in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.numeric_part">
+<em class="property">property </em><code class="sig-name descname">numeric_part</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.numeric_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>The entire numeric component of the identifier.</p>
+<p>For new-style identifiers, this is the entire identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.year">
+<em class="property">property </em><code class="sig-name descname">year</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Year in which the first version of the e-print was announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.domain.identifier.VersionedIdentifier.yymm">
+<em class="property">property </em><code class="sig-name descname">yymm</code><a class="headerlink" href="#arxiv.canonical.domain.identifier.VersionedIdentifier.yymm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric part conveying the original announcement year and month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.domain.html">arxiv.canonical.domain package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.domain.file.html" title="previous chapter">arxiv.canonical.domain.file module</a></li>
+      <li>Next: <a href="arxiv.canonical.domain.license.html" title="next chapter">arxiv.canonical.domain.license module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.domain.identifier.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

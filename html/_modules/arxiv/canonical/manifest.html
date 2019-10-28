@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.manifest &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.canonical.manifest</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Defines the structure of manifest records, used to store integrity info.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">mypy_extensions</span> <span class="k">import</span> <span class="n">TypedDict</span>
+
+<span class="kn">from</span> <span class="nn">.domain.version</span> <span class="k">import</span> <span class="n">EventType</span>
+
+
+<div class="viewcode-block" id="ManifestEntry"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestEntry">[docs]</a><span class="k">class</span> <span class="nc">ManifestEntry</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Structure of a single entry in a manifest.&quot;&quot;&quot;</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">number_of_events</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">number_of_events_by_type</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">EventType</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">number_of_versions</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="Manifest"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.Manifest">[docs]</a><span class="k">class</span> <span class="nc">Manifest</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Structure of a manifest record.&quot;&quot;&quot;</span>
+
+    <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ManifestEntry</span><span class="p">]</span>
+    <span class="n">number_of_events</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">number_of_events_by_type</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">EventType</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">number_of_versions</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="ManifestEncoder"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestEncoder">[docs]</a><span class="k">class</span> <span class="nc">ManifestEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;JSON encoder for manifests.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ManifestEncoder.unpack"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestEncoder.unpack">[docs]</a>    <span class="k">def</span> <span class="nf">unpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert manifests and their members to native Python types.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">obj</span></div>
+
+<div class="viewcode-block" id="ManifestEncoder.encode"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestEncoder.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Serialize manifest objects.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ManifestEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="ManifestDecoder"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestDecoder">[docs]</a><span class="k">class</span> <span class="nc">ManifestDecoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;JSON decoder for manifests.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Pass :func:`object_hook` to the base constructor.&quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;object_hook&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;object_hook&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_hook</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ManifestDecoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ManifestDecoder.object_hook"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.ManifestDecoder.object_hook">[docs]</a>    <span class="k">def</span> <span class="nf">object_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># pylint: disable=method-hidden</span>
+        <span class="sd">&quot;&quot;&quot;Decode the manifest to domain types.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;number_of_events_by_type&#39;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;number_of_events_by_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">EventType</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">value</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;number_of_events_by_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">obj</span></div></div>
+
+
+<div class="viewcode-block" id="make_empty_manifest"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.make_empty_manifest">[docs]</a><span class="k">def</span> <span class="nf">make_empty_manifest</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Manifest</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a new empty manifest.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Manifest</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">number_of_events</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">number_of_versions</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">number_of_events_by_type</span><span class="o">=</span><span class="p">{})</span></div>
+
+
+<div class="viewcode-block" id="checksum_from_manifest"><a class="viewcode-back" href="../../../arxiv.canonical/arxiv.canonical.manifest.html#arxiv.canonical.manifest.checksum_from_manifest">[docs]</a><span class="k">def</span> <span class="nf">checksum_from_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">Manifest</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Retrieve a checksum for a key from a manifest.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">manifest</span><span class="p">[</span><span class="s1">&#39;entries&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">entry</span><span class="p">[</span><span class="s1">&#39;checksum&#39;</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Not found: </span><span class="si">{key}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

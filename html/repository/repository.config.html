@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>repository.config module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="repository.controllers module" href="repository.controllers.html" />
+    <link rel="prev" title="repository.tests.test_controllers module" href="repository.tests.test_controllers.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-repository.config">
+<span id="repository-config-module"></span><h1>repository.config module<a class="headerlink" href="#module-repository.config" title="Permalink to this headline">¶</a></h1>
+<p>Flask configuration.</p>
+<p>Docstrings are from the <a class="reference external" href="http://flask.pocoo.org/docs/0.12/config/">Flask configuration documentation</a>.</p>
+<dl class="data">
+<dt id="repository.config.APPLICATION_ROOT">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">APPLICATION_ROOT</code><em class="property"> = '/'</em><a class="headerlink" href="#repository.config.APPLICATION_ROOT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path where application is deployed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.AUTH_UPDATED_SESSION_REF">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">AUTH_UPDATED_SESSION_REF</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.AUTH_UPDATED_SESSION_REF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authn/z info is at <code class="docutils literal notranslate"><span class="pre">request.session</span></code> instead of <code class="docutils literal notranslate"><span class="pre">request.auth</span></code>.</p>
+<p>See <a href="#id1"><span class="problematic" id="id2">`https://arxiv-org.atlassian.net/browse/ARXIVNG-2186`_</span></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.AWS_ACCESS_KEY_ID">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">AWS_ACCESS_KEY_ID</code><em class="property"> = 'nope'</em><a class="headerlink" href="#repository.config.AWS_ACCESS_KEY_ID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access key for requests to AWS services.</p>
+<p>If <a class="reference internal" href="#repository.config.VAULT_ENABLED" title="repository.config.VAULT_ENABLED"><code class="xref py py-const docutils literal notranslate"><span class="pre">VAULT_ENABLED</span></code></a> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this will be overwritten.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.AWS_REGION">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">AWS_REGION</code><em class="property"> = 'us-east-1'</em><a class="headerlink" href="#repository.config.AWS_REGION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default region for calling AWS services.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.AWS_SECRET_ACCESS_KEY">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">AWS_SECRET_ACCESS_KEY</code><em class="property"> = 'nope'</em><a class="headerlink" href="#repository.config.AWS_SECRET_ACCESS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secret auth key for requests to AWS services.</p>
+<p>If <a class="reference internal" href="#repository.config.VAULT_ENABLED" title="repository.config.VAULT_ENABLED"><code class="xref py py-const docutils literal notranslate"><span class="pre">VAULT_ENABLED</span></code></a> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this will be overwritten.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.CSRF_SECRET">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">CSRF_SECRET</code><em class="property"> = 'csrfbarsecret'</em><a class="headerlink" href="#repository.config.CSRF_SECRET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secret used for generating CSRF tokens.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.DEBUG">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">DEBUG</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.DEBUG" title="Permalink to this definition">¶</a></dt>
+<dd><p>enable/disable debug mode</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.ENABLE_CALLBACKS">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">ENABLE_CALLBACKS</code><em class="property"> = True</em><a class="headerlink" href="#repository.config.ENABLE_CALLBACKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable the <code class="xref py py-func docutils literal notranslate"><span class="pre">Event.bind()</span></code> feature.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.JWT_SECRET">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">JWT_SECRET</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.JWT_SECRET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secret key for signing + verifying authentication JWTs.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.KUBE_TOKEN">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">KUBE_TOKEN</code><em class="property"> = 'fookubetoken'</em><a class="headerlink" href="#repository.config.KUBE_TOKEN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Service account token for authenticating with Vault. May be a file path.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.LOGGER_HANDLER_POLICY">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">LOGGER_HANDLER_POLICY</code><em class="property"> = 'debug'</em><a class="headerlink" href="#repository.config.LOGGER_HANDLER_POLICY" title="Permalink to this definition">¶</a></dt>
+<dd><p>the policy of the default logging handler. The default is ‘always’ which means
+that the default logging handler is always active. ‘debug’ will only activate
+logging in debug mode, ‘production’ will only log in production and ‘never’
+disables it entirely.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.LOGGER_NAME">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">LOGGER_NAME</code><em class="property"> = 'search'</em><a class="headerlink" href="#repository.config.LOGGER_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the logger.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.LOGLEVEL">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">LOGLEVEL</code><em class="property"> = 20</em><a class="headerlink" href="#repository.config.LOGLEVEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logging verbosity.</p>
+<p>See <a href="#id3"><span class="problematic" id="id4">`https://docs.python.org/3/library/logging.html#levels`_</span></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.NAMESPACE">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">NAMESPACE</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.NAMESPACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Namespace in which this service is deployed; to qualify keys for secrets.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.PRESERVE_CONTEXT_ON_EXCEPTION">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">PRESERVE_CONTEXT_ON_EXCEPTION</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.PRESERVE_CONTEXT_ON_EXCEPTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default if the application is in debug mode the request context is not
+popped on exceptions to enable debuggers to introspect the data. This can be
+disabled by this key. You can also use this setting to force-enable it for non
+debug execution which might be useful to debug production applications (but
+also very risky).</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.PROPAGATE_EXCEPTIONS">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">PROPAGATE_EXCEPTIONS</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.PROPAGATE_EXCEPTIONS" title="Permalink to this definition">¶</a></dt>
+<dd><p>explicitly enable or disable the propagation of exceptions. If not set or
+explicitly set to None this is implicitly true if either TESTING or DEBUG is
+true.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.S3_BUCKET">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">S3_BUCKET</code><em class="property"> = 'canonical-None'</em><a class="headerlink" href="#repository.config.S3_BUCKET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bucket for storing compilation products and logs.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.S3_ENDPOINT">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">S3_ENDPOINT</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.S3_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>AWS S3 endpoint. Default is <code class="docutils literal notranslate"><span class="pre">None</span></code> (use the “real” S3 service).</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.S3_VERIFY">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">S3_VERIFY</code><em class="property"> = True</em><a class="headerlink" href="#repository.config.S3_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable TLS certificate verification for S3.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.SECRET_KEY">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">SECRET_KEY</code><em class="property"> = 'fooflasksecret'</em><a class="headerlink" href="#repository.config.SECRET_KEY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flask secret key.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.SERVER_NAME">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">SERVER_NAME</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.SERVER_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name and port number of the server. Required for subdomain support
+(e.g.: ‘myapp.dev:5000’) Note that localhost does not support subdomains so
+setting this to ‘localhost’ does not help. Setting a SERVER_NAME also by
+default enables URL generation without a request context but with an
+application context.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.SESSION_COOKIE_NAME">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">SESSION_COOKIE_NAME</code><em class="property"> = 'submission_ui_session'</em><a class="headerlink" href="#repository.config.SESSION_COOKIE_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cookie used to store submission-related information.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.TESTING">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">TESTING</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.TESTING" title="Permalink to this definition">¶</a></dt>
+<dd><p>enable/disable testing mode</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.URLS">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">URLS</code><em class="property"> = []</em><a class="headerlink" href="#repository.config.URLS" title="Permalink to this definition">¶</a></dt>
+<dd><p>URLs for external services, for use with <a class="reference external" href="https://flask.palletsprojects.com/en/1.0.x/api/#flask.url_for" title="(in Flask v1.0.x)"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask.url_for()</span></code></a>.
+This subset of URLs is common only within submit, for now - maybe move to base
+if these pages seem relevant to other services.</p>
+<p>For details, see <a class="reference external" href="https://arxiv.github.io/arxiv-base/arxiv/arxiv.base.urls.html#module-arxiv.base.urls" title="(in arXiv base v0.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.base.urls</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.USE_X_SENDFILE">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">USE_X_SENDFILE</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.USE_X_SENDFILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable x-sendfile</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_CERT">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_CERT</code><em class="property"> = None</em><a class="headerlink" href="#repository.config.VAULT_CERT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to CA certificate for TLS verification when talking to Vault.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_ENABLED">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_ENABLED</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.VAULT_ENABLED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable secret retrieval from Vault.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_HOST">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_HOST</code><em class="property"> = 'foovaulthost'</em><a class="headerlink" href="#repository.config.VAULT_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vault hostname/address.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_PORT">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_PORT</code><em class="property"> = '1234'</em><a class="headerlink" href="#repository.config.VAULT_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vault API port.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_REQUESTS">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_REQUESTS</code><em class="property"> = [{'type': 'generic', 'name': 'JWT_SECRET', 'mount_point': 'secret-None/', 'path': 'jwt', 'key': 'jwt-secret', 'minimum_ttl': 3600}, {'type': 'aws', 'name': 'AWS_S3_CREDENTIAL', 'mount_point': 'aws-None/', 'role': None}, {'type': 'generic', 'name': 'SQLALCHEMY_DATABASE_URI', 'mount_point': 'secret-None/', 'path': 'beta-mysql', 'key': 'uri', 'minimum_ttl': 360000}]</em><a class="headerlink" href="#repository.config.VAULT_REQUESTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requests for Vault secrets.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_ROLE">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_ROLE</code><em class="property"> = 'submission-ui'</em><a class="headerlink" href="#repository.config.VAULT_ROLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vault role linked to this application’s service account.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.VAULT_SCHEME">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">VAULT_SCHEME</code><em class="property"> = 'https'</em><a class="headerlink" href="#repository.config.VAULT_SCHEME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default is <code class="docutils literal notranslate"><span class="pre">https</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.WAIT_FOR_SERVICES">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">WAIT_FOR_SERVICES</code><em class="property"> = False</em><a class="headerlink" href="#repository.config.WAIT_FOR_SERVICES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable/enable waiting for upstream services to be available on startup.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="repository.config.WAIT_ON_STARTUP">
+<code class="sig-prename descclassname">repository.config.</code><code class="sig-name descname">WAIT_ON_STARTUP</code><em class="property"> = 0</em><a class="headerlink" href="#repository.config.WAIT_ON_STARTUP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of seconds to wait before checking upstream services on startup.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="repository.html">repository package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="repository.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="repository.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="repository.html">repository package</a><ul>
+      <li>Previous: <a href="repository.tests.test_controllers.html" title="previous chapter">repository.tests.test_controllers module</a></li>
+      <li>Next: <a href="repository.controllers.html" title="next chapter">repository.controllers module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/repository/repository.config.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

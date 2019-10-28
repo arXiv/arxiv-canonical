@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.log.log module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.log.tests module" href="arxiv.canonical.log.tests.html" />
+    <link rel="prev" title="arxiv.canonical.log package" href="arxiv.canonical.log.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.log.log">
+<span id="arxiv-canonical-log-log-module"></span><h1>arxiv.canonical.log.log module<a class="headerlink" href="#module-arxiv.canonical.log.log" title="Permalink to this headline">¶</a></h1>
+<p>Provides the write log for the canonical record.</p>
+<dl class="class">
+<dt id="arxiv.canonical.log.log.Log">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.log.log.</code><code class="sig-name descname">Log</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Action log for a canonical agent.</p>
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.current_log_path">
+<em class="property">property </em><code class="sig-name descname">current_log_path</code><a class="headerlink" href="#arxiv.canonical.log.log.Log.current_log_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the current log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.log_failure">
+<code class="sig-name descname">log_failure</code><span class="sig-paren">(</span><em class="sig-param">event_id</em>, <em class="sig-param">action</em>, <em class="sig-param">message=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.log_failure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.log_failure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a failed action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.log_success">
+<code class="sig-name descname">log_success</code><span class="sig-paren">(</span><em class="sig-param">event_id</em>, <em class="sig-param">action</em>, <em class="sig-param">message=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.log_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.log_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a successful action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.read_all">
+<code class="sig-name descname">read_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.read_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.read_all" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.read_last_entry">
+<code class="sig-name descname">read_last_entry</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.read_last_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.read_last_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the last entry in the log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.read_last_succeeded">
+<code class="sig-name descname">read_last_succeeded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.read_last_succeeded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.read_last_succeeded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the last SUCCEEDED entry in the log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.Log.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">event_id</em>, <em class="sig-param">action</em>, <em class="sig-param">state</em>, <em class="sig-param">message</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#Log.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.Log.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a log entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.canonical.log.log.LogEntry">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.log.log.</code><code class="sig-name descname">LogEntry</code><span class="sig-paren">(</span><em class="sig-param">timestamp</em>, <em class="sig-param">event_id</em>, <em class="sig-param">action</em>, <em class="sig-param">state</em>, <em class="sig-param">message</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#LogEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.canonical.log.log.LogEntry.action">
+<code class="sig-name descname">action</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Action being performed by the agent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.log.log.LogEntry.event_id">
+<code class="sig-name descname">event_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the event being handled.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.log.log.LogEntry.from_repr">
+<em class="property">classmethod </em><code class="sig-name descname">from_repr</code><span class="sig-paren">(</span><em class="sig-param">repr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/log/log.html#LogEntry.from_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.from_repr" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.canonical.log.log.LogEntry" title="arxiv.canonical.log.log.LogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.log.log.LogEntry.message">
+<code class="sig-name descname">message</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional unstructured information about the action.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.log.log.LogEntry.state">
+<code class="sig-name descname">state</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outcome of the action.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.canonical.log.log.LogEntry.timestamp">
+<code class="sig-name descname">timestamp</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.canonical.log.log.LogEntry.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time of the log entry.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.log.html">arxiv.canonical.log package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.log.html" title="previous chapter">arxiv.canonical.log package</a></li>
+      <li>Next: <a href="arxiv.canonical.log.tests.html" title="next chapter">arxiv.canonical.log.tests module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.log.log.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

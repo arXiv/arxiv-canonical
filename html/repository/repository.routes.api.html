@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>repository.routes.api module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="repository.services package" href="repository.services.html" />
+    <link rel="prev" title="repository.routes package" href="repository.routes.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-repository.routes.api">
+<span id="repository-routes-api-module"></span><h1>repository.routes.api module<a class="headerlink" href="#module-repository.routes.api" title="Permalink to this headline">¶</a></h1>
+<p>Defines the HTTP routes and methods supported by the repository API.</p>
+<dl class="function">
+<dt id="repository.routes.api.get_eprint_events">
+<code class="sig-prename descclassname">repository.routes.api.</code><code class="sig-name descname">get_eprint_events</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">version</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/repository/routes/api.html#get_eprint_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#repository.routes.api.get_eprint_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get events for a specific version of an e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="repository.routes.api.get_eprint_pdf">
+<code class="sig-prename descclassname">repository.routes.api.</code><code class="sig-name descname">get_eprint_pdf</code><span class="sig-paren">(</span><em class="sig-param">identifier</em>, <em class="sig-param">version</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/repository/routes/api.html#get_eprint_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#repository.routes.api.get_eprint_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get PDF for a specific version of an e-print.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="repository.routes.api.service_status">
+<code class="sig-prename descclassname">repository.routes.api.</code><code class="sig-name descname">service_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/repository/routes/api.html#service_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#repository.routes.api.service_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Service status endpoint.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">200</span> <span class="pre">OK</span></code> if the service is up and ready to handle requests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../arxiv.canonical/arxiv.canonical.html">arxiv.canonical package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="repository.html">repository package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="repository.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="repository.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="repository.html">repository package</a><ul>
+  <li><a href="repository.routes.html">repository.routes package</a><ul>
+      <li>Previous: <a href="repository.routes.html" title="previous chapter">repository.routes package</a></li>
+      <li>Next: <a href="repository.services.html" title="next chapter">repository.services package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/repository/repository.routes.api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

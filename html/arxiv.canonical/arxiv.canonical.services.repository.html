@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.canonical.services.repository module &#8212; arXiv Canonical Record 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.canonical.services.store module" href="arxiv.canonical.services.store.html" />
+    <link rel="prev" title="arxiv.canonical.services.remote module" href="arxiv.canonical.services.remote.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.canonical.services.repository">
+<span id="arxiv-canonical-services-repository-module"></span><h1>arxiv.canonical.services.repository module<a class="headerlink" href="#module-arxiv.canonical.services.repository" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="arxiv.canonical.services.repository.RemoteRepository">
+<em class="property">class </em><code class="sig-prename descclassname">arxiv.canonical.services.repository.</code><code class="sig-name descname">RemoteRepository</code><span class="sig-paren">(</span><em class="sig-param">trusted_domain</em>, <em class="sig-param">trusted_scheme='https'</em>, <em class="sig-param">retry=3</em>, <em class="sig-param">backoff=2</em>, <em class="sig-param">retry_status=5</em>, <em class="sig-param">force_retry_on=(&lt;HTTPStatus.INTERNAL_SERVER_ERROR: 500&gt;</em>, <em class="sig-param">&lt;HTTPStatus.BAD_GATEWAY: 502&gt;</em>, <em class="sig-param">&lt;HTTPStatus.SERVICE_UNAVAILABLE: 503&gt;</em>, <em class="sig-param">&lt;HTTPStatus.GATEWAY_TIMEOUT: 504&gt;)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/repository.html#RemoteRepository"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.repository.RemoteRepository" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.canonical.services.remote.html#arxiv.canonical.services.remote.RemoteSource" title="arxiv.canonical.services.remote.RemoteSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.canonical.services.remote.RemoteSource</span></code></a></p>
+<p>Retrieves content from a remote arXiv repository.</p>
+<dl class="method">
+<dt id="arxiv.canonical.services.repository.RemoteRepository.can_resolve">
+<code class="sig-name descname">can_resolve</code><span class="sig-paren">(</span><em class="sig-param">uri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/repository.html#RemoteRepository.can_resolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.repository.RemoteRepository.can_resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether or not the implementation can resolve an URI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>uri</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">D.URI</span></code>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.repository.RemoteRepository.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">stream=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/repository.html#RemoteRepository.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.repository.RemoteRepository.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make an IO that waits to load from the record until it is read().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.IO" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.canonical.services.repository.RemoteRepository.load_entry">
+<code class="sig-name descname">load_entry</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/canonical/services/repository.html#RemoteRepository.load_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.canonical.services.repository.RemoteRepository.load_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an entry from the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="arxiv.canonical.record.core.html#arxiv.canonical.record.core.RecordStream" title="arxiv.canonical.record.core.RecordStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStream</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv Canonical Record</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.canonical.html">arxiv.canonical package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#goals">Goals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#differences-from-legacy-arxiv">Differences from legacy arXiv</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.canonical.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.canonical.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../repository/repository.html">repository package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.canonical.html">arxiv.canonical package</a><ul>
+  <li><a href="arxiv.canonical.services.html">arxiv.canonical.services package</a><ul>
+      <li>Previous: <a href="arxiv.canonical.services.remote.html" title="previous chapter">arxiv.canonical.services.remote module</a></li>
+      <li>Next: <a href="arxiv.canonical.services.store.html" title="next chapter">arxiv.canonical.services.store module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.canonical/arxiv.canonical.services.repository.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
