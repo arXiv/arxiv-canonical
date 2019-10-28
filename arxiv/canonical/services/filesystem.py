@@ -16,7 +16,7 @@ from .. import record as R
 from .. import integrity as I
 from ..manifest import Manifest, ManifestEncoder, ManifestDecoder
 from ..register import ICanonicalStorage, IStorableEntry, ICanonicalSource
-from .readable import MemoizedReadable
+from .readable import BytesIOProxy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))
@@ -36,7 +36,7 @@ class Filesystem(ICanonicalSource):
     def can_resolve(self, uri: D.URI) -> bool:
         return uri.is_file and self._base_path in os.path.abspath(uri.path)
 
-    def load_deferred(self, uri: D.URI) -> IO[bytes]:
+    def load(self, uri: D.URI) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""
         if not self.can_resolve(uri):
             raise RuntimeError(f'Cannot resolve this URI: {uri}')
@@ -136,7 +136,7 @@ class CanonicalFilesystem(Filesystem, ICanonicalStorage):
             ri.record.stream.domain.is_gzipped = False
             ri.record.stream.domain.size_bytes = size_bytes
             ri.record.stream = ri.record.stream._replace(
-                content=self.load_deferred(ri.record.key)
+                content=self.load(ri.record.key)
             )
             ri.update_checksum()
 

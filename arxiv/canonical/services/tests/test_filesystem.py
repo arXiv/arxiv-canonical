@@ -46,13 +46,13 @@ class TestLoadDeferred(TestCase):
         with open(self.file_path, 'wb') as f:
             f.write(b'some content')
 
-    def test_load_deferred(self):
+    def test_load(self):
         """Can load content from the file."""
-        resource = self.filesystem.load_deferred(URI(self.file_path))
+        resource = self.filesystem.load(URI(self.file_path))
         self.assertEqual(resource.read(4), b'some')
 
-    def test_load_deferred_outside_base_path(self):
+    def test_load_outside_base_path(self):
         """Cannot load a file outside of the base path"""
         _, other_path = tempfile.mkstemp()
         with self.assertRaises(RuntimeError):
-            self.filesystem.load_deferred(URI(other_path))
+            self.filesystem.load(URI(other_path))

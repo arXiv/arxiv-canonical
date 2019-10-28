@@ -31,8 +31,8 @@ Start at the beginning of time. Initialize a counter that keeps track of the
 last version number seen for each e-print identifier.
 
 Prior to the start of the daily.log (mid-1998): Read the abs file for each
-e-print, and generate a ``new`` and subsequent ``replace`` event(s) using the
-submission date(s) as the announcement date(s).
+e-print, and generate a ``new`` and subsequent ``replace`` event(s) **using the
+submission date(s) as the announcement date(s)**.
 
 Read daily.log in order. Rely on the version number mapping to keep track of
 where we are with each e-print.

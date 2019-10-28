@@ -3,8 +3,8 @@ from abc import ABC
 from typing import Any, Sequence
 
 from .. import domain as D
-from ..register import ICanonicalStorage, IRegisterAPI, ICanonicalSource
-from ..events import IEventStream
+from ..core import IEventStream, ICanonicalStorage, IRegisterAPI, \
+    ICanonicalSource
 
 from .register import Reader, Writer, NoRegister
 from .stream import Listener, Emitter, NoStream

@@ -44,13 +44,13 @@ class TestLoadDeferred(TestCase):
         self.trusted_domain = 'arxiv.org'
         self.remote = repository.RemoteRepository(self.trusted_domain, 'https')
 
-    def test_load_deferred(self):
+    def test_load(self):
         """Can load content from the HTTP URI."""
         mock_response = mock.MagicMock(status_code=200)
         mock_response.iter_content.return_value = \
             iter([b'foo', b'con' b'ten', b't'])
         self.mock_session.get.return_value = mock_response
-        res = self.remote.load_deferred(URI('arxiv:///foo/resource'))
+        res = self.remote.load(URI('arxiv:///foo/resource'))
         self.assertEqual(self.mock_session.get.call_count, 0,
                          'No request is yet performed')
         self.assertEqual(res.read(4), b'fooc')
@@ -59,5 +59,5 @@ class TestLoadDeferred(TestCase):
 
         mock_response.iter_content.return_value = \
             iter([b'foo', b'con' b'ten', b't'])
-        res = self.remote.load_deferred(URI('arxiv:///foo/resource'))
+        res = self.remote.load(URI('arxiv:///foo/resource'))
         self.assertEqual(res.read(), b'foocontent')

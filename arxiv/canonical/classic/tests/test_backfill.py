@@ -42,7 +42,7 @@ class TestBackfillWithData(TestCase):
         print('record_path ::', self.record_path)
         # self.mock_source = mock.MagicMock()
         # self.mock_source.can_resolve.return_value = True
-        # self.mock_source.load_deferred = \
+        # self.mock_source.load = \
         #     lambda *a, **k: io.BytesIO(b'foocontent')
 
         self.abs_path = os.path.join(

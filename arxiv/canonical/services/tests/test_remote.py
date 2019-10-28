@@ -54,13 +54,13 @@ class TestLoadDeferred(TestCase):
         self.trusted_domain = 'arxiv.org'
         self.remote = remote.RemoteSource(self.trusted_domain, 'https')
 
-    def test_load_deferred(self):
+    def test_load(self):
         """Can load content from the HTTP URI."""
         mock_response = mock.MagicMock(status_code=200)
         mock_response.iter_content.return_value = \
             iter([b'foo', b'con' b'ten', b't'])
         self.mock_session.get.return_value = mock_response
-        res = self.remote.load_deferred(URI('https://arxiv.org/stats/today'))
+        res = self.remote.load(URI('https://arxiv.org/stats/today'))
         self.assertEqual(self.mock_session.get.call_count, 0,
                          'No request is yet performed')
         self.assertEqual(res.read(4), b'fooc')
@@ -69,18 +69,18 @@ class TestLoadDeferred(TestCase):
 
         mock_response.iter_content.return_value = \
             iter([b'foo', b'con' b'ten', b't'])
-        res = self.remote.load_deferred(URI('https://arxiv.org/stats/today'))
+        res = self.remote.load(URI('https://arxiv.org/stats/today'))
         self.assertEqual(res.read(), b'foocontent')
 
-    def test_load_deferred_outside_base_path(self):
+    def test_load_outside_base_path(self):
         """Cannot load an HTTP URI outside trusted domain."""
         with self.assertRaises(RuntimeError):
-            self.remote.load_deferred(URI('https://asdf.com'))
+            self.remote.load(URI('https://asdf.com'))
 
-    def test_load_deferred_without_training_wheels(self):
+    def test_load_without_training_wheels(self):
         """This will issue a live call to arxiv.org."""
         r = remote.RemoteSource(self.trusted_domain, 'https')
-        reader = r.load_deferred(URI('https://arxiv.org/pdf/0801.1021v2.pdf'))
+        reader = r.load(URI('https://arxiv.org/pdf/0801.1021v2.pdf'))
         self.assertIsInstance(reader, io.BytesIO)
         self.assertEqual(len(reader.read()), 237187)
         reader.seek(0)
@@ -90,10 +90,10 @@ class TestLoadDeferred(TestCase):
         self.assertEqual(len(reader.read(4096)), 4096)
 
 
-    def test_load_deferred_streaming_without_training_wheels(self):
+    def test_load_streaming_without_training_wheels(self):
         """This will issue a live call to arxiv.org."""
         r = remote.RemoteSource(self.trusted_domain, 'https')
-        reader = r.load_deferred(URI('https://arxiv.org/pdf/0801.1021v2.pdf'),
+        reader = r.load(URI('https://arxiv.org/pdf/0801.1021v2.pdf'),
                                  stream=True)
         self.assertIsInstance(reader, io.BytesIO)
         self.assertEqual(len(reader.read()), 237187)

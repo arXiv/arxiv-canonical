@@ -1,4 +1,4 @@
-"""Provides :class:`.MemoizedReadable`."""
+"""Provides :class:`.BytesIOProxy`."""
 
 import io
 from typing import Any, Callable, IO, List, Optional, Iterable, Iterator
@@ -6,11 +6,11 @@ from typing import Any, Callable, IO, List, Optional, Iterable, Iterator
 from typing_extensions import Literal
 
 
-class MemoizedReadable(io.BytesIO):
+class BytesIOProxy(io.BytesIO):
     """
     A readable object that wraps a ``read()`` callable.
 
-    This gives us lazy, memoized read access to a (presumably expensive)
+    This gives us lazy, proxied read access to a (presumably expensive)
     resource that is consistent with ``io.IOBase``.
     """
 
@@ -23,8 +23,7 @@ class MemoizedReadable(io.BytesIO):
         if self._read is None:
             raise ValueError('Resource is closed')
         if self._content is None:
-            c = self._read()
-            self._content = io.BytesIO(c)
+            self._content = io.BytesIO(self._read())
         return self._content
 
     def close(self) -> None:
@@ -33,7 +32,7 @@ class MemoizedReadable(io.BytesIO):
             self._content.close()
         else:
             self._read = None
-        super(MemoizedReadable, self).close()
+        super(BytesIOProxy, self).close()
 
     def fileno(self) -> int:
         """Return the underlying file descriptor of the stream if it exists."""

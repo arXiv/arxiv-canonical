@@ -1,3 +1,9 @@
+"""
+Provides structs for organizing e-print metadata and content in the register.
+
+The classes in this module extend :class:`.Base` with methods for naming
+themselves and manifests.
+"""
 
 from datetime import date, datetime
 from typing import Any, Callable, Iterable, List, Optional, Set, Sequence, Type
@@ -16,6 +22,12 @@ class RegisterEPrint(Base[D.Identifier,
                           I.IntegrityEPrint,
                           D.VersionedIdentifier,
                           RegisterVersion]):
+    """
+    Representation of an e-print in the canonical register.
+
+    Organizes a series of one or more :class:`.RegisterVersion`s.
+    """
+
     domain_type = D.EPrint
     record_type = R.RecordEPrint
     integrity_type = I.IntegrityEPrint
@@ -28,6 +40,19 @@ class RegisterEPrint(Base[D.Identifier,
     @classmethod
     def _manifest_to_member_name(cls, key: str) -> D.VersionedIdentifier:
         return D.VersionedIdentifier(key)
+
+    # Single-dispatch based on the event type, using the ``add_event_`` methods
+    # defined below.
+    def _add_events(self, s: ICanonicalStorage,
+                    sources: Sequence[ICanonicalSource],
+                    events: Iterable[D.Event],
+                    _: Callable) -> Iterable[RegisterVersion]:
+        added: Set[RegisterVersion] = set()
+        for event in events:
+            adder = getattr(self, f'add_event_{event.event_type.value}', None)
+            assert adder is not None
+            added |= set(adder(s, sources, event))
+        return added
 
     def _add_versions(self, s: ICanonicalStorage,
                       sources: Sequence[ICanonicalSource],
@@ -48,6 +73,7 @@ class RegisterEPrint(Base[D.Identifier,
     def add_event_new(self, s: ICanonicalStorage,
                       sources: Sequence[ICanonicalSource],
                       event: D.Event) -> List[RegisterVersion]:
+        """Add an event that results in a new version."""
         assert self.members is not None
         altered: List[RegisterVersion] = []
         for key in self._member_name(event):
@@ -61,6 +87,7 @@ class RegisterEPrint(Base[D.Identifier,
     def add_event_update(self, s: ICanonicalStorage,
                          sources: Sequence[ICanonicalSource],
                          event: D.Event) -> List[RegisterVersion]:
+        """Add an event that results in an update to a version."""
         assert self.members is not None
         altered: List[RegisterVersion] = []
         for key in self._member_name(event):
@@ -73,43 +100,38 @@ class RegisterEPrint(Base[D.Identifier,
     def add_event_update_metadata(self, s: ICanonicalStorage,
                                   sources: Sequence[ICanonicalSource],
                                   event: D.Event) -> List[RegisterVersion]:
+        """Add an event that results in an update to metadata of a version."""
         return self.add_event_update(s, sources, event)
 
     def add_event_replace(self, s: ICanonicalStorage,
                           sources: Sequence[ICanonicalSource],
                           event: D.Event) -> List[RegisterVersion]:
+        """Add an event that generates a replacement version."""
         return self.add_event_new(s, sources, event)
 
     def add_event_cross(self, s: ICanonicalStorage,
                         sources: Sequence[ICanonicalSource],
                         event: D.Event) -> List[RegisterVersion]:
+        """Add a cross-list event."""
         return self.add_event_update_metadata(s, sources, event)
 
     def add_event_migrate(self, s: ICanonicalStorage,
                           sources: Sequence[ICanonicalSource],
                           event: D.Event) -> List[RegisterVersion]:
+        """Add a data-migration event."""
         return self.add_event_update(s, sources, event)
 
     def add_event_migrate_metadata(self, s: ICanonicalStorage,
                                    sources: Sequence[ICanonicalSource],
                                    event: D.Event) -> List[RegisterVersion]:
+        """Add a metadata-migration event."""
         return self.add_event_update_metadata(s, sources, event)
 
     def add_event_withdraw(self, s: ICanonicalStorage,
                            sources: Sequence[ICanonicalSource],
                            event: D.Event) -> List[RegisterVersion]:
+        """Add an event that withdraws an e-print."""
         return self.add_event_new(s, sources, event)
-
-    def _add_events(self, s: ICanonicalStorage,
-                    sources: Sequence[ICanonicalSource],
-                    events: Iterable[D.Event],
-                    _: Callable) -> Iterable[RegisterVersion]:
-        added: Set[RegisterVersion] = set()
-        for event in events:
-            adder = getattr(self, f'add_event_{event.event_type.value}', None)
-            assert adder is not None
-            added |= set(adder(s, sources, event))
-        return added
 
 
 class RegisterDay(Base[date,
@@ -118,6 +140,8 @@ class RegisterDay(Base[date,
                        I.IntegrityDay,
                        D.Identifier,
                        RegisterEPrint]):
+    """Representation of a day-block of e-prints in the canonical register."""
+
     domain_type = D.EPrintDay
     record_type = R.RecordDay
     integrity_type = I.IntegrityDay
@@ -138,6 +162,8 @@ class RegisterMonth(Base[YearMonth,
                          I.IntegrityMonth,
                          date,
                          RegisterDay]):
+    """Representation of a month-block in the canonical register."""
+
     domain_type = D.EPrintMonth
     record_type = R.RecordMonth
     integrity_type = I.IntegrityMonth
@@ -158,6 +184,8 @@ class RegisterYear(Base[Year,
                         I.IntegrityYear,
                         YearMonth,
                         RegisterMonth]):
+    """Representation of a year-block in the canonical register."""
+
     domain_type = D.EPrintYear
     record_type = R.RecordYear
     integrity_type = I.IntegrityYear
@@ -180,6 +208,7 @@ class RegisterEPrints(Base[str,
                            I.IntegrityEPrints,
                            Year,
                            RegisterYear]):
+    """Representation of the complete set of e-prints in the register."""
     domain_type = D.AllEPrints
     record_type = R.RecordEPrints
     integrity_type = I.IntegrityEPrints

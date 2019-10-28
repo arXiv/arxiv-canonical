@@ -3,8 +3,7 @@ from abc import ABC
 from typing import Any, List, Optional, Sequence
 
 from .. import domain as D
-from ..events import IEventStream
-from ..register import ICanonicalSource
+from ..core import IEventStream, ICanonicalSource
 
 from .proxy import EventStreamProxy
 

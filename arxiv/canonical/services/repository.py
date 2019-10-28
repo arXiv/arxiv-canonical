@@ -31,7 +31,7 @@ class RemoteRepository(RemoteSource):
         """Load an entry from the record."""
         raise NotImplementedError('Implement me!')
 
-    def load_deferred(self, key: D.URI, stream: bool = True) -> IO[bytes]:
+    def load(self, key: D.URI, stream: bool = True) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""
-        return super(RemoteRepository, self).load_deferred(self._to_http(key),
+        return super(RemoteRepository, self).load(self._to_http(key),
                                                            stream=stream)

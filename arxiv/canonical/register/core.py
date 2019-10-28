@@ -1,8 +1,5 @@
-"""
-Core structures of the canonical record.
+"""Core structures of the canonical register."""
 
-
-"""
 import io
 import os
 from collections import abc, defaultdict
@@ -16,70 +13,14 @@ from typing import (Dict, Tuple, Iterator, List,
 
 from typing_extensions import Literal, Protocol
 
-from ..core import ICanonicalSource, dereference
+from ..core import ICanonicalSource, ICanonicalStorage, IManifestStorage, \
+    IStorableEntry, dereference, IRegisterAPI, Year, Month, YearMonth, Selector
 from .. import domain as D
 from .. import record as R
 from .. import integrity as I
 from ..manifest import Manifest, ManifestEntry, make_empty_manifest
 
 from .util import LazyMap, LazyMapView
-
-Year = int
-Month = int
-YearMonth = Tuple[Year, Month]
-
-
-class IStorableEntry(Protocol):
-    """Minimal interface for a storable object."""
-
-    name: str
-    """Name of the entry."""  # pylint: disable=pointless-string-statement; this is a docstring.
-
-    @property
-    def checksum(self) -> str:
-        """URL-safe b64-encoded md5 hash."""
-
-    @property
-    def record(self) -> R.RecordEntry:
-        """Reference to a :class:`.RecordEntry`."""
-
-    def update_checksum(self) -> None:
-        """Update the integrity checksum for this entry."""
-
-
-class IManifestStorage(Protocol):
-    """
-    Manifest protocol.
-
-    This could conceivably be stored separately from the canonical record
-    content, so it is defined separately.
-    """
-
-    def store_manifest(self, key: D.Key, manifest: Manifest) -> None:  # pylint: disable=unused-argument; this is a stub.
-        """Store an integrity manifest."""
-
-    def load_manifest(self, key: D.Key) -> Manifest:  # pylint: disable=unused-argument; this is a stub.
-        """Load an integrity manifest."""
-
-
-_I = TypeVar('_I', I.IntegrityEntry, I.IntegrityMetadata, I.IntegrityListing,
-             covariant=True)
-
-
-class ICanonicalStorage(ICanonicalSource, IManifestStorage, Protocol):
-    """Storage protocol for the canonical R."""
-
-    def list_subkeys(self, key: D.URI) -> List[str]:  # pylint: disable=unused-argument; this is a stub.
-        """List all of the subkeys for ``key`` in the record."""
-
-    def store_entry(self, ri: IStorableEntry) -> None:  # pylint: disable=unused-argument; this is a stub.
-        """
-        Store an entry in the record.
-
-        This method MUST decompress the content of the entry if it is gzipped
-        (as is sometimes the case in the classic system) and update the
-        ``CanonicalFile`` (``ri.record.stream.domain``).
-        """
 
 
 _Name = TypeVar('_Name')
@@ -95,7 +36,7 @@ class Base(Generic[_Name, _Domain, _Record, _Integrity, _MemberName, _Member]):
     """
     Generic base class for all register classes.
 
-    This defines the abstract structure of a register class, specifically that
+    This defines the abstract structure of a register class. It specifies thatpecifically that
     instances of a register class are composed of a domain object, a record
     object, an integrity object, and a set of members. This allows us to
     define register classes that align domain, record, and integrity classes

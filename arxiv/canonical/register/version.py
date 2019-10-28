@@ -42,7 +42,7 @@ class RegisterVersion(Base[D.VersionedIdentifier,
         # metadata record.
         key = R.RecordMetadata.make_key(identifier)
         stream, _ = s.load_entry(key)
-        d = R.RecordMetadata.to_domain(stream)   # self.load_deferred
+        d = R.RecordMetadata.to_domain(stream)   # self.load
         _r = R.RecordMetadata(key=key, stream=stream, domain=d)
 
         # The manifest provides pre-calculated checksums for version members

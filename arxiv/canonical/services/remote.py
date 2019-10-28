@@ -9,7 +9,7 @@ import requests
 from .. import domain as D
 from .. import record as R
 from ..register import ICanonicalSource
-from .readable import IterReadWrapper, MemoizedReadable
+from .readable import IterReadWrapper, BytesIOProxy
 
 
 class RemoteSource(ICanonicalSource):
@@ -52,7 +52,7 @@ class RemoteSource(ICanonicalSource):
         """Load an entry from the record."""
         raise NotImplementedError('Implement me!')
 
-    def load_deferred(self, key: D.URI, stream: bool = True) -> IO[bytes]:
+    def load(self, key: D.URI, stream: bool = True) -> IO[bytes]:
         """Make an IO that waits to load from the record until it is read()."""
         if not self.__can_resolve(key):
             raise RuntimeError(f'Cannot resolve URI: {key}')

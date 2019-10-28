@@ -13,7 +13,8 @@ from typing_extensions import Protocol, Literal
 
 from ..manifest import Manifest
 from .core import (D, R, I, ICanonicalStorage, ICanonicalSource, Base,
-                   Year, Month, YearMonth, IStorableEntry)
+                   Year, Month, YearMonth, IStorableEntry, Selector,
+                   IRegisterAPI)
 from .eprint import (RegisterEPrint, RegisterDay, RegisterMonth, RegisterYear,
                      RegisterEPrints)
 from .exceptions import NoSuchResource, ConsistencyError
@@ -23,40 +24,7 @@ from .listing import (RegisterListing, RegisterListingDay,
 from .metadata import RegisterMetadata
 from .version import RegisterVersion
 
-
-Selector = Union[Year, YearMonth, datetime.date]
 _ID = Union[D.VersionedIdentifier, D.Identifier]
-
-
-class IRegisterAPI(Protocol):
-    def add_events(self, *events: D.Event) -> None:
-        """Add new events to the register."""
-        ...
-
-    def load_version(self, identifier: D.VersionedIdentifier) -> D.Version:
-        """Load an e-print :class:`.Version` from the record."""
-        ...
-
-    def load_eprint(self, identifier: D.Identifier) -> D.EPrint:
-        """Load an :class:`.EPrint` from the record."""
-        ...
-
-    def load_history(self, identifier: _ID) -> Iterable[D.EventSummary]:
-        """Load the event history of an :class:`.EPrint`."""
-        ...
-
-    def load_event(self, identifier: str) -> D.Event:
-        """Load an :class:`.Event` by identifier."""
-        ...
-
-    def load_events(self, selector: Selector) -> Tuple[Iterable[D.Event], int]:
-        """Load all :class:`.Event`s for a day, month, or year."""
-        ...
-
-    def load_listing(self, date: datetime.date,
-                     shard: str = D.Event.get_default_shard()) -> D.Listing:  # pylint: disable=no-member
-        """Load a :class:`.Listing` for a particulate date."""
-        ...
 
 
 class RegisterAPI(IRegisterAPI):
@@ -151,8 +119,10 @@ class RegisterAPI(IRegisterAPI):
     def load_render(self, identifier: D.VersionedIdentifier) \
             -> Tuple[D.CanonicalFile, IO[bytes]]:
         version = self._load_version(identifier)
-        if version.record.render.stream.content is None:
+        if version.record.render is None \
+                or version.record.render.stream.content is None:
             raise NoSuchResource(f'Cannot load render for {identifier}')
+        assert version.domain.render is not None
         return version.domain.render, version.record.render.stream.content
 
     def load_source(self, identifier: D.VersionedIdentifier) \

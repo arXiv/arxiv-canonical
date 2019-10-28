@@ -1,7 +1,6 @@
 from typing import Any, Generic, List, Type, TypeVar
 
-from ..events import IEventStream
-from ..register import IRegisterAPI
+from ..core import IEventStream, IRegisterAPI
 
 
 _Inner = TypeVar('_Inner')

@@ -16,7 +16,7 @@ class TestAPI(TestCase):
         self.mock_source = mock.MagicMock(spec=ICanonicalSource)
         self.mock_source.can_resolve.return_value = True
 
-        self.mock_source.load_deferred = \
+        self.mock_source.load = \
             lambda *a, **k: io.BytesIO(b'foocontent')
         self.storage = InMemoryStorage()
         self.api = RegisterAPI(self.storage, [self.storage, self.mock_source])

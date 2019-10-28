@@ -32,7 +32,7 @@ from ..manifest import (Manifest, ManifestDecoder, ManifestEntry,
 from ..register import ICanonicalStorage, IStorableEntry
 from ..serialize.decoder import CanonicalDecoder
 from ..serialize.encoder import CanonicalEncoder
-from .readable import MemoizedReadable
+from .readable import BytesIOProxy
 
 
 MonkeyPatch.patch_fromisoformat()
@@ -110,9 +110,9 @@ class CanonicalStore(ICanonicalStorage):
         body: IO[bytes] = response['Body']
         return body.read()
 
-    def load_deferred(self, key: D.URI) -> IO[bytes]:
-        load_deferred: Callable[[], bytes] = partial(self._load_key, key)
-        return MemoizedReadable(load_deferred)
+    def load(self, key: D.URI) -> IO[bytes]:
+        load: Callable[[], bytes] = partial(self._load_key, key)
+        return BytesIOProxy(load)
 
     def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, Checksum]:
         assert isinstance(key, D.Key)
@@ -125,9 +125,9 @@ class CanonicalStore(ICanonicalStorage):
                 size_bytes=response['ContentLength'],
                 content_type=D.ContentType.from_mimetype(response['ContentType']),
                 ref=key
-                # content=MemoizedReadable(response['Body'].read),
+                # content=BytesIOProxy(response['Body'].read),
             ),
-            content=MemoizedReadable(response['Body'].read),
+            content=BytesIOProxy(response['Body'].read),
             content_type=D.ContentType.from_mimetype(response['ContentType']),
             size_bytes=response['ContentLength']
         )
@@ -167,7 +167,7 @@ class CanonicalStore(ICanonicalStorage):
             ri.update_checksum()
             # Finally, replace the content IO with a deferred IO.
             ri.record.stream = ri.record.stream._replace(
-                content=self.load_deferred(ri.record.key)
+                content=self.load(ri.record.key)
             )
 
     def store_manifest(self, key: str, manifest: Manifest) -> None:
@@ -213,7 +213,7 @@ class InMemoryStorage(ICanonicalStorage):
     def can_resolve(self, uri: D.URI) -> bool:
         return bool(uri in self._streams)
 
-    def load_deferred(self, key: D.URI) -> IO[bytes]:
+    def load(self, key: D.URI) -> IO[bytes]:
         return self._streams[key][0].content
 
     def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, str]:
