@@ -1,3 +1,5 @@
+"""Core concepts for characterizing bitstream/version content."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -44,39 +46,50 @@ class SourceFileType(Enum):
 
 
 class SourceType(str):
+    """Characterizes a version source package."""
+
     def __init__(self, value: str) -> None:
+        """Initialize with source file type codes."""
         self._types = [SourceFileType(v) for v in list(value.upper())]
 
     @property
     def has_docx(self) -> bool:
+        """Indicate whether the source has DOCX content."""
         return bool(SourceFileType.DOCX in self._types)
 
     @property
     def has_encrypted_source(self) -> bool:
+        """Indicate whether the source is encryped."""
         return bool(SourceFileType.SourceEncrypted in self._types)
 
     @property
     def has_html(self) -> bool:
+        """Indicate whether the source has HTML content."""
         return bool(SourceFileType.HTML in self._types)
 
     @property
     def has_ignore(self) -> bool:
+        """Indicate whether the source content should be ignored."""
         return bool(SourceFileType.Ignore in self._types)
 
     @property
     def has_odf(self) -> bool:
+        """Indicate whether the source has ODF content."""
         return bool(SourceFileType.ODF in self._types)
 
     @property
     def has_pdf_only(self) -> bool:
+        """Indicate whether the source contains only a PDF."""
         return bool(SourceFileType.PDFOnly in self._types)
 
     @property
     def has_pdflatex(self) -> bool:
+        """Indicate whether the source has PDFLaTeX content."""
         return bool(SourceFileType.PDFLaTeX in self._types)
 
     @property
     def has_ps_only(self) -> bool:
+        """Indicate whether the source has postcript content only."""
         return bool(SourceFileType.PostscriptOnly in self._types)
 
     @property
@@ -114,6 +127,8 @@ class SourceType(str):
 
 
 class ContentType(Enum):
+    """Characterization of the content type of an individual bitstream."""
+
     pdf = 'pdf'
     tar = 'tar'
     json = 'json'
@@ -125,14 +140,17 @@ class ContentType(Enum):
 
     @property
     def mime_type(self) -> str:
+        """The MIME content type for this :class:`.ContentType`."""
         return _mime_types[self]
 
     @property
     def ext(self) -> str:
+        """The preferred filename extension for this :class:`.ContentType`."""
         return _extensions[self]
 
     @classmethod
     def from_filename(cls, filename: str) -> 'ContentType':
+        """Infer the :class:`.ContentType` of a file from its filename."""
         for ctype, ext in _extensions.items():
             if filename.endswith(ext) or filename.endswith(f'{ext}.gz'):
                 return ctype
@@ -140,11 +158,12 @@ class ContentType(Enum):
 
     @classmethod
     def from_mimetype(cls, mime: str) -> 'ContentType':
+        """Infer the :class:`.ContentType` of a file from its MIME type."""
         return {v: k for k, v in _mime_types.items()}[mime]
 
     def make_filename(self, identifier: VersionedIdentifier,
                       is_gzipped: bool = False) -> str:
-        """Make a filename for this content type based on an identifier."""
+        """Make a filename for a bitstream with this :class:`.ContentType`."""
         if identifier.is_old_style:
             fn = f'{identifier.numeric_part}v{identifier.version}.{self.ext}'
         else:
@@ -152,7 +171,6 @@ class ContentType(Enum):
         if is_gzipped:
             fn = f'{fn}.gz'
         return fn
-
 
 
 _mime_types = {
@@ -218,4 +236,5 @@ def available_formats_by_ext(filename: str) -> Optional[List[ContentType]]:
 
 
 def list_source_extensions() -> List[str]:
+    """List all of the known filename extensions for source files."""
     return [ext for ext, _ in DISSEMINATION_FORMATS_BY_SOURCE_EXT]

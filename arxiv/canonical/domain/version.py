@@ -1,7 +1,5 @@
-"""
-Provides the core domain concept and logic for e-prints.
+"""Provides the core domain concept and logic for individual versions."""
 
-"""
 import io
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from datetime import datetime, date
@@ -11,6 +9,7 @@ from typing import Any, Dict, Iterable, List, Mapping, MutableSequence, \
 from uuid import UUID
 
 from backports.datetime_fromisoformat import MonkeyPatch
+from typing_extensions import Literal
 
 from arxiv.taxonomy import Category  # pylint: disable=no-name-in-module
 
@@ -25,7 +24,7 @@ MonkeyPatch.patch_fromisoformat()
 
 
 class Metadata(CanonicalBase):
-    """Metadata for a version."""
+    """Submitter-provided descriptive metadata for a version."""
 
     primary_classification: Category
     secondary_classification: List[Category]
@@ -67,6 +66,7 @@ class Metadata(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Metadata':
+        """Reconstitute from a native dict."""
         return cls(
             primary_classification=Category(data['primary_classification']),
             secondary_classification=[
@@ -86,14 +86,17 @@ class Metadata(CanonicalBase):
 
     @property
     def all_categories(self) -> List[str]:
+        """All classification categories for this version."""
         return [self.primary_classification] + self.secondary_classification
 
     def add_secondaries(self, *new_secondaries: Category) -> None:
+        """Add cross-list categories for this version."""
         for category in new_secondaries:
             if category not in self.secondary_classification:
                 self.secondary_classification.append(category)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'primary_classification': str(self.primary_classification),
             'secondary_classification': [
@@ -113,9 +116,16 @@ class Metadata(CanonicalBase):
 
 
 class VersionReference(CanonicalBase):
+    """An abridged reference to a particular :class:`Version`."""
+
     identifier: VersionedIdentifier
+    """Identifier of the version."""
+
     announced_date: date
+    """Date on which the version was announced."""
+
     submitted_date: date
+    """Date on which the version was submitted."""
 
     def __init__(self, identifier: VersionedIdentifier,
                  announced_date: date,
@@ -126,6 +136,7 @@ class VersionReference(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'VersionReference':
+        """Reconstitute from a native dict."""
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             announced_date=datetime.fromisoformat(data['announced_date']).date(),  # type: ignore; pylint: disable=no-member
@@ -133,6 +144,7 @@ class VersionReference(CanonicalBase):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'identifier': str(self.identifier),
             'announced_date': self.announced_date.isoformat(),
@@ -141,26 +153,49 @@ class VersionReference(CanonicalBase):
 
 
 class Version(CanonicalBase):
-    """Canonical record for an arXiv e-print version."""
+    """Represents a single version of an arXiv e-print in the record."""
 
     identifier: VersionedIdentifier
+    """Unique arXiv identifier for the version."""
+
     announced_date: date
+    """Day on which this version was announced."""
+
     announced_date_first: date
+    """Day on which the first version of the e-print was announced."""
+
     submitted_date: datetime
+    """Timestamp when this version was submitted to arXiv."""
+
     updated_date: datetime
-    """The last time the record for this version was written."""
+    """The last time the record for this version was changed."""
 
     metadata: Metadata
+    """Submitter-provided descriptive metadata for the version."""
+
     events: List['EventSummary']
     """Events that are specific to this version of the e-print."""
 
     previous_versions: List[VersionReference]
+    """References to previous versions of the e-print."""
+
     submitter: Optional[Person]
+    """Person responsible for submitting this version."""
+
     proxy: Optional[str]
+    """The proxy that deposited the version on behalf of the submitter."""
+
     is_announced: bool
+    """Indicate whether or not the version is announced."""
+
     is_withdrawn: bool
+    """Indicate whether or not the version is withdrawn."""
+
     reason_for_withdrawal: Optional[str]
+    """The reason for the withdrawal of the e-print."""
+
     is_legacy: bool
+    """Indicate whether this record was populated from the legacy system."""
 
     source: CanonicalFile
     """The original user-submitted source package."""
@@ -177,6 +212,7 @@ class Version(CanonicalBase):
     """Internal code for the source type."""
 
     formats: Dict[ContentType, CanonicalFile]
+    """Dissemination formats for this version."""
 
     def __init__(self, identifier: VersionedIdentifier,
                  announced_date: date,
@@ -217,6 +253,7 @@ class Version(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Version':
+        """Reconstitute from a native dict."""
         source_type: Optional[SourceType] = None
         if 'source_type' in data and data['source_type']:
             source_type = SourceType(data['source_type'])
@@ -250,19 +287,24 @@ class Version(CanonicalBase):
         )
 
     @property
-    def number_of_events(self) -> int:
+    def number_of_events(self) -> Literal[0]:
+        """Numer of events described by this object (0)."""
         return 0
 
     @property
-    def number_of_versions(self) -> int:
+    def number_of_versions(self) -> Literal[1]:
+        """Number of versions described by this object (1)."""
         return 1
 
+    # TODO: do we still need this? Holdover from classic.
     @property
     def size_kilobytes(self) -> int:
+        """Size of the source package in kb."""
         assert self.source is not None
         return int(round(self.source.size_bytes / 1_028))
 
     def get_format(self, desired_format: str) -> CanonicalFile:
+        """Get a particular dissemination format for this version."""
         if desired_format == 'source':
             return self.source
         if desired_format == 'render' and self.render:
@@ -276,6 +318,7 @@ class Version(CanonicalBase):
                            f' for {self.identifier}') from e
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'identifier': str(self.identifier),
             'announced_date': self.announced_date.isoformat(),
@@ -307,9 +350,16 @@ class Version(CanonicalBase):
 
 
 class EventIdentifier(str):
+    """Unique identifier for an :class:`.Event`."""
+
     version_id: VersionedIdentifier
+    """Identifier of the :class:`.Version` to which the event pertains."""
+
     event_date: datetime
+    """Timestamp of the event."""
+
     shard: str
+    """Shard ID for the event.""""
 
     def __init__(self, value: str) -> None:
         decoded = urlsafe_b64decode(value).decode('utf-8')
@@ -345,14 +395,39 @@ class EventType(Enum):
 
 
 class _EventBase(CanonicalBase):
+    """Core attributes of an event and its summary."""
+
     identifier: VersionedIdentifier
+    """Identifier of the :class:`.Version` to which the event pertains."""
+
     event_date: datetime
+    """Timestamp of the event."""
+
     event_type: EventType
+    """The type of this event."""
+
     categories: List[Category]
+    """
+    Categories related to this event.
+
+    This is an artifact of the format of the legacy daily.log file, and may no
+    longer be particularly useful.
+    """
 
     description: str
+    """
+    Additional information about the event.
+
+    This is currently not used for anything, but could provide a space for
+    administrative notes or other information about updates not captured in
+    the event ontology and version metadata.
+    """
+
     is_legacy: bool
-    event_agent: Optional[str]
+    """Indicate whether this event was populated from the legacy record."""
+
+    event_agent: Optional[str]  # TODO: do we need this?
+    """Agent that generated the event."""
 
     def __init__(self, identifier: VersionedIdentifier,
                  event_date: datetime,
@@ -396,6 +471,7 @@ class Event(_EventBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Event':
+        """Reconstitute from a native dict."""
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             event_date=datetime.fromisoformat(data['event_date']),  # type: ignore ; pylint: disable=no-member
@@ -414,6 +490,7 @@ class Event(_EventBase):
 
     @property
     def event_id(self) -> EventIdentifier:
+        """The unique identifier for this event."""
         return EventIdentifier.from_parts(self.identifier, self.event_date,
                                           self.shard)
 
@@ -430,6 +507,7 @@ class Event(_EventBase):
 
     @property
     def summary(self) -> 'EventSummary':
+        """A summary of this event."""
         return EventSummary(
             identifier=self.identifier,
             event_date=self.event_date,
@@ -442,6 +520,7 @@ class Event(_EventBase):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'identifier': str(self.identifier),
             'event_date': self.event_date.isoformat(),
@@ -464,6 +543,7 @@ class EventSummary(_EventBase):
     """
 
     event_id: EventIdentifier
+    """Unique identifier for the event."""
 
     def __init__(self, identifier: VersionedIdentifier,
                  event_date: datetime,
@@ -482,6 +562,7 @@ class EventSummary(_EventBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'EventSummary':
+        """Reconstitute from a native dict."""
         return cls(
             identifier=VersionedIdentifier(data['identifier']),
             event_date=datetime.fromisoformat(data['event_date']),  # type: ignore ; pylint: disable=no-member
@@ -494,6 +575,7 @@ class EventSummary(_EventBase):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'identifier': str(self.identifier),
             'event_date': self.event_date.isoformat(),

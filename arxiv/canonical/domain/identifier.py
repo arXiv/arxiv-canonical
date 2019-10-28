@@ -30,7 +30,7 @@ NEURO_SYS_IDENTIFIERS = {
 
 
 class InvalidIdentifier(ValueError):
-    pass
+    """A value was encountered that is not a valid arXiv identifier."""
 
 
 class Identifier(str):
@@ -42,11 +42,12 @@ class Identifier(str):
     """
 
     def __init__(self, value: str) -> None:
+        """Initialize from a raw str value."""
         if value in NEURO_SYS_IDENTIFIERS:
             value = NEURO_SYS_IDENTIFIERS[value]
-        if identifier.STANDARD.match(value.__str__()):
+        if identifier.STANDARD.match(value.__str__()):  # pylint: disable=no-member
             self.is_old_style = False
-        elif identifier.OLD_STYLE.match(value.__str__()):
+        elif identifier.OLD_STYLE.match(value.__str__()):  # pylint: disable=no-member
             self.is_old_style = True
         else:
             raise InvalidIdentifier(f'Not a valid arXiv ID: {value}')
@@ -59,6 +60,7 @@ class Identifier(str):
 
     @property
     def category_part(self) -> str:
+        """For old-style identifiers, conveys the primary category."""
         if not self.is_old_style:
             raise ValueError('New identifiers have no category semantics')
         return self.split('/')[0]
@@ -72,12 +74,18 @@ class Identifier(str):
 
     @property
     def numeric_part(self) -> str:
+        """
+        The entire numeric component of the identifier.
+
+        For new-style identifiers, this is the entire identifier.
+        """
         if self.is_old_style:
             return self.split('/')[1]
         return str(self)
 
     @property
     def yymm(self) -> str:
+        """Numeric part conveying the original announcement year and month."""
         if self.is_old_style:
             numeric_part = self.split('/', 1)[1]
             yy = numeric_part[0:2]
@@ -87,9 +95,9 @@ class Identifier(str):
             mm = self[2:4]
         return f'{yy}{mm}'
 
-
     @property
     def year(self) -> int:
+        """Year in which the first version of the e-print was announced."""
         if self.is_old_style:
             yy = int(self.split('/', 1)[1][0:2])
         else:
@@ -100,6 +108,7 @@ class Identifier(str):
 
     @property
     def month(self) -> int:
+        """Month in which the first version of the e-print was announced."""
         if self.is_old_style:
             return int(self.split('/', 1)[1][2:4])
         return int(self[2:4])
@@ -142,7 +151,14 @@ class Identifier(str):
 
 
 class VersionedIdentifier(str):
+    """
+    An arXiv identifier for a specific :class:`.Version`.
+
+    This is an :class:`.Identifier` with a version (``v{N}``) affix.
+    """
+
     def __init__(self, value: str) -> None:
+        """Initialize with a raw str value."""
         try:
             id_part, version_part = self.split('v', 1)
             self.arxiv_id = Identifier(id_part)
@@ -158,10 +174,16 @@ class VersionedIdentifier(str):
 
     @property
     def category_part(self) -> str:
+        """For old-style identifiers, conveys the primary category."""
         return self.arxiv_id.category_part
 
     @property
     def numeric_part(self) -> str:
+        """
+        The entire numeric component of the identifier.
+
+        For new-style identifiers, this is the entire identifier.
+        """
         return self.arxiv_id.numeric_part
 
     @property
@@ -171,18 +193,22 @@ class VersionedIdentifier(str):
 
     @property
     def is_old_style(self) -> int:
+        """Indicate whether this is an old-style identifier."""
         return self.arxiv_id.is_old_style
 
     @property
     def year(self) -> int:
+        """Year in which the first version of the e-print was announced."""
         return self.arxiv_id.year
 
     @property
     def yymm(self) -> str:
+        """Numeric part conveying the original announcement year and month."""
         return self.arxiv_id.yymm
 
     @property
     def month(self) -> int:
+        """Month in which the first version of the e-print was announced."""
         return self.arxiv_id.month
 
     def __gt__(self, other: Any) -> bool:

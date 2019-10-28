@@ -1,4 +1,4 @@
-"""Provides file-related concepts and logic."""
+"""Provides bitstream-related concepts and logic."""
 
 import os
 from datetime import datetime
@@ -12,13 +12,23 @@ from .content import ContentType
 
 
 class URI(str):
+    """
+    A unique identifier for bitstream content.
+
+    Bitstream content may be located in a variety of places prior to
+    canonicalization. For example, it may be located on a local filesystem,
+    or at a remote location accessible via HTTP.
+    """
+
     def __new__(cls, value: str) -> 'URI':
+        """Make a new URI."""
         if value.startswith('/'):
             value = f'file:///{value.lstrip("/")}'
         uri: URI = super(URI, cls).__new__(cls, value)  # type: ignore
         return uri
 
     def __init__(self, value: str) -> None:
+        """Initialize and parse an URI from a str value."""
         if value.startswith('/'):
             value = f'file:///{value.lstrip("/")}'
 
@@ -34,25 +44,32 @@ class URI(str):
 
     @property
     def is_canonical(self) -> bool:
+        """Indicate whether the URI is a key in the canonical record."""
         return bool(self.scheme == 'arxiv')
 
     @property
     def is_file(self) -> bool:
+        """Indicate whether the URI is a path to a local file."""
         return bool(self.scheme == 'file')
 
     @property
     def is_http_url(self) -> bool:
+        """Indicate whether the URI is an HTTP URL."""
         return bool(self.scheme == 'http' or self.scheme == 'https')
 
 
 class Key(URI):
+    """The unique identifier for a bitstream in the canonical record."""
+
     def __new__(cls, value: str) -> 'Key':
+        """Make a new key."""
         if not value.startswith('arxiv:///'):
             value = f'arxiv:///{value.lstrip("/")}'
         key: Key = super(Key, cls).__new__(cls, value)  # type: ignore
         return key
 
     def __init__(self, value: str) -> None:
+        """Initialize a key with a str value."""
         if not value.startswith('arxiv:///'):
             value = f'arxiv:///{value.lstrip("/")}'
         super(Key, self).__init__(value)
@@ -97,6 +114,7 @@ class CanonicalFile(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CanonicalFile':
+        """Reconstitute a :class:`.CanonicalFile` from a native dict."""
         return cls(
             modified=datetime.fromisoformat(data['modified']),  # type: ignore ; pylint: disable=no-member
             size_bytes=data['size_bytes'],
@@ -108,9 +126,11 @@ class CanonicalFile(CanonicalBase):
 
     @property
     def mime_type(self) -> str:
+        """Convenience accessor for the MIME type of the file."""
         return self.content_type.mime_type
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict from this :class:`.CanonicalFile`."""
         return {
             'modified': self.modified.isoformat(),
             'size_bytes': self.size_bytes,
@@ -119,6 +139,3 @@ class CanonicalFile(CanonicalBase):
             'ref': self.ref,
             'is_gzipped': self.is_gzipped
         }
-
-
-

@@ -6,7 +6,7 @@ from .base import CanonicalBase
 
 
 class Person(CanonicalBase):
-    """An arXiv user."""
+    """Represents an human person in the canonical record."""
 
     full_name: str
     last_name: Optional[str] = None
@@ -33,6 +33,7 @@ class Person(CanonicalBase):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Person':
+        """Reconstitute from a native dict."""
         return cls(
             full_name=data['full_name'],
             last_name=data.get('last_name'),
@@ -44,6 +45,7 @@ class Person(CanonicalBase):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """Generate a native dict representation."""
         return {
             'full_name': self.full_name,
             'last_name': self.last_name,
