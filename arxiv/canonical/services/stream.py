@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Optional
 import boto3
 
 from arxiv.canonical.domain import Event
-from arxiv.canonical.events import IEventStream
+from arxiv.canonical.core import IEventStream
 from arxiv.integration.kinesis.consumer import BaseConsumer, process_stream
 
 

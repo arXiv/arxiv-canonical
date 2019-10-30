@@ -14,6 +14,8 @@ mypy = "*"
 pytest-cov = "*"
 arxiv-canonical = {path = "."}
 moto = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
 
 [packages]
 backports-datetime-fromisoformat = "*"
