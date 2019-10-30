@@ -17,29 +17,33 @@ def service_status() -> Response:
 
     Returns ``200 OK`` if the service is up and ready to handle requests.
     """
-    response_data, status_code, headers = controllers.service_status(request.params)
-    response: Response = jsonify(response_data)
-    response.status_code = status_code
-    response.headers.extend(headers)
+    data, code, headers = controllers.service_status(request.params)
+    response: Response = jsonify(data)
+    response.status_code = code
+    response.headers.extend(headers)  # type: ignore
     return response
 
 
-@blueprint.route('/e-print/<arxiv:identifier>v<int:version>/events', 
+@blueprint.route('/e-print/<arxiv:identifier>v<int:version>/events',
                  methods=['GET'])
 def get_eprint_events(identifier: str, version: int) -> Response:
     """Get events for a specific version of an e-print."""
     data, code, headers = controllers.get_eprint_events(identifier, version)
-    return jsonify(data), code, headers
+    response: Response = jsonify(data)
+    response.status_code = code
+    response.headers.extend(headers)  # type: ignore
+    return response
 
 
 @blueprint.route('/e-print/<arxiv:identifier>v<int:version>/pdf',
                  methods=['GET'])
 def get_eprint_pdf(identifier: str, version: int) -> Response:
     """Get PDF for a specific version of an e-print."""
-    pdf, status_code, headers = controllers.get_eprint_pdf(identifier, version)
-    response: Response = send_file(pdf.content, as_attachment=True,
+    data, code, headers = controllers.get_eprint_pdf(identifier, version)
+    pdf = data['metadata']
+    response: Response = send_file(data['pointer'], as_attachment=True,
                                    attachment_filename=pdf.filename,
                                    last_modified=pdf.modified)
-    response.status_code = status_code
-    response.headers.extend(headers)
+    response.status_code = code
+    response.headers.extend(headers)  # type: ignore
     return response

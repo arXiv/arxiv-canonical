@@ -5,6 +5,8 @@ services:
   - docker
 os:
   - linux
+env:
+  - BOTO_CONFIG=/dev/null
 python:
   - "3.6"
 script:
@@ -12,7 +14,7 @@ script:
   - pipenv install --dev
   - pipenv run pytest --cov=arxiv --cov=announcement/announcement --cov=repository/repository --cov-report=term-missing arxiv announcement/announcement repository/repository
 after_success:
-  - coveralls
+  - pipenv run -m coveralls
   - "./tests/lint.sh arxiv"
   - "./tests/lint.sh announcement/announcement"
   - "./tests/lint.sh repository/repository"

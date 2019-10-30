@@ -1,44 +1,15 @@
 {
   "title": "Event",
-  "type": "object",
-  "properties": {
-    "@type": {
-      "type": "string"
-    },
-    "arxiv_id": {
-      "description": "Canonical arXiv e-print identifier",
-      "type": "string"
-    },
-    "version": {
-      "description": "The version number for this e-print.",
-      "minimum": 1,
-      "type": "integer"
-    },
-    "legacy": {
-      "description": "Legacy records were carried forward from arXiv Classic.",
-      "type": "boolean"
-    },
-    "event_date": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "event_type": {
-      "type": "string",
-      "enum": [
-        "created",
-        "updated",
-        "cross",
-        "withdrawn"
-      ]
-    },
-    "event_agent": {
-      "type": "string",
-      "description": "Username or service name."
-    },
-    "description": {
-      "type": "string",
-      "description": "Brief description of the event and its context."
+  "allOf": [
+    {"$ref": "./EventBase.json"},
+    {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": {
+          "$ref": "./Version.json"
+        }
+      }
     }
-  },
-  "required": ["event_date", "event_type", "event_agent"]
+  ]
 }

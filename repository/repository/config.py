@@ -4,9 +4,20 @@ Flask configuration.
 Docstrings are from the `Flask configuration documentation
 <http://flask.pocoo.org/docs/0.12/config/>`_.
 """
-from typing import Optional
+from typing import Any, Optional, Type
 import warnings
 from os import environ
+
+
+def _showwarning(message: str,
+                 *args: Any,
+                 category: Type[Exception] = UserWarning,
+                 filename: str = '',
+                 lineno: int = -1,
+                 **kwargs: Any) -> None:
+    print(message)
+
+warnings.showwarning = _showwarning
 
 NAMESPACE = environ.get('NAMESPACE')
 """Namespace in which this service is deployed; to qualify keys for secrets."""
@@ -133,7 +144,7 @@ EXTERNAL_URL_SCHEME = environ.get('EXTERNAL_URL_SCHEME', 'https')
 BASE_SERVER = environ.get('BASE_SERVER', 'arxiv.org')
 
 URLS = [
-   
+
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.

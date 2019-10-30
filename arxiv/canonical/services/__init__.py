@@ -1,3 +1,5 @@
 """Service integrations."""
 
-from .store import FakeCanonicalStore, CanonicalStore
+from .filesystem import Filesystem, CanonicalFilesystem
+from .remote import RemoteSource
+from .store import CanonicalStore, InMemoryStorage

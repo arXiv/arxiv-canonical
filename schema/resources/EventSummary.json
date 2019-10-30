@@ -1,0 +1,4 @@
+{
+  "title": "EventSummary",
+  "$ref": "./EventBase.json"
+}

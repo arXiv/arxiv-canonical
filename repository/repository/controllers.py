@@ -10,14 +10,15 @@ from http import HTTPStatus
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import NotFound
 
-from .services.record import CanonicalStore, DoesNotExist
-from arxiv.canonical.domain import File
+from arxiv.canonical.domain import CanonicalFile, VersionedIdentifier
+
+from .services.record import RepositoryService, NoSuchResource
 
 
 Response = Tuple[Dict[str, Any], HTTPStatus, Dict[str, str]]
-FileResponse = Tuple[Union[Dict[str, Any], File], HTTPStatus, Dict[str, str]]
 
-def service_status(params: MultiDict) -> Response:
+
+def service_status(_: MultiDict) -> Response:
     """
     Handle requests for the service status endpoint.
 
@@ -43,15 +44,19 @@ def get_eprint_events(identifier: str, version: int) -> Response:
         Raised when the requested identifier + version does not exist.
 
     """
-    estore = CanonicalStore.current_session()
+    repo = RepositoryService.current_session()
     try:
-        eprint = estore.load_eprint(identifier, version)
-    except DoesNotExist as e:
+        v_identifier = VersionedIdentifier.from_parts(identifier, version)
+    except (TypeError, ValueError) as e:
         raise NotFound(f'No such e-print: {identifier}v{version}') from e
-    return eprint.history, HTTPStatus.OK, {}
+    try:
+        eprint = repo.register.load_version(v_identifier)
+    except NoSuchResource as e:
+        raise NotFound(f'No such e-print: {identifier}v{version}') from e
+    return eprint.events, HTTPStatus.OK, {}
 
 
-def get_eprint_pdf(identifier: str, version: int) -> FileResponse:
+def get_eprint_pdf(identifier: str, version: int) -> Response:
     """
     Retrieve pdf for a specific e-print version.
 
@@ -68,9 +73,13 @@ def get_eprint_pdf(identifier: str, version: int) -> FileResponse:
         Raised when the requested identifier + version does not exist.
 
     """
-    estore = CanonicalStore.current_session()
+    repo = RepositoryService.current_session()
     try:
-        eprint = estore.load_eprint(identifier, version)
-    except DoesNotExist as e:
+        v_identifier = VersionedIdentifier.from_parts(identifier, version)
+    except (ValueError, TypeError) as e:
         raise NotFound(f'No such e-print: {identifier}v{version}') from e
-    return eprint.pdf, HTTPStatus.OK, {}
+    try:
+        cf, f = repo.register.load_render(v_identifier)
+    except NoSuchResource as e:
+        raise NotFound(f'No such e-print: {identifier}v{version}') from e
+    return {'metadata': cf, 'pointer': f}, HTTPStatus.OK, {}

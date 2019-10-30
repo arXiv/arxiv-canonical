@@ -1,0 +1,23 @@
+{
+  "title": "VersionReference",
+  "type": "object",
+  "properties": {
+    "@type": {
+      "type": "string"
+    },
+    "identifier": {
+      "description": "Canonical arXiv e-print identifier",
+      "$ref": "./VersionedIdentifier.json"
+    },
+    "announced_date": {
+      "description": "Date this e-print version was announced.",
+      "type": "string",
+      "format": "date"
+    },
+    "submitted_date": {
+      "description": "Date this version of the e-print was submitted.",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

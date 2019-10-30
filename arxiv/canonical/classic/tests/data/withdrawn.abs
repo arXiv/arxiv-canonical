@@ -1,0 +1,35 @@
+------------------------------------------------------------------------------
+\\
+arXiv:1606.01467
+From: Jie Fu <nobody@example.edu>
+Date: Sun, 5 Jun 2016 06:42:56 GMT   (352kb,D)
+Date (revised v2): Wed, 8 Jun 2016 17:02:49 GMT   (380kb,D)
+Date (revised v3): Mon, 1 Aug 2016 14:17:18 GMT   (254kb,D)
+Date (revised v4): Sun, 16 Oct 2016 04:20:25 GMT   (42kb,D)
+Date (revised v5): Mon, 7 Nov 2016 05:27:02 GMT   (318kb,D)
+Date (revised v6): Fri, 11 Nov 2016 06:22:25 GMT   (313kb,D)
+Date (revised v7): Thu, 17 Nov 2016 06:16:24 GMT   (0kb,I)
+
+Title: Deep Q-Networks for Accelerating the Training of Deep Neural Networks
+Authors: Jie Fu
+Categories: cs.LG cs.NE
+Comments: This paper has been withdrawn by the author due to a crucial error in
+  the source-code (the epsilon configuration), which makes the results invalid
+License: http://arxiv.org/licenses/nonexclusive-distrib/1.0/
+\\
+  In this paper, we propose a principled deep reinforcement learning (RL)
+approach that is able to accelerate the convergence rate of general deep neural
+networks (DNNs). With our approach, a deep RL agent (synonym for
+\emph{optimizer} in this work) is used to automatically learn policies about
+how to schedule learning rates during the optimization of a DNN. The state
+features of the agent are learned from the weight statistics of the optimizee
+during training. The reward function of this agent is designed to learn
+policies that minimize the optimizee's training time given a certain
+performance goal. The actions of the agent correspond to changing the learning
+rate for the optimizee during training. As far as we know, this is the first
+attempt to use deep RL to learn how to optimize a large-sized DNN. We perform
+extensive experiments on a standard benchmark dataset and demonstrate the
+effectiveness of the policies learned by our approach. All source code for
+reproducing the experiments can be downloaded from
+https://github.com/bigaidream-projects/qan
+\\

@@ -1,44 +1,66 @@
 """
 Persist changes to the canonical record.
 
-Provides a :class:`.CanonicalStore` that stores resources in S3.
+Provides a :class:`.CanonicalStore` that stores resources in S3, using
+:mod:`.serialize.record` to serialize and deserialize resources.
 """
-
+import gzip
 import io
-from unittest import mock    # TODO: remove this when fakes are no longer used.
-from typing import Optional, Dict, Any
+import logging
+import os
+from base64 import urlsafe_b64decode, urlsafe_b64encode
+from binascii import hexlify, unhexlify
 from datetime import datetime, date
-from pytz import UTC
+from functools import partial
+from hashlib import md5
+from json import dumps, load
+from typing import (Optional, Dict, Any, IO, List, Callable, Tuple, Type,
+                    TypeVar, Union)
 
-from flask import Flask
 import boto3
 import botocore
+from backports.datetime_fromisoformat import MonkeyPatch
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from pytz import UTC
 
-from arxiv.base.globals import get_application_global, get_application_config
-from arxiv.taxonomy import Category
+from .. import integrity as I
+from .. import record as R
+from .. import domain as D
+from ..manifest import (Manifest, ManifestDecoder, ManifestEntry,
+                        ManifestEncoder)
+from ..register import ICanonicalStorage, IStorableEntry
+from ..serialize.decoder import CanonicalDecoder
+from ..serialize.encoder import CanonicalEncoder
+from .readable import BytesIOProxy
 
-from ..domain import Listing, EPrint, Identifier, Event, License, File, \
-    Person, CanonicalRecord, MonthlyBlock
+
+MonkeyPatch.patch_fromisoformat()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(int(os.environ.get('LOGLEVEL', '40')))
+
+_I = TypeVar('_I', I.IntegrityEntry, I.IntegrityMetadata, I.IntegrityListing,
+             covariant=True)
+
+Checksum = str
 
 
 class DoesNotExist(Exception):
     """The requested resource does not exist."""
 
 
-# TODO: implement me!
-class CanonicalStore:
+class CanonicalStore(ICanonicalStorage):
     """
     Persists the canonical record in S3.
-    
+
     The intended pattern for working with the canonical record is to use the
-    :class:`.domain.CanonicalRecord` as the primary entrypoint for all 
+    :class:`.domain.CanonicalRecord` as the primary entrypoint for all
     operations. Consequently, this service offers only a single public instance
     method, :fund:`.load_record`.
 
     Persistence is achieved by attaching members to
-    :class:`.domain.CanonicalRecord`, :class`.domain.MonthlyBlock`, and
+    :class:`.domain.CanonicalRecord`, :class`.domain.Month`, and
     :class:`.domain.Listing` instances that implement reads/writes to S3. In
     this way, consumers of ``arxiv.canonical.domain`` can largely work directly
     with :class:`.domain.CanonicalRecord`, and persistence is handled
@@ -72,7 +94,104 @@ class CanonicalStore:
         """
         return self._read_only
 
-    def _new_client(self, config: Optional[Config] = None) -> boto3.client:
+    def can_resolve(self, uri: D.URI) -> bool:
+        return isinstance(uri, D.Key) or uri.is_canonical
+
+    def inititalize(self) -> None:
+        self.client.create_bucket(Bucket=self._bucket)
+
+    def is_available(self, retries: int = 0, read_timeout: int = 5,
+                     connect_timeout: int = 5) -> bool:
+        """Determine whether or not we can read from/write to the store."""
+        raise NotImplementedError('Implement me!')
+
+    def _load_key(self, key: str) -> bytes:
+        response = self.client.get_object(Bucket=self._bucket, Key=key)
+        body: IO[bytes] = response['Body']
+        return body.read()
+
+    def load(self, key: D.URI) -> IO[bytes]:
+        load: Callable[[], bytes] = partial(self._load_key, key)
+        return BytesIOProxy(load)
+
+    def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, Checksum]:
+        assert isinstance(key, D.Key)
+        logger.debug('Load entry at %s', key)
+        response = self.client.get_object(Bucket=self._bucket, Key=key)
+        stream = R.RecordStream(
+            domain=D.CanonicalFile(
+                modified=response['LastModified'],
+                filename=key.filename,
+                size_bytes=response['ContentLength'],
+                content_type=D.ContentType.from_mimetype(response['ContentType']),
+                ref=key
+                # content=BytesIOProxy(response['Body'].read),
+            ),
+            content=BytesIOProxy(response['Body'].read),
+            content_type=D.ContentType.from_mimetype(response['ContentType']),
+            size_bytes=response['ContentLength']
+        )
+        return stream, _hex_to_b64(response['ETag'][1:-1])
+
+    def list_subkeys(self, key: str) -> List[str]:
+        response = self.client.list_objects_v2(Bucket=self._bucket, Prefix=key)
+        subs = [obj['Key'].split(key, 1)[1] for obj in response['Contents']]
+        return [sub.split('/', 1)[0] if '/' in sub else sub for sub in subs]
+
+    def store_entry(self, ri: IStorableEntry) -> None:
+        assert ri.record.stream.content is not None
+        # Make sure to decompress the content if necessary.
+        if ri.record.stream.domain.is_gzipped:
+            body = gzip.GzipFile(fileobj=ri.record.stream.content).read()
+            s3_checksum = _b64_to_hex(I.calculate_checksum(body))
+        else:
+            body = ri.record.stream.content.read()
+            s3_checksum = _b64_to_hex(ri.checksum)
+        size_bytes = len(body)
+
+        self.client.put_object(Bucket=self._bucket,
+                               Key=ri.record.key,
+                               Body=body,
+                               ContentLength=size_bytes,
+                               ContentMD5=s3_checksum,
+                               ContentType=ri.record.stream.content_type.mime_type)
+
+        # Update the CanonicalFile if necessary.
+        if ri.record.stream.domain.is_gzipped:
+            ri.record.stream.domain.size_bytes = size_bytes
+            ri.record.stream.domain.is_gzipped = False
+            # Use an in-memory buffer for the checksum, to cut down on
+            # unnecessary IO.
+            ri.record.stream = \
+                ri.record.stream._replace(content=io.BytesIO(body))
+            ri.update_checksum()
+            # Finally, replace the content IO with a deferred IO.
+            ri.record.stream = ri.record.stream._replace(
+                content=self.load(ri.record.key)
+            )
+
+    def store_manifest(self, key: str, manifest: Manifest) -> None:
+        body = dumps(manifest, cls=ManifestEncoder).encode('utf-8')
+        self.client.put_object(Bucket=self._bucket,
+                               Key=key,
+                               Body=body,
+                               ContentLength=len(body),
+                               ContentMD5=I.checksum.checksum_raw(body),
+                               ContentType='application/json')
+
+    def load_manifest(self, key: str) -> Manifest:
+        response = self.client.get_object(Bucket=self._bucket, Key=key)
+        manifest: Manifest = load(response['Body'], cls=ManifestDecoder)
+        return manifest
+
+    def _handle_client_error(self, exc: ClientError) -> None:
+        if exc.response['Error']['Code'] == 'NoSuchBucket':
+            raise DoesNotExist(f'{self._bucket} does not exist') from exc
+        if exc.response['Error']['Code'] == "NoSuchKey":
+            raise DoesNotExist(f'No such object in {self._bucket}') from exc
+        raise RuntimeError('Unhandled ClientError') from exc
+
+    def _new_client(self) -> boto3.client:
         # Only add credentials to the client if they are explicitly set.
         # If they are not set, boto3 falls back to environment variables and
         # credentials files.
@@ -85,254 +204,51 @@ class CanonicalStore:
             params['verify'] = self._verify
         return boto3.client('s3', **params)
 
-    def _handle_client_error(self, exc: ClientError) -> None:
-        if exc.response['Error']['Code'] == 'NoSuchBucket':
-            raise DoesNotExist(f'{self._bucket} does not exist') from exc
-        if exc.response['Error']['Code'] == "NoSuchKey":
-            raise DoesNotExist(f'No such object in {self._bucket}') from exc
-        raise RuntimeError('Unhandled ClientError') from exc
-    
-    def is_available(self, retries: int = 0, read_timeout: int = 5,
-                     connect_timeout: int = 5) -> bool:
-        """Determine whether or not we can read from/write to the store."""
-        raise NotImplementedError('Implement me!')
-    
-    def load_record(self) -> CanonicalRecord:
-        """
-        Initialize and return the :class:`.CanonicalRecord`.
-        
-        The ``blocks`` and ``listings`` members must be mappings that implement
-        ``__getitem__`` methods such that, when called, an object of the
-        expected type (:class:`.MonthlyBlock` and :class:`.Listing`,
-        respectively) is always returned. 
-        """
-        raise NotImplementedError('Implement me!')
 
-    def _load_listing(self, listing_date: date) -> Listing:
-        """
-        Load a :class:`.Listing`.
+class InMemoryStorage(ICanonicalStorage):
+    def __init__(self) -> None:
+        self._streams: Dict[D.URI, Tuple[R.RecordStream, str]] = {}
+        self._manifests: Dict[str, Manifest] = {}
 
-        If ``self.read_only`` is ``False``, the ``events`` member of the listing
-        must be a subclass of ``list``, and implement an ``append(event: Event)
-        -> None`` method that, when called, writes the current state of the
-        listing to S3.
-        
-        Parameters
-        ----------
-        listing_date : datetime
-            Date for selecting listing events.
+    def can_resolve(self, uri: D.URI) -> bool:
+        return bool(uri in self._streams)
 
-        Returns
-        -------
-        :class:`.Listing`
+    def load(self, key: D.URI) -> IO[bytes]:
+        return self._streams[key][0].content
 
-        """
-        raise NotImplementedError('Implement me!')
+    def load_entry(self, key: D.URI) -> Tuple[R.RecordStream, str]:
+        assert isinstance(key, D.Key)
+        return self._streams[key]
 
-    def _load_block(self, year: int, month: int) -> MonthlyBlock:
-        """
-        Load a :class:`.MonthlyBlock`.
+    def list_subkeys(self, key: str) -> List[str]:
+        return [k.split(key, 1)[1].split('/', 1)[0]
+                for k in self._streams.keys()
+                if k.startswith(key) and k != key]
 
-        The ``eprints`` member of the block must be a mapping (e.g. subclass of
-        ``dict``), and implement:
-        
-        - If ``self.read_only`` is ``False``, a method
-          ``__setitem__(identifier: VersionedIdentifier, eprint: EPrint) ->
-          None`` that, when called, writes the :class:`.EPrint` to S3.
-        - A method ``__getitem__(identifier: VersionedIdentifier) -> EPrint:``
-          that, when called, reads the corresponding :class:`.EPrint` from 
-          S3 if it exists (otherwise raises ``KeyError``).
+    def store_entry(self, ri: IStorableEntry) -> None:
+        assert ri.record.stream.content is not None
+        if ri.record.stream.domain.is_gzipped:
+            content = gzip.GzipFile(fileobj=ri.record.stream.content).read()
+            ri.record.stream.domain.size_bytes = len(content)
+            ri.record.stream.domain.is_gzipped = False
+            ri.record.stream = \
+                ri.record.stream._replace(content=io.BytesIO(content))
+            ri.update_checksum()
+        self._streams[ri.record.key] = (ri.record.stream, ri.checksum)
+        ri.record.stream.domain.ref = ri.record.key
 
-        Parameters
-        ----------
-        year : int
-        month : int
+    def store_manifest(self, key: str, manifest: Manifest) -> None:
+        self._manifests[key] = manifest
 
-        Returns
-        -------
-        :class:`.MonthlyBlock`
-
-        """
-        raise NotImplementedError('Implement me!')
-    
-
-    def _store_listing(self, listing: Listing) -> None:
-        """
-        Store a :class:`.Listing`.
-
-        Should complain loudly if ``self.read_only`` is ``True``.
-        """
-        raise NotImplementedError('Implement me!')
-    
-    def _store_eprint(self, eprint: EPrint) -> None:
-        """
-        Store a :class:`.EPrint`.
-
-        If the :attr:`.EPrint.source_package` or :attr:`.EPrint.pdf` content
-        has changed, those should also be stored.
-
-        Should complain loudly if ``self.read_only`` is ``True``.
-        """
-        raise NotImplementedError('Implement me!')
-    
-
-    def _load_eprint(self, identifier: Identifier, version: int) \
-            -> EPrint:
-        """
-        Load an :class:`.EPrint`.
-
-        The content of the :attr:`.EPrint.source_package` and 
-        :attr:`.EPrint.pdf` should implement :class:`.Readable`. The ``read()``
-        method should be a closure that, when called, retrieves the content of 
-        the corresponding resource from storage.
-        """
-        raise NotImplementedError('Implement me!')
-    
-    @classmethod
-    def init_app(cls, app: Flask) -> None:
-        """Set defaults for required configuration parameters."""
-        app.config.setdefault('AWS_REGION', 'us-east-1')
-        app.config.setdefault('AWS_ACCESS_KEY_ID', None)
-        app.config.setdefault('AWS_SECRET_ACCESS_KEY', None)
-        app.config.setdefault('S3_ENDPOINT', None)
-        app.config.setdefault('S3_VERIFY', True)
-        app.config.setdefault('S3_BUCKET', 'arxiv-canonical')
-
-    @classmethod
-    def get_session(cls) -> 'CanonicalStore':
-        """Create a new :class:`botocore.client.S3` session."""
-        config = get_application_config()
-        return cls(config['S3_BUCKET'],
-                   config['S3_VERIFY'],
-                   config['AWS_REGION'],
-                   config['S3_ENDPOINT'],
-                   config['AWS_ACCESS_KEY_ID'],
-                   config['AWS_SECRET_ACCESS_KEY'])
-
-    @classmethod
-    def current_session(cls) -> 'CanonicalStore':
-        """Get the current store session for this application."""
-        g = get_application_global()
-        if g is None:
-            return cls.get_session()
-        if 'store' not in g:
-            g.store = cls.get_session()
-        store: CanonicalStore = g.store
-        return store
+    def load_manifest(self, key: str) -> Manifest:
+        return self._manifests[key]
 
 
-class FakeCanonicalStore(CanonicalStore):
-    """
-    A mock implementation of the canonical store.
-    
-    Methods to store things don't do anything, so don't expect data to stick
-    around.
-    """
+def _b64_to_hex(checksum: Checksum) -> str:
+    return hexlify(urlsafe_b64decode(checksum.encode('utf-8'))).decode('utf-8')
 
-    @classmethod
-    def current_session(cls) -> 'FakeCanonicalStore':
-        return cls('foo')
 
-    def store_listing(self, listing: Listing) -> None:
-        return
-    
-    def store_eprint(self, eprint: EPrint) -> None:
-        return
+def _hex_to_b64(etag: str) -> Checksum:
+    """Convert an hexdigest of an MD5 to a URL-safe base64-encoded digest."""
+    return urlsafe_b64encode(unhexlify(etag)).decode('utf-8')
 
-    def load_record(self) -> CanonicalRecord:
-        fake_eprints = mock.MagicMock(spec=dict)
-        identifier = Identifier('1901.00123')
-        fake_eprint = EPrint(
-            arxiv_id=identifier,
-            announced_date=date.today(),
-            version=1,
-            legacy=True,
-            submitted_date=datetime.now(UTC),
-            license=License(
-                href="https://arxiv.org/licenses/nonexclusive-distrib/1.0/"
-                     "license.html"
-            ),
-            primary_classification=Category("cs.DL"),
-            title="Adventures in Flatland",
-            abstract="As Gregor Samsa awoke one morning from uneasy dreams he"
-                     " found himself transformed in his bed into a gigantic"
-                     " insect. He was lying on his hard, as it were"
-                     " armor-plated, back and when he lifted his head a little"
-                     " he could see his dome-like brown belly divided into"
-                     " stiff arched segments on top of which the bed quilt"
-                     " could hardly keep in position and was about to slide"
-                     " off completely. His numerous legs, which were pitifully"
-                     " thin compared to the rest of his bulk, waved helplessly"
-                     " before his eyes.",
-            authors="Ima N. Author (FSU)",
-            source_type="tex",
-            size_kilobytes=543,
-            previous_versions=[],
-            secondary_classification=[Category('cs.AI'), Category('cs.AR')],
-            history=[
-                Event(arxiv_id=identifier,
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.NEW,
-                      categories=[Category('cs.DL'),
-                                  Category('cs.AI'),
-                                  Category('cs.AR')],
-                      version=1),
-            ],
-            submitter=Person(
-                full_name="Ima N. Author",
-                last_name="Author",
-                first_name="Ima N.",
-                affiliation=["FSU"]
-            ),
-            comments="4 figures, 2 turtles",
-            source_package=File(
-                filename=f"{identifier}.tar.gz",
-                mime_type="application/tar+gzip",
-                checksum="asdf1234==",
-                content=io.BytesIO(b'foocontent'),
-                created=datetime.now(UTC),
-                modified=datetime.now(UTC)
-            ),
-            pdf=File(
-                filename=f"{identifier}.pdf",
-                mime_type="application/pdf",
-                checksum="qwer9876==",
-                content=io.BytesIO(b'foopdf'),
-                created=datetime.now(UTC),
-                modified=datetime.now(UTC)
-            )
-        )
-        fake_eprints.__getitem__.return_value = fake_eprint
-        fake_block = mock.MagicMock(spec=MonthlyBlock,
-                                    eprints=fake_eprints)
-        fake_block.load_eprint.return_value = fake_eprint
-        fake_blocks = mock.MagicMock(spec=dict)
-        fake_blocks.__getitem__.return_value = fake_block
-
-        fake_listings = mock.MagicMock(spec=dict)
-        fake_listings.__getitem__.return_value = Listing(
-            date=date.today(),
-            events=[
-                Event(arxiv_id=Identifier('2004.00321'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.NEW,
-                      categories=[Category('cs.DL'), Category('cs.AI')],
-                      version=1),
-                Event(arxiv_id=Identifier('2004.00322'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.NEW,
-                      categories=[Category('cs.DL'), Category('cs.AI')],
-                      version=1),
-                Event(arxiv_id=Identifier('2003.00021'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.CROSSLIST,
-                      categories=[Category('cs.AR')],
-                      version=1),
-                Event(arxiv_id=Identifier('2003.00001'),
-                      event_date=datetime.now(UTC),
-                      event_type=Event.Type.REPLACED,
-                      categories=[Category('cs.AR')],
-                      version=2)
-            ]
-        )    
-        return CanonicalRecord(blocks=fake_blocks, listings=fake_listings)

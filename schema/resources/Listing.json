@@ -2,8 +2,12 @@
   "title": "Listing",
   "description": "Canonical announcement record.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "@type": {
+      "type": "string"
+    },
+    "identifier": {
       "type": "string"
     },
     "date": {
@@ -13,7 +17,7 @@
     "events": {
       "type": "array",
       "items": {
-        "$ref": "./ListingEvent.json"
+        "$ref": "./Event.json"
       }
     }
   }

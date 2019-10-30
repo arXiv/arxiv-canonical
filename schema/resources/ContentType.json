@@ -1,0 +1,12 @@
+{
+  "type": "string",
+  "enum": [
+    "pdf",
+    "tar",
+    "json",
+    "abs",
+    "html",
+    "tex",
+    "ps"
+  ]
+}
