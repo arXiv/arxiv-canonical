@@ -4,11 +4,11 @@
   "type": "object",
   "properties": {
     "name": {
-      "description": "The fullest representation of the affiliation's name",
+      "description": "The fullest representation of the collaborations's name",
       "type": "string"
     },
     "language": {
-      "description": "Language",
+      "description": "Language used to identify the collaboration.",
       "oneOf": [
         {"type": "string"},
         {"type": "null"}
