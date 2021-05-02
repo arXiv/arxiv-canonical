@@ -1,0 +1,18 @@
+{
+  "title": "Collaboration",
+  "description": "Collaborating Entity",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The fullest representation of the affiliation's name",
+      "type": "string"
+    },
+    "language": {
+      "description": "Language",
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    },
+  }
+}

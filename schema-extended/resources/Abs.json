@@ -1,0 +1,145 @@
+{
+    "title": "Abs",
+    "description": "Legacy metadata record for an arXiv e-print.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "identifier",
+      "submitted_date",
+      "announced_month",
+      "license",
+      "primary_classification",
+      "title",
+      "abstract",
+      "authors"
+    ],
+    "properties": {
+      "@type": {
+        "type": "string"
+      },
+      "identifier": {
+        "description": "Canonical arXiv e-print identifier",
+        "$ref": "./VersionedIdentifier.json"
+      },
+      "is_withdrawn": {
+        "type": "boolean"
+      },
+      "submitter": {
+        "description": "The person who submitted the e-print.",
+        "oneOf": [
+          {"$ref": "./Person.json"},
+          {"type": "null"}
+        ]
+      },
+      "submitted_date": {
+        "description": "Date this version of the e-print was submitted.",
+        "type": "string",
+        "format": "date-time"
+      },
+      "announced_month": {
+        "description": "Year and month (``%Y-%m``) this e-print version was announced.",
+        "type": "string",
+        "pattern": "^[0-9]{4}-[0-9]{2}$"
+      },
+      "license": {
+        "$ref": "./License.json"
+      },
+      "previous_versions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "identifier": {
+              "description": "Canonical arXiv e-print identifier",
+              "$ref": "./VersionedIdentifier.json"
+            },
+            "submitted_date": {
+              "description": "Date this version of the e-print was submitted.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "announced_month": {
+              "description": "Year and month (``%Y-%m``) this e-print version was announced.",
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}$"
+            },
+            "source_type": {
+              "type": "string"
+            },
+            "size_kilobytes": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "primary_classification": {
+        "type": "string"
+      },
+      "secondary_classification": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "source_type": {
+        "type": "string"
+      },
+      "size_kilobytes": {
+        "type": "number"
+      },
+      "proxy": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "abstract": {
+        "type": "string"
+      },
+      "authors": {
+        "type": "string"
+      },
+      "comments": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+
+      "journal_ref": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "report_num": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "doi": {
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "msc_class": {
+        "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC)",
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      },
+      "acm_class": {
+        "description": "Classifications from ACM Computing Classification System",
+        "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+        ]
+      }
+    }
+  }

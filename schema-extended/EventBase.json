@@ -1,0 +1,51 @@
+{
+  "title": "EventBase",
+  "type": "object",
+  "required": [
+    "identifier",
+    "event_date",
+    "event_type",
+    "event_id",
+    "is_legacy"
+  ],
+  "properties": {
+    "@type": {
+      "type": "string"
+    },
+    "identifier": {
+      "description": "Canonical arXiv e-print identifier",
+      "$ref": "./VersionedIdentifier.json"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "$ref": "./EventType.json"
+    },
+    "event_id": {
+      "$ref": "./EventIdentifier.json"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the event and its context."
+    },
+    "is_legacy": {
+      "description": "Legacy records were carried forward from arXiv Classic.",
+      "type": "boolean"
+    },
+    "event_agent": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ],
+      "description": "Username or service name."
+    }
+  }
+}

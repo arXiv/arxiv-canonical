@@ -1,0 +1,14 @@
+{
+  "type": "string",
+  "enum": [
+    "new",
+    "update",
+    "update_metadata",
+    "replace",
+    "cross",
+    "jref",
+    "withdraw",
+    "migrate",
+    "migrae_metadata"
+  ]
+}
