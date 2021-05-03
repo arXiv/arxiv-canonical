@@ -1,0 +1,26 @@
+{
+  "identifier": "2014.13925v1",
+  "content_type": "article",
+  "submitted_date": "2020-04-01T12:34:56Z",
+  "announced_month": "2020-04",
+  "license": {
+    "href": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/"
+  },
+  "title": "The Loudest Stellar Heartbeat: Characterizing the most extreme amplitude heartbeat star system",
+  "primary_classification": "cs.AI",
+  "abstract": "We characterize the extreme heartbeat star system MACHO 80.7443.1718 in the LMC using TESS photometry and spectroscopic observations from the Magellan Inamori Kyocera Echelle (MIKE) and SOAR Goodman spectographs. MACHO 80.7443.1718 was first identified as a heartbeat star system in the All-Sky Automated Survey for SuperNovae (ASAS-SN) with $P_{\\rm orb}=32.836\\pm0.008\\,{\\rm d}$. MACHO 80.7443.1718 is a young (${\\sim}6$~Myr), massive binary, composed of a B0 Iae supergiant with $M_1 \\simeq 35 M_\\odot$ and an O9.5V secondary with $M_2 \\simeq 16 M_\\odot$ on an eccentric ($e=0.51\\pm0.03$) orbit. In addition to having the largest variability amplitude amongst all known heartbeats stars, MACHO 80.7443.1718 is also one of the most massive heartbeat stars yet discovered. The B[e] supergiant has Balmer emission lines and permitted/forbidden metallic emission lines associated with a circumstellar disk. The disk rapidly dissipates at periastron which could indicate mass transfer to the secondary, but re-emerges immediately following periastron passage. MACHO 80.7443.1718 also shows tidally excited oscillations at the $N=25$ and $N=41$ orbital harmonics and has a rotational period of 4.4 d.",
+  "authors_display": "T. Jayasinghe, C. S. Kochanek, J. Strader, K. Z. Stanek, P. J. Vallely, Todd A. Thompson, J. T. Hinkle, B. J. Shappee, A. K. Dupree, K. Auchettl, L. Chomiuk, E. Aydi, K. Dage, A. Hughes, L. Shishkovsky, K. V. Sokolovsky, S. Swihart, K. T. Voggel, I. B. Thompson",
+  "authors": [
+    {
+      "full_name": "T. Jayasinghe",
+      "first_name": "T.",
+      "last_name": "Jayasinghe"
+    },
+    {
+      "full_name": "C. S. Kochanek",
+      "first_name": "C. S.",
+      "last_name": "Kochanek"
+    }
+  ],
+  "comments": "21 pages, 16 figures. Submitted to MNRAS"
+}
