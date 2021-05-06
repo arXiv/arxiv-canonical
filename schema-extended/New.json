@@ -2,7 +2,21 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
 
     "definitions": {
-      "$comment": "Definitions for individual entities.",
+      "abstract": {
+        "type": "object",
+        "properties": {
+          "abstract": {
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/definitions/language"
+          }
+        },
+        "required": [
+          "abstract",
+          "language"
+        ]
+      },
       "affiliation": {
         "description": "Institutional affiliation",
         "type": "object",
@@ -21,7 +35,7 @@
         }
       },
       "content_type": {
-        "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed",
+        "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed.",
         "type": "string",
         "enum": ["article", "proceeding", "review", "monograph", "Ph. D. thesis", "seminar", "lecture notes", "whitepaper"]
       },
@@ -139,7 +153,7 @@
         ]
       },
       "publication_status": {
-        "$comment": "structure needs further discussion",
+        "$comment": "this structure needs further discussion",
         "type": "object",
         "properties": {
           "status": {
@@ -158,6 +172,30 @@
             "type": "string"
           }
         }
+      },
+      "source_format": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": ["tex", "pdftex", "pdf", "ps", "html", "docx", "withdrawn"]
+          },
+          {"type": "null"}
+        ]
+      },
+      "title": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/definitions/language"
+          }
+        },
+        "required": [
+          "title",
+          "language"
+        ]
       },
       "user_link": {
         "type": "object",
@@ -189,16 +227,18 @@
     "additionalProperties": false,
     "required": [
       "identifier",
-      "content_type",
       "submitted_date",
       "publication_date",
       "license",
+      "content_type",
       "primary_classification",
-      "title",
-      "abstract",
+      "titles",
+      "abstracts",
       "authors_display",
       "authors",
-      "publication_status"
+      "publication_status",
+      "size_kilobytes",
+      "source_type"
     ],
     "properties": {
       "@type": {
@@ -222,14 +262,14 @@
         ]
       },
       "submitted_date": {
-        "description": "Date this version of the e-print was submitted.",
+        "description": "Date this e-print version was submitted.",
         "type": "string",
         "format": "date-time"
       },
       "publication_date": {
         "description": "Date this e-print version was announced.",
         "type": "string",
-        "pattern": "^[0-9]{4}-[0-9]{2}$"
+        "format": "date-time"
       },
       "license": {
         "$ref": "#/definitions/license"
@@ -252,10 +292,10 @@
             "publication_date": {
               "description": "Date this e-print version was announced.",
               "type": "string",
-              "pattern": "^[0-9]{4}-[0-9]{2}$"
+              "format": "publication_date"
             },
-            "source_type": {
-              "type": "string"
+            "source_format": {
+              "$ref": "#/definitions/source_format"
             },
             "size_kilobytes": {
               "type": "number"
@@ -272,7 +312,7 @@
           "type": "string"
         }
       },
-      "source_type": {
+      "source_format": {
         "type": "string"
       },
       "size_kilobytes": {
@@ -284,11 +324,21 @@
           {"type": "null"}
         ]
       },
-      "title": {
-        "type": "string"
+      "titles": {
+        "description": "The English and non-English versions of the title.",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/definitions/title"
+        }
       },
-      "abstract": {
-        "type": "string"
+      "abstracts": {
+        "description": "The English and non-English versions of the abstract.",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/definitions/abstract"
+        }
       },
       "authors_display": {
         "descripiton": "Legacy author display string.",
@@ -321,7 +371,7 @@
           {"type": "null"}
         ]
       },
-      "journal_doi": {
+      "journal_dois": {
         "description": "The journal DOI(s).",
         "type": "array",
         "$comment": "Do we want additional properties to indicate the type or provenance of the DOI?",
@@ -351,7 +401,7 @@
       },
       "acm_class": {
         "description": "Classifications from ACM Computing Classification System",
-        "$comment": "could have full enumeration",
+        "$comment": "we could have am enumeration here",
         "oneOf": [
           {"type": "string"},
           {"type": "null"}
@@ -365,6 +415,12 @@
       },
       "publication_status": {
         "$ref": "#/definitions/publication_status"
+      },
+      "size_kilobytes": {
+        "type": "number"
+      },
+      "source_format": {
+        "$ref": "#/definitions/source_format"
       }
     }
 }

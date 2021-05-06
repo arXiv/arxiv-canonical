@@ -1,26 +1,105 @@
 {
-  "identifier": "2014.13925v1",
+  "identifier": "2105.01224v1",
   "content_type": "article",
-  "submitted_date": "2020-04-01T12:34:56Z",
-  "announced_month": "2020-04",
+  "submitted_date": "2020-04-04T12:34:56Z",
+  "publication_date": "2020-04-06T12:00:00Z",
   "license": {
-    "href": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/"
+    "href": "http://creativecommons.org/licenses/by/4.0/"
   },
-  "title": "The Loudest Stellar Heartbeat: Characterizing the most extreme amplitude heartbeat star system",
-  "primary_classification": "cs.AI",
-  "abstract": "We characterize the extreme heartbeat star system MACHO 80.7443.1718 in the LMC using TESS photometry and spectroscopic observations from the Magellan Inamori Kyocera Echelle (MIKE) and SOAR Goodman spectographs. MACHO 80.7443.1718 was first identified as a heartbeat star system in the All-Sky Automated Survey for SuperNovae (ASAS-SN) with $P_{\\rm orb}=32.836\\pm0.008\\,{\\rm d}$. MACHO 80.7443.1718 is a young (${\\sim}6$~Myr), massive binary, composed of a B0 Iae supergiant with $M_1 \\simeq 35 M_\\odot$ and an O9.5V secondary with $M_2 \\simeq 16 M_\\odot$ on an eccentric ($e=0.51\\pm0.03$) orbit. In addition to having the largest variability amplitude amongst all known heartbeats stars, MACHO 80.7443.1718 is also one of the most massive heartbeat stars yet discovered. The B[e] supergiant has Balmer emission lines and permitted/forbidden metallic emission lines associated with a circumstellar disk. The disk rapidly dissipates at periastron which could indicate mass transfer to the secondary, but re-emerges immediately following periastron passage. MACHO 80.7443.1718 also shows tidally excited oscillations at the $N=25$ and $N=41$ orbital harmonics and has a rotational period of 4.4 d.",
-  "authors_display": "T. Jayasinghe, C. S. Kochanek, J. Strader, K. Z. Stanek, P. J. Vallely, Todd A. Thompson, J. T. Hinkle, B. J. Shappee, A. K. Dupree, K. Auchettl, L. Chomiuk, E. Aydi, K. Dage, A. Hughes, L. Shishkovsky, K. V. Sokolovsky, S. Swihart, K. T. Voggel, I. B. Thompson",
-  "authors": [
+  "primary_classification": "hep-ex",
+  "secondary_classification": ["hep-ph"],
+  "titles": [
     {
-      "full_name": "T. Jayasinghe",
-      "first_name": "T.",
-      "last_name": "Jayasinghe"
-    },
-    {
-      "full_name": "C. S. Kochanek",
-      "first_name": "C. S.",
-      "last_name": "Kochanek"
+      "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
+      "language": "en"
     }
   ],
-  "comments": "21 pages, 16 figures. Submitted to MNRAS"
+
+  "abstracts": [
+    {
+      "abstract": "",
+      "language": "en"
+    }
+  ],
+  "authors_display": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
+  "authors": [
+    {
+      "full_name": "Kensuke Homma",
+      "first_name": "Kensuke",
+      "last_name": "Homma"
+    },
+    {
+      "full_name": "Yuri Kirita",
+      "first_name": "Yuri",
+      "last_name": "Kirita"
+    },
+    {
+      "full_name": "Masaki Hashida",
+      "first_name": "Masaki",
+      "last_name": "Hashida"
+    },
+    {
+      "full_name": "Yusuke Hirahara",
+      "first_name": "Yusuke",
+      "last_name": "Hirahara"
+    },
+    {
+      "full_name": "Shunsuke Inoue",
+      "first_name": "Shunsuke",
+      "last_name": "Inoue"
+    },
+    {
+      "full_name": "Fumiya Ishibashi",
+      "first_name": "Fumiya",
+      "last_name": "Ishibashi"
+    },
+    {
+      "full_name": "Yoshihide Nakamiya",
+      "first_name": "Yoshihide",
+      "last_name": "Nakamiya"
+    },
+    {
+      "full_name": "Liviu Neagu",
+      "first_name": "Liviu",
+      "last_name": "Neagu"
+    },
+    {
+      "full_name": "Akihide Nobuhiro",
+      "first_name": "Akihide",
+      "last_name": "Nobuhiro"
+    },
+    {
+      "full_name": "Takaya Ozaki",
+      "first_name": "Takaya",
+      "last_name": "Ozaki"
+    },
+    {
+      "full_name": "Madalin-Mihai Rosu",
+      "first_name": "Madalin-Mihai",
+      "last_name": "Rosu"
+    },
+    {
+      "full_name": "Shuji Sakabe",
+      "first_name": "Shuji",
+      "last_name": "Sakabe"
+    },
+    {
+      "full_name": "Ovidiu Tesileanu",
+      "first_name": "Ovidiu",
+      "last_name": "Tesileanu"
+    }
+  ],
+  "collaborations": [
+    {
+        "name": "SAPPHIRES",
+        "language": "en"
+    }
+  ],
+  "comments": "32 pages, 14 figures",
+  "publication_status": {
+    "status": "posted",
+    "is_published": false
+  },
+  "size_kilobytes": 5224,
+  "source_format": "tex"
 }
