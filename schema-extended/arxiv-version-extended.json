@@ -163,7 +163,7 @@
             "type": "string",
             "enum": ["posted", "withdrawn"]
           },
-          "is_journal_published_version": {
+          "is_accepted_version": {
             "type": "boolean"
           }
         }
@@ -213,8 +213,8 @@
           },
           "category": {
             "type": "string",
-            "$comment": "TODO: expand enumeration",
-            "enum": ["code", "data", "personal homepage", "other"]
+            "$comment": "TODO: refine this enumeration",
+            "enum": ["related article", "slides", "notes", "software", "dataset", "simulation", "video", "review", "news item", "personal website", "blog entry", "other"]
           }
         }
       },
