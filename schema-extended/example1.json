@@ -1,10 +1,10 @@
 {
   "identifier": "2105.01224v1",
   "content_type": "article",
-  "submitted_date": "2020-04-04T12:34:56Z",
-  "publication_date": "2020-04-06T12:00:00Z",
+  "submitted_date": "2021-05-04T12:34:56Z",
+  "publication_date": "2021-05-06T12:00:00Z",
   "license": {
-    "href": "http://creativecommons.org/licenses/by/4.0/"
+    "url": "http://creativecommons.org/licenses/by/4.0/"
   },
   "primary_classification": "hep-ex",
   "secondary_classification": ["hep-ph"],
@@ -21,12 +21,18 @@
       "language": "en"
     }
   ],
+  "submitter": {
+    "full_name": "Kensuke Homma",
+    "first_name": "Kensuke",
+    "last_name": "Homma"
+  },
   "authors_display": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
   "authors": [
     {
       "full_name": "Kensuke Homma",
       "first_name": "Kensuke",
-      "last_name": "Homma"
+      "last_name": "Homma",
+      "is_submitter": true
     },
     {
       "full_name": "Yuri Kirita",
