@@ -2,16 +2,17 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
 
     "definitions": {
+      "$comment": "Definitions for individual entities.",
       "affiliation": {
         "description": "Institutional affiliation",
         "type": "object",
         "properties": {
           "name": {
-            "description": "The fullest representation of the affiliation's name",
+            "description": "The complete name of the affiliation",
             "type": "string"
           },
           "ror_id": {
-            "description": "Research Organization Registry ID",
+            "description": "Affiliation's Research Organization Registry ID",
             "oneOf": [
               {"type": "string"},
               {"type": "null"}
@@ -20,7 +21,7 @@
         }
       },
       "content_type": {
-        "$comment": "TODO: a more complete enumeration of possible content types",
+        "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed",
         "type": "string",
         "enum": ["article", "proceeding", "review", "monograph", "Ph. D. thesis", "seminar", "lecture notes", "whitepaper"]
       },
@@ -34,7 +35,7 @@
           "language": {
             "description": "Language used to identify the collaboration.",
             "oneOf": [
-              {"type": "string"},
+              {"$ref": "#/definitions/language"},
               {"type": "null"}
             ]
           }
@@ -44,8 +45,26 @@
         "type": "string",
         "pattern": "^10.[0-9]{4,9}/[-._;()/:a-zA-Z0-9]+$"
       },
+      "funding": {
+        "type": "object",
+        "properties": {
+          "funder_name": {
+            "type": "string"
+          },
+          "funder_doi": {
+            "description": "DOI from the Funder Registry",
+            "oneOf": [
+              {"$ref": "#/definitions/doi"},
+              {"type": "null"}
+            ]
+          }
+        }
+      },
       "language": {
-
+        "description": "The 2-letter ISO 639-1 language classification.",
+        "type": "string",
+        "$comment": "TODO: need complete list of language codes",
+        "enum": ["en", "de", "fr", "ru", "cn"]
       },
       "license": {
         "type": "object",
@@ -137,6 +156,24 @@
         "properties": {
           "reference_string": {
             "type": "string"
+          }
+        }
+      },
+      "user_link": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "$comment": "TODO: consider using a pattern here"
+          },
+          "display_text": {
+            "description": "Text to associate with the URL.",
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "$comment": "TODO: expand enumeration",
+            "enum": ["code", "data", "personal homepage", "other"]
           }
         }
       },
@@ -319,6 +356,12 @@
           {"type": "string"},
           {"type": "null"}
         ]
+      },
+      "user_links": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/user_link"
+        }
       },
       "publication_status": {
         "$ref": "#/definitions/publication_status"
