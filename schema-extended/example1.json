@@ -101,7 +101,9 @@
         "language": "en"
     }
   ],
-  "comments": "32 pages, 14 figures",
+  "comments": {
+    "legacy_comments": "32 pages, 14 figures"
+  },
   "publication_status": {
     "status": "posted",
     "is_accepted_version": false

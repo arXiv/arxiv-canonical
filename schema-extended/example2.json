@@ -8,11 +8,18 @@
   },
   "previous_versions": [
     {
-      "identifier": "",
-      "submitted_date": "",
-      "publication_date": "",
-      "source_format": "",
-      "size_kilobytes": "",
+      "identifier": "1904.00012v1",
+      "submitted_date": "2019-03-29T18:00:00Z",
+      "publication_date": "2019-04-24T01:00:00Z",
+      "source_format": "tex",
+      "size_kilobytes": 1393
+    },
+    {
+      "identifier": "1904.00012v2",
+      "submitted_date": "2019-04-23T07:52:54Z",
+      "publication_date": "2019-04-24T01:00:00Z",
+      "source_format": "tex",
+      "size_kilobytes": 1393
     }
   ],
   "primary_classification": "astro-ph.SR",
@@ -76,10 +83,13 @@
       "full_name": "O.I. Spiridonova",
       "first_name": "O.I.",
       "last_name": "Spiridonova"
-    },
+    }
   ],
-
-  "comments": "14 pages, 3 figures, original version of the manuscript submitted to Nature; accepted version is published at https://www.nature.com/articles/s41586-019-1216-1 and is accessible at https://rdcu.be/bDo6c",
+  "comments": {
+    "legacy_comments": "14 pages, 3 figures, original version of the manuscript submitted to Nature; accepted version is published at https://www.nature.com/articles/s41586-019-1216-1 and is accessible at https://rdcu.be/bDo6c",
+  },
+  "journal_ref": "Nature 569, 684-687 (30 May 2019)",
+  "journal_dois": ["10.1038/s41586-019-1216-1"],
   "publication_status": {
     "status": "posted",
     "is_accepted_version": true

@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
 
-    "$defs": {
+    "definitions": {
       "abstract": {
         "type": "object",
         "properties": {
@@ -52,6 +52,17 @@
               {"$ref": "#/definitions/language"},
               {"type": "null"}
             ]
+          }
+        }
+      },
+      "comments": {
+        "type": "object",
+        "properties": {
+          "legacy_comments": {
+            "type": "string"
+          },
+          "administrative_comments": {
+            "type": "string"
           }
         }
       },
@@ -364,7 +375,7 @@
       },
       "comments": {
         "oneOf": [
-          {"type": "string"},
+          {"$ref": "#/definitions/comments"},
           {"type": "null"}
         ]
       },
@@ -391,6 +402,7 @@
         ]
       },
       "report_num": {
+        "description": "The report number.",
         "oneOf": [
           {"type": "string"},
           {"type": "null"}
@@ -421,9 +433,11 @@
         "$ref": "#/definitions/publication_status"
       },
       "size_kilobytes": {
+        "description": "The size of the source file, in kilobytes.",
         "type": "number"
       },
       "source_format": {
+        "description": "The source input format.",
         "$ref": "#/definitions/source_format"
       }
     }
