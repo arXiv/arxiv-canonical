@@ -356,7 +356,7 @@
         }
       },
       "authors_display": {
-        "descripiton": "Legacy author display string.",
+        "description": "Legacy author display string.",
         "type": "string"
       },
       "authors": {
