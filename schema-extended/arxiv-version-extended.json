@@ -23,16 +23,26 @@
         "properties": {
           "name": {
             "description": "The complete name of the affiliation",
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "ror_id": {
-            "description": "Affiliation's Research Organization Registry ID",
-            "oneOf": [
-              {"type": "string"},
-              {"type": "null"}
+            "title": "ROR ID",
+            "description": "Research Organization Registry ID",
+            "type": "string",
+            "pattern": "^https://ror\\.org/0\\w{6}\\d{2}$",
+            "minLength": 1,
+            "examples": [
+              "https://ror.org/05bnh6r87",
+              "https://ror.org/05gzmn429",
+              "https://ror.org/01ggx4157",
+              "https://ror.org/03c3r2d17"
             ]
           }
-        }
+        },
+        "required": [
+          "name"
+        ]
       },
       "content_type": {
         "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed.",
@@ -44,14 +54,8 @@
         "properties": {
           "name": {
             "description": "The fullest representation of the collaborations's name",
-            "type": "string"
-          },
-          "language": {
-            "description": "Language of the collaboration name.",
-            "oneOf": [
-              {"$ref": "#/definitions/language"},
-              {"type": "null"}
-            ]
+            "type": "string",
+            "minLength": 1
           }
         }
       },
@@ -67,23 +71,44 @@
         }
       },
       "doi": {
+        "title": "DOI",
+        "description": "Digital Object Identifier.",
         "type": "string",
-        "pattern": "^10.[0-9]{4,9}/[-._;()/:a-zA-Z0-9]+$"
+        "pattern": "^10\\.\\d{4,9}/\\S+$",
+        "minLength": 1
+
       },
       "funding": {
         "type": "object",
         "properties": {
-          "funder_name": {
-            "type": "string"
+          "funding_statement": {
+            "title": "Funding statement",
+            "type": "string",
+            "minLength": 1
           },
           "funder_doi": {
             "description": "DOI from the Funder Registry",
-            "oneOf": [
-              {"$ref": "#/definitions/doi"},
-              {"type": "null"}
-            ]
+            "$ref": "#/definitions/doi"
+          },
+          "project_name": {
+            "title": "Project name",
+            "description": "The full name of the project.",
+            "type": "string",
+            "minLength": 1
+          },
+          "project_acronym": {
+            "title": "Project acronym",
+            "description": "The abbreviated name of the project.",
+            "type": "string",
+            "minLength": 1
+          },
+          "grant_number": {
+            "title": "Grant number",
+            "type": "string",
+            "minLength": 1
           }
-        }
+        },
+        "additionalProperties": false
       },
       "language": {
         "description": "The 2-letter ISO 639-1 language classification.",
