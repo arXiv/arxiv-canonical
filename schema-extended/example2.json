@@ -3,9 +3,7 @@
   "content_type": "article",
   "submitted_date": "2019-05-21T12:34:56Z",
   "publication_date": "2019-05-22T01:23:45Z",
-  "license": {
-    "url": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/"
-  },
+  "license":  "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
   "previous_versions": [
     {
       "identifier": "1904.00012v1",
@@ -86,7 +84,7 @@
     }
   ],
   "comments": {
-    "legacy_comments": "14 pages, 3 figures, original version of the manuscript submitted to Nature; accepted version is published at https://www.nature.com/articles/s41586-019-1216-1 and is accessible at https://rdcu.be/bDo6c",
+    "legacy_comments": "14 pages, 3 figures, original version of the manuscript submitted to Nature; accepted version is published at https://www.nature.com/articles/s41586-019-1216-1 and is accessible at https://rdcu.be/bDo6c"
   },
   "journal_ref": "Nature 569, 684-687 (30 May 2019)",
   "journal_dois": ["10.1038/s41586-019-1216-1"],

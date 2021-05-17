@@ -22,13 +22,13 @@
         "type": "object",
         "properties": {
           "name": {
-            "description": "The complete name of the affiliation",
+            "description": "The complete name of the affiliation.",
             "type": "string",
             "minLength": 1
           },
           "ror_id": {
             "title": "ROR ID",
-            "description": "Research Organization Registry ID",
+            "description": "Research Organization Registry ID.",
             "type": "string",
             "pattern": "^https://ror\\.org/0\\w{6}\\d{2}$",
             "minLength": 1,
@@ -42,7 +42,8 @@
         },
         "required": [
           "name"
-        ]
+        ],
+        "additionalProperties": false
       },
       "content_type": {
         "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed.",
@@ -76,7 +77,6 @@
         "type": "string",
         "pattern": "^10\\.\\d{4,9}/\\S+$",
         "minLength": 1
-
       },
       "funding": {
         "type": "object",
@@ -116,17 +116,30 @@
         "$comment": "TODO: need complete list of language codes",
         "enum": ["en", "de", "fr", "ru", "cn"]
       },
-      "license": {
-        "type": "object",
-        "properties": {
-          "@type": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string",
-            "nullable": true
-          }
-        }
+      "active_licenses": {
+        "title": "Active licenses",
+        "description": "Licenses that are selectable upon submission to arXiv.",
+        "type": "string",
+        "enum": [
+          "http://creativecommons.org/licenses/by/4.0/",
+          "http://creativecommons.org/licenses/by-sa/4.0/",
+          "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+          "http://creativecommons.org/licenses/by-nc-nd/4.0/",
+          "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+          "http://creativecommons.org/publicdomain/zero/1.0/"
+        ]
+
+      },
+      "inactive_licenses": {
+        "title": "Inactive licenses",
+        "description": "Historical licenses that are no longer selectable upon submission to arXiv.",
+        "type": "string",
+        "enum": [
+          "http://arxiv.org/licenses/assumed-1991-2003/",
+          "http://creativecommons.org/licenses/by/3.0/",
+          "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+          "http://creativecommons.org/licenses/publicdomain"
+        ]
       },
       "person": {
         "type": "object",
@@ -312,7 +325,12 @@
         "format": "date-time"
       },
       "license": {
-        "$ref": "#/definitions/license"
+        "title": "License",
+        "description": "The license associated with the content.",
+        "oneOf": [
+          {"$ref": "#/definitions/active_licenses"},
+          {"$ref": "#/definitions/inactive_licenses"}
+        ]
       },
       "previous_versions": {
         "$comment": "This follows the legacy metadata model for previous versions",
@@ -396,7 +414,9 @@
         "type": "array",
         "items": {
           "$ref": "#/definitions/collaboration"
-        }
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
       "comments": {
         "oneOf": [

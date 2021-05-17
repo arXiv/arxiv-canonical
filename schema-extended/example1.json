@@ -3,9 +3,7 @@
   "content_type": "article",
   "submitted_date": "2021-05-04T12:34:56Z",
   "publication_date": "2021-05-06T12:00:00Z",
-  "license": {
-    "url": "http://creativecommons.org/licenses/by/4.0/"
-  },
+  "license": "http://creativecommons.org/licenses/by/4.0/",
   "primary_classification": "hep-ex",
   "secondary_classification": ["hep-ph"],
   "titles": [
