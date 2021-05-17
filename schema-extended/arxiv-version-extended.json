@@ -31,7 +31,6 @@
             "description": "Research Organization Registry ID.",
             "type": "string",
             "pattern": "^https://ror\\.org/0\\w{6}\\d{2}$",
-            "minLength": 1,
             "examples": [
               "https://ror.org/05bnh6r87",
               "https://ror.org/05gzmn429",
@@ -177,10 +176,16 @@
             "$ref": "#/definitions/affiliation"
           },
           "orcid": {
-            "description": "ORCID identifier, if available.",
-            "oneOf": [
-              {"type": "string"},
-              {"type": "null"}
+            "title": "ORCID iD",
+            "allOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$"
+              },
+              {
+                "type": "string",
+                "$comment": "TODO: consider adding 'orcid' format here; however, some validators hang on unexpected formats. Validator would need to implement the checksum validation as described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
+              }
             ]
           },
           "author_id": {
