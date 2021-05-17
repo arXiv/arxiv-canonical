@@ -59,16 +59,10 @@
           }
         }
       },
-      "comments": {
-        "type": "object",
-        "properties": {
-          "legacy_comments": {
-            "type": "string"
-          },
-          "administrative_comments": {
-            "type": "string"
-          }
-        }
+      "comment": {
+        "title": "Comment",
+        "type": "string",
+        "minLength": 1
       },
       "doi": {
         "title": "DOI",
@@ -143,9 +137,6 @@
       "person": {
         "type": "object",
         "properties": {
-          "@type": {
-            "type": "string"
-          },
           "full_name": {
             "description": "The fullest representation of the person's name available in arXiv metadata.",
             "type": "string"
@@ -171,9 +162,13 @@
               {"type": "null"}
             ]
           },
-          "affiliation": {
-            "description": "Institutional affiliation, if available.",
-            "$ref": "#/definitions/affiliation"
+          "affiliations": {
+            "description": "Institutional affiliations",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/affiliation"
+            },
+            "minItems": 1
           },
           "orcid": {
             "title": "ORCID iD",
@@ -299,9 +294,6 @@
       "submitter"
     ],
     "properties": {
-      "@type": {
-        "type": "string"
-      },
       "identifier": {
         "description": "Canonical arXiv e-print identifier",
         "$ref": "#/definitions/versioned_identifier"
@@ -415,7 +407,7 @@
         }
       },
       "collaborations": {
-        "description": "Collaborations associated with this e-print",
+        "description": "Collaborations associated with this e-print.",
         "type": "array",
         "items": {
           "$ref": "#/definitions/collaboration"
@@ -424,10 +416,35 @@
         "uniqueItems": true
       },
       "comments": {
-        "oneOf": [
-          {"$ref": "#/definitions/comments"},
-          {"type": "null"}
-        ]
+        "title": "Comments",
+        "description": "Comments from authors or arXiv administrators.",
+        "type": "object",
+        "properties": {
+          "author_comments": {
+            "Title": "Author comments",
+            "description": "Comments from author(s).",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/comment"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+          "administrator_comments": {
+            "title": "Administrator comments",
+            "description": "Comments from by arXiv administrators",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/comment"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+          "legacy_comments": {
+            "description": "Unstructured comments from authors and/or arXiv administrators.",
+            "$ref": "#/definitions/comment"
+          },
+        }
       },
       "journal_ref": {
         "description": "Journal reference",
