@@ -1,0 +1,99 @@
+{
+  "identifier": "1904.00012v3",
+  "content_type": "article",
+  "submitted_date": "2019-05-21T12:34:56Z",
+  "publication_date": "2019-05-22T01:23:45Z",
+  "license": {
+    "url": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/"
+  },
+  "previous_versions": [
+    {
+      "identifier": "1904.00012v1",
+      "submitted_date": "2019-03-29T18:00:00Z",
+      "publication_date": "2019-04-24T01:00:00Z",
+      "source_format": "tex",
+      "size_kilobytes": 1393
+    },
+    {
+      "identifier": "1904.00012v2",
+      "submitted_date": "2019-04-23T07:52:54Z",
+      "publication_date": "2019-04-24T01:00:00Z",
+      "source_format": "tex",
+      "size_kilobytes": 1393
+    }
+  ],
+  "primary_classification": "astro-ph.SR",
+  "titles": [
+    {
+      "title": "A massive white-dwarf merger product before final collapse",
+      "language": "en"
+    }
+  ],
+
+  "abstracts": [
+    {
+      "abstract": "Gravitational wave emission can lead to the coalescence of close pairs of compact objects orbiting each other. For the case of neutron stars such mergers may yield masses above the Tolman-Oppenheimer-Volkoff limit, leading to the formation of black holes. For the case of white dwarfs the merger product may exceed the Chandrasekhar limit, leading either to a thermonuclear explosion as Type Ia supernova, or to a collapse forming a neutron star. If a Type Ia supernova explosion is avoided, the merger of two massive white dwarfs is expected to form a hydrogen- and helium-free circumstellar nebula with a hot and luminous, rapidly rotating and highly magnetized central star for several 10,000 yr before its final collapse. Here we report the discovery of a hot star with an emission line dominated spectrum in the centre of a circular mid-infrared nebula. Both the star and the nebula appear to be free of hydrogen and helium. Our tailored stellar atmosphere and wind models indicate a stellar surface temperature of about 200,000 K, and a record outflow velocity of 16,000 km/s. This extreme velocity, together with the derived mass outflow rate, imply rapid stellar rotation and a strong magnetic field aiding the wind acceleration. The Gaia distance of the star leads to a luminosity of 10^{4.5} Lsun, which matches models of the post-merger evolution of super-Chandrasekhar mass white dwarfs. The high stellar temperature and the nebular size argue for a short remaining lifetime of the star, which will produce a bright optical and high-energy transient upon collapse. Our observations indicate that super-Chandrasekhar mass white dwarf mergers can indeed avoid a thermonuclear explosion as Type Ia supernova, and provide empirical evidence for magnetic field generation in stellar mergers.",
+      "language": "en"
+    }
+  ],
+  "submitter": {
+    "full_name": "Vasilii Gvaramadze",
+    "first_name": "Vasilii",
+    "last_name": "Gvaramadze"
+  },
+  "authors_display": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
+  "authors": [
+    {
+      "full_name": "V.V. Gvaramadze",
+      "first_name": "V.V.",
+      "last_name": "Gvaramadze",
+      "is_submitter": true
+    },
+    {
+      "full_name": "G. Gräfener",
+      "first_name": "G.",
+      "last_name": "Gräfener"
+    },
+    {
+      "full_name": "N. Langer",
+      "first_name": "N.",
+      "last_name": "N. Langer"
+    },
+    {
+      "full_name": "O.V. Maryeva",
+      "first_name": "O.V.",
+      "last_name": "Maryeva"
+    },
+    {
+      "full_name": "Shunsuke Inoue",
+      "first_name": "Shunsuke",
+      "last_name": "Inoue"
+    },
+    {
+      "full_name": "A.Y. Kniazev",
+      "first_name": "A.Y.",
+      "last_name": "A.Y. Kniazev"
+    },
+    {
+      "full_name": "A.S. Moskvitin",
+      "first_name": "A.S.",
+      "last_name": "Moskvitin"
+    },
+    {
+      "full_name": "O.I. Spiridonova",
+      "first_name": "O.I.",
+      "last_name": "Spiridonova"
+    }
+  ],
+  "comments": {
+    "legacy_comments": "14 pages, 3 figures, original version of the manuscript submitted to Nature; accepted version is published at https://www.nature.com/articles/s41586-019-1216-1 and is accessible at https://rdcu.be/bDo6c",
+  },
+  "journal_ref": "Nature 569, 684-687 (30 May 2019)",
+  "journal_dois": ["10.1038/s41586-019-1216-1"],
+  "publication_status": {
+    "status": "posted",
+    "is_accepted_version": true
+  },
+  "size_kilobytes": 1393,
+  "source_format": "tex"
+}
