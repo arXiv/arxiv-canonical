@@ -48,9 +48,9 @@
       },
       "content_type": {
         "title": "Content type",
-        "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed.",
+        "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
         "type": "string",
-        "enum": ["article", "proceeding", "review", "monograph", "Ph. D. thesis", "seminar", "lecture notes", "whitepaper"]
+        "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
       },
       "collaboration": {
         "type": "object",
@@ -313,7 +313,7 @@
       "submitted_date",
       "publication_date",
       "license",
-      "content_type",
+      "content_types",
       "primary_classification",
       "titles",
       "abstracts",
@@ -325,22 +325,26 @@
     ],
     "properties": {
       "identifier": {
-        "title": "arXiv identifier"
+        "title": "arXiv identifier",
         "description": "Canonical arXiv e-print identifier",
         "$ref": "#/definitions/versioned_identifier"
       },
-      "content_type": {
-        "$ref": "#/definitions/content_type"
+      "content_types": {
+        "title": "List of content types",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/content_type"
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
       "is_withdrawn": {
         "type": "boolean"
       },
       "submitter": {
-        "description": "The person who submitted the e-print.",
-        "oneOf": [
-          {"$ref": "#/definitions/person"},
-          {"type": "null"}
-        ]
+        "title": "Submitter",
+        "description": "Information about the submitter.",
+        "$ref": "#/definitions/person"
       },
       "submitted_date": {
         "description": "Date this e-print version was submitted.",
@@ -390,20 +394,20 @@
         }
       },
       "primary_classification": {
-        "type": "string"
+        "title": "Primary classification",
+        "type": "string",
+        "minLength": 1
       },
-      "secondary_classification": {
+      "secondary_classifications": {
+        "title": "Secondary classifications",
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
-      "source_format": {
-        "type": "string"
-      },
-      "size_kilobytes": {
-        "type": "number"
-      },
+
       "proxy": {
         "oneOf": [
           {"type": "string"},
@@ -429,7 +433,7 @@
         "uniqueItems": true
       },
       "legacy_authors": {
-        "title": "Legacy authors field",
+        "title": "Legacy authors",
         "description": "Legacy author free-text field.",
         "type": "string",
         "minLength": 1,
@@ -447,11 +451,17 @@
       },
       "collaborations": {
         "title": "Collaborations",
-        "description": "Collaborations associated with this e-print.",
+        "description": "Collaborations associated with this e-print. Should not include 'Collaboration' suffix.",
         "type": "array",
         "items": {
           "$ref": "#/definitions/collaboration"
         },
+        "examples": [
+          "ATLAS",
+          "BABAR",
+          "L3",
+          "ZEUS"
+        ],
         "minItems": 1,
         "uniqueItems": true
       },
@@ -462,7 +472,7 @@
         "properties": {
           "author_comments": {
             "Title": "Author comments",
-            "description": "Comments from author(s).",
+            "description": "Comments from authors.",
             "type": "array",
             "items": {
               "$ref": "#/definitions/comment"

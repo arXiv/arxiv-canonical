@@ -1,6 +1,6 @@
 {
   "identifier": "1904.00012v3",
-  "content_type": "article",
+  "content_types": ["article"],
   "submitted_date": "2019-05-21T12:34:56Z",
   "publication_date": "2019-05-22T01:23:45Z",
   "license":  "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",

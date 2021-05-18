@@ -1,11 +1,11 @@
 {
   "identifier": "2105.01224v1",
-  "content_type": "article",
+  "content_types": ["article"],
   "submitted_date": "2021-05-04T12:34:56Z",
   "publication_date": "2021-05-06T12:00:00Z",
   "license": "http://creativecommons.org/licenses/by/4.0/",
   "primary_classification": "hep-ex",
-  "secondary_classification": ["hep-ph"],
+  "secondary_classifications": ["hep-ph"],
   "titles": [
     {
       "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
@@ -107,7 +107,7 @@
     "is_accepted_version": false
   },
   "source_info": {
-    "format": "tex",
+    "source_format": "tex",
     "size_kilobytes": 5224
   }
 }
