@@ -6,7 +6,9 @@
         "type": "object",
         "properties": {
           "abstract": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "$comment": "there are some rare cases (quant-ph/0202054v5, hep-th/0407186v1, astro-ph/0005231v2) with empty abstracts that will need to be fixed."
           },
           "language": {
             "$ref": "#/definitions/language"
@@ -249,23 +251,32 @@
           "language"
         ]
       },
-      "user_link": {
+      "author_link": {
+        "tile": "Author link",
+        "description": "Author-provided link to external resource.",
         "type": "object",
         "properties": {
-          "url": {
+          "uri": {
             "type": "string",
-            "$comment": "TODO: consider using a pattern here"
+            "format": "uri"
           },
           "display_text": {
-            "description": "Text to associate with the URL.",
-            "type": "string"
+            "description": "Text to associate with the URI.",
+            "type": "string",
+            "minLength": 1
           },
           "category": {
+            "title": "Link category",
+            "description": "The type of resource the link resolves to.",
             "type": "string",
             "$comment": "TODO: refine this enumeration",
             "enum": ["related article", "slides", "notes", "software", "dataset", "simulation", "video", "review", "news item", "personal website", "blog entry", "other"]
           }
-        }
+        },
+        "required": [
+          "uri",
+          "category"
+        ]
       },
       "versioned_identifier": {
         "type": "string",
@@ -429,7 +440,7 @@
             },
             "minItems": 1,
             "uniqueItems": true
-          }
+          },
           "administrator_comments": {
             "title": "Administrator comments",
             "description": "Comments from by arXiv administrators",
@@ -439,19 +450,17 @@
             },
             "minItems": 1,
             "uniqueItems": true
-          }
+          },
           "legacy_comments": {
             "description": "Unstructured comments from authors and/or arXiv administrators.",
             "$ref": "#/definitions/comment"
-          },
+          }
         }
       },
       "journal_ref": {
-        "description": "Journal reference",
-        "oneOf": [
-          {"type": "string"},
-          {"type": "null"}
-        ]
+        "title": "Journal reference",
+        "type": "string",
+        "minLength": 1
       },
       "journal_dois": {
         "description": "The journal DOI(s).",
@@ -462,27 +471,23 @@
         }
       },
       "arxiv_doi": {
+        "title": "arXiv DOI",
         "description": "The arXiv-issued DOI.",
-        "oneOf": [
-          {"$ref": "#/definitions/doi"},
-          {"type": "null"}
-        ]
+        "$ref": "#/definitions/doi"
       },
       "report_num": {
-        "description": "The report number.",
-        "oneOf": [
-          {"type": "string"},
-          {"type": "null"}
-        ]
+        "title": "Report number",
+        "type": "string",
+        "minLength": 1
       },
-      "msc_class": {
+      "msc_classes": {
         "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC)",
         "oneOf": [
           {"type": "string"},
           {"type": "null"}
         ]
       },
-      "acm_class": {
+      "acm_classes": {
         "description": "Classifications from ACM Computing Classification System",
         "$comment": "we could have am enumeration here",
         "oneOf": [
@@ -490,11 +495,13 @@
           {"type": "null"}
         ]
       },
-      "user_links": {
+      "author_links": {
         "type": "array",
         "items": {
-          "$ref": "#/definitions/user_link"
-        }
+          "$ref": "#/definitions/author_link"
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
       "publication_status": {
         "$ref": "#/definitions/publication_status"
