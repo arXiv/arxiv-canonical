@@ -39,7 +39,7 @@
     "first_name": "Vasilii",
     "last_name": "Gvaramadze"
   },
-  "authors_display": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
+  "legacy_authors": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
   "authors": [
     {
       "full_name": "V.V. Gvaramadze",
@@ -92,6 +92,9 @@
     "status": "posted",
     "is_accepted_version": true
   },
-  "size_kilobytes": 1393,
-  "source_format": "tex"
+  "source_info": {
+    "source_format": "tex",
+    "size_kilobytes": 1393
+  }
+
 }

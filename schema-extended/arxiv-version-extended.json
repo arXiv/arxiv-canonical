@@ -47,6 +47,7 @@
         "additionalProperties": false
       },
       "content_type": {
+        "title": "Content type",
         "$comment": "TODO: below are examples; a more complete enumeration of possible content types is needed.",
         "type": "string",
         "enum": ["article", "proceeding", "review", "monograph", "Ph. D. thesis", "seminar", "lecture notes", "whitepaper"]
@@ -236,11 +237,30 @@
           {"type": "null"}
         ]
       },
+      "source_info": {
+        "description": "The source input format.",
+        "type": "object",
+        "properties": {
+          "source_format": {
+            "$ref": "#/definitions/source_format"
+          },
+          "size_kilobytes": {
+            "description": "The size of the source file, in kilobytes.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "source_format",
+          "size_kilobytes"
+        ],
+        "additionalProperties": false
+      },
       "title": {
         "type": "object",
         "properties": {
           "title": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "language": {
             "$ref": "#/definitions/language"
@@ -253,7 +273,7 @@
       },
       "author_link": {
         "tile": "Author link",
-        "description": "Author-provided link to external resource.",
+        "description": "Author-provided link to related resource.",
         "type": "object",
         "properties": {
           "uri": {
@@ -261,7 +281,7 @@
             "format": "uri"
           },
           "display_text": {
-            "description": "Text to associate with the URI.",
+            "description": "Descriptive text to associate with the URI.",
             "type": "string",
             "minLength": 1
           },
@@ -284,7 +304,7 @@
       }
     },
 
-    "title": "Abs",
+    "title": "arXiv Document Metadata",
     "description": "Extended metadata record for an arXiv e-print.",
     "type": "object",
     "additionalProperties": false,
@@ -297,15 +317,15 @@
       "primary_classification",
       "titles",
       "abstracts",
-      "authors_display",
+      "legacy_authors",
       "authors",
       "publication_status",
-      "size_kilobytes",
-      "source_format",
+      "source_info",
       "submitter"
     ],
     "properties": {
       "identifier": {
+        "title": "arXiv identifier"
         "description": "Canonical arXiv e-print identifier",
         "$ref": "#/definitions/versioned_identifier"
       },
@@ -393,31 +413,40 @@
       "titles": {
         "description": "The English and non-English versions of the title.",
         "type": "array",
-        "minItems": 1,
         "items": {
           "$ref": "#/definitions/title"
-        }
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
       "abstracts": {
         "description": "The English and non-English versions of the abstract.",
         "type": "array",
-        "minItems": 1,
         "items": {
           "$ref": "#/definitions/abstract"
-        }
+        },
+        "minItems": 1,
+        "uniqueItems": true
       },
-      "authors_display": {
-        "description": "Legacy author display string.",
-        "type": "string"
+      "legacy_authors": {
+        "title": "Legacy authors field",
+        "description": "Legacy author free-text field.",
+        "type": "string",
+        "minLength": 1,
+        "examples": [
+          "J. Doe (Cornell University), M. Smith (Stanford University), F. Bar"
+        ]
       },
       "authors": {
+        "title": "Authors",
         "type": "array",
-        "minItems": 1,
         "items": {
           "$ref": "#/definitions/person"
-        }
+        },
+        "minItems": 1
       },
       "collaborations": {
+        "title": "Collaborations",
         "description": "Collaborations associated with this e-print.",
         "type": "array",
         "items": {
@@ -506,13 +535,10 @@
       "publication_status": {
         "$ref": "#/definitions/publication_status"
       },
-      "size_kilobytes": {
-        "description": "The size of the source file, in kilobytes.",
-        "type": "number"
-      },
-      "source_format": {
-        "description": "The source input format.",
-        "$ref": "#/definitions/source_format"
+      "source_info": {
+        "title": "Source information",
+        "description": "Information about the input source files.",
+        "$ref": "#/definitions/source_info"
       }
     }
 }

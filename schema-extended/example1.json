@@ -24,7 +24,7 @@
     "first_name": "Kensuke",
     "last_name": "Homma"
   },
-  "authors_display": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
+  "legacy_authors": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
   "authors": [
     {
       "full_name": "Kensuke Homma",
@@ -106,6 +106,8 @@
     "status": "posted",
     "is_accepted_version": false
   },
-  "size_kilobytes": 5224,
-  "source_format": "tex"
+  "source_info": {
+    "format": "tex",
+    "size_kilobytes": 5224
+  }
 }
