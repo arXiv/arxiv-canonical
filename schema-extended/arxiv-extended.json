@@ -223,18 +223,19 @@
           "last_name"
         ]
       },
-      "publication_status": {
-        "$comment": "this structure needs further discussion",
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["posted", "withdrawn"]
-          },
-          "is_accepted_version": {
-            "type": "boolean"
-          }
-        }
+      "arxiv_status": {
+        "title": "arXiv posting status",
+        "description": "The status of this document version on arXiv.",
+        "type": "string",
+        "enum": ["posted", "withdrawn"],
+        "minLength": 1
+      },
+      "external_publication_status": {
+        "title": "External publication status",
+        "description": "The publication status of this document version.",
+        "type": "string",
+        "enum": ["submitted", "accepted", "published"],
+        "$comment": "Is this enough?"
       },
       "reference_string": {
         "title": "Reference string",
@@ -335,13 +336,24 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "is_withdrawn": {
-            "type": "boolean"
-          },
           "submitter": {
             "title": "Submitter",
-            "description": "Information about the submitter.",
-            "$ref": "#/definitions/person"
+            "description": "Information about the submitter and possible proxy for the submitter.",
+            "type": "object",
+            "properties": {
+              "submitter": {
+                "$ref": "#/definitions/person"
+              },
+              "proxy_name": {
+                "title": "Proxy name",
+                "description": "Name of the proxy that submitted on the submitter's behalf.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "submitter"
+            ]
           },
           "submitted_date": {
             "description": "Date this e-print version was submitted.",
@@ -359,12 +371,6 @@
             "oneOf": [
               {"$ref": "#/definitions/active_licenses"},
               {"$ref": "#/definitions/inactive_licenses"}
-            ]
-          },
-          "proxy": {
-            "oneOf": [
-              {"type": "string"},
-              {"type": "null"}
             ]
           },
           "titles": {
@@ -455,13 +461,14 @@
             "type": "string",
             "minLength": 1
           },
-          "journal_dois": {
+          "publisher_dois": {
+            "title": "Publisher DOIs",
             "description": "The journal DOI(s).",
             "type": "array",
-            "$comment": "Do we want additional properties to indicate the type or provenance of the DOI?",
             "items": {
               "$ref": "#/definitions/doi"
-            }
+            },
+            "minItems": 1
           },
           "arxiv_doi": {
             "title": "arXiv DOI",
@@ -508,8 +515,8 @@
             "uniqueItems": true,
             "$comment": "should this be version-specific?"
           },
-          "publication_status": {
-            "$ref": "#/definitions/publication_status"
+          "external_publication_status": {
+            "$ref": "#/definitions/external_publication_status"
           },
           "source_info": {
             "title": "Source information",
@@ -527,7 +534,7 @@
           "abstracts",
           "legacy_authors",
           "authors",
-          "publication_status",
+          "arxiv_status",
           "source_info",
           "submitter"
         ]
