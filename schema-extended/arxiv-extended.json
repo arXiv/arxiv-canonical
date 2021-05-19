@@ -6,23 +6,41 @@
     "additionalProperties": false,
 
     "definitions": {
-      "abstract": {
-        "title": "Abstract",
-        "type": "object",
-        "properties": {
-          "abstract": {
-            "type": "string",
-            "minLength": 1,
-            "$comment": "there are some rare cases (quant-ph/0202054v5, hep-th/0407186v1, astro-ph/0005231v2) with empty abstracts that will need to be fixed."
-          },
-          "language": {
-            "$ref": "#/definitions/language"
+      "abstracts": {
+        "title": "List of abstracts",
+        "description": "The English and non-English versions of the abstract. The English abstract must be provided first.",
+        "type": "array",
+        "items": [
+          {
+            "type": "object",
+            "properties": {
+              "abstract": {
+                "type": "string",
+                "minLength": 1
+              },
+              "language": {
+                "const": "en"
+              }
+            },
+            "additionalProperties": false
           }
-        },
-        "required": [
-          "abstract",
-          "language"
-        ]
+        ],
+        "additionalItems": {
+          "type": "object",
+          "properties": {
+            "abstract": {
+              "type": "string",
+              "minLength": 1
+            },
+            "language": {
+               "allOf": [
+                 {"$ref": "#/definitions/language"},
+                 {"not": {"enum": ["en"]}}
+             ]
+            }
+          },
+          "additionalProperties": false
+        }
       },
       "affiliation": {
         "title": "Affiliation",
@@ -270,21 +288,41 @@
         ],
         "additionalProperties": false
       },
-      "title": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 1
-          },
-          "language": {
-            "$ref": "#/definitions/language"
+      "titles": {
+        "title": "List of titles",
+        "description": "The English and non-English versions of the title. The English title must be provided first.",
+        "type": "array",
+        "items": [
+          {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "language": {
+                "const": "en"
+              }
+            },
+            "additionalProperties": false
           }
-        },
-        "required": [
-          "title",
-          "language"
-        ]
+        ],
+        "additionalItems": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "language": {
+               "allOf": [
+                 {"$ref": "#/definitions/language"},
+                 {"not": {"enum": ["en"]}}
+             ]
+            }
+          },
+          "additionalProperties": false
+        }
       },
       "author_link": {
         "tile": "Author link",
@@ -374,23 +412,12 @@
             ]
           },
           "titles": {
+            "title": "Titles",
             "description": "The English and non-English versions of the title.",
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/title"
-            },
-            "minItems": 1,
-            "uniqueItems": true
+            "$ref": "#/definitions/titles"
           },
           "abstracts": {
-            "title": "List of abstracts",
-            "description": "The English and non-English versions of the abstract. The Engli",
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/abstract"
-            },
-            "minItems": 1,
-            "uniqueItems": true
+            "$ref": "#/definitions/abstracts"
           },
           "legacy_authors": {
             "title": "Legacy authors",
@@ -586,7 +613,9 @@
       "versions": {
         "title": "List of arXiv document versions",
         "type": "array",
-        "$ref": "#/definitions/version",
+        "items": {
+          "$ref": "#/definitions/version"
+        },
         "minItems": 1,
         "uniqueItems": true
       }
