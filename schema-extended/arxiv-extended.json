@@ -237,9 +237,9 @@
         },
         "required": [
           "full_name",
-          "first_name",
           "last_name"
-        ]
+        ],
+        "$comment": "Removed requirement for first name. Some people do not have a last name--optional too?"
       },
       "arxiv_status": {
         "title": "arXiv posting status",
@@ -324,8 +324,8 @@
           "additionalProperties": false
         }
       },
-      "author_link": {
-        "tile": "Author link",
+      "related_link": {
+        "tile": "Related link",
         "description": "Author-provided link to related resource.",
         "type": "object",
         "properties": {
@@ -557,8 +557,8 @@
             ],
             "$comment": "TODO: consider array of an enumerated definition instead. Legacy input is inconsistent."
           },
-          "author_links": {
-            "title": "List of author links",
+          "related_links": {
+            "title": "List of related links",
             "type": "array",
             "items": {
               "$ref": "#/definitions/author_link"
