@@ -222,13 +222,9 @@
           },
           "author_id": {
             "description": "arXiv author identifier, if available.",
-            "oneOf": [
-              {
-                "type": "string",
-                "pattern": "^[a-z]+_[a-z]{1}_[0-9]+$"
-              },
-              {"type": "null"}
-            ]
+            "type": "string",
+            "pattern": "^[a-z]+_[a-z]{1}_[0-9]+$",
+            "$comment": "make generic?"
           },
           "is_submitter": {
             "description": "Indicates whether this person is the submitter of this submission",
@@ -280,6 +276,30 @@
             "title": "Source size in kilobytes",
             "description": "The size of the source file, in kilobytes.",
             "type": "number"
+          },
+          "checksum": {
+            "title": "Checksum",
+            "description": "Checksum of the source file, if source file exists.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "type": "string",
+                  "enum": ["MD5", "SHA-1", "SHA-256", "SHA-512"]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
           }
         },
         "required": [
