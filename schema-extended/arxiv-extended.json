@@ -77,12 +77,6 @@
         "pattern": "^([a-z]{3,}-[a-z]{2,}|[a-z]{2,}-?[a-z]+\\.[A-Z]{2})$",
         "$comment": "TODO: enumeration"
       },
-      "document_type": {
-        "title": "Document type",
-        "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
-        "type": "string",
-        "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
-      },
       "collaboration": {
         "type": "object",
         "properties": {
@@ -97,6 +91,40 @@
         "title": "Comment",
         "type": "string",
         "minLength": 1
+      },
+      "conference_info": {
+        "title": "Conference information",
+        "type": "object",
+        "$comment": "based on subset of INSPIRE's definition",
+        "properties": {
+          "conference_titles": {
+            "title": "List of conference titles",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "cnum": {
+            "title": "CNUM identifier of the conference",
+            "description": "The CNUM is based on the starting day of the conference, with an extra number appended to distinguish conferences starting on the first day.",
+            "type": "string",
+            "pattern": "^C\\d\\d-\\d\\d-\\d\\d(\\.\\d+)?$",
+            "examples": [
+              "C87-12-25",
+              "C87-12-25.2"
+            ]
+
+          }
+        }
+      },
+      "document_type": {
+        "title": "Document type",
+        "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
+        "type": "string",
+        "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
       },
       "doi": {
         "title": "DOI",
@@ -600,6 +628,10 @@
             "title": "Source information",
             "description": "Information about the input source files.",
             "$ref": "#/definitions/source_info"
+          },
+          "conference_info": {
+            "$ref": "#/definitions/conference_info",
+            "$comment": "not currently tied to document_type."
           },
           "references": {
             "title": "List of references",
