@@ -368,6 +368,7 @@
         },
         "required": [
           "uri",
+          "display_text",
           "category"
         ]
       },
@@ -419,8 +420,8 @@
             "type": "string",
             "format": "date-time"
           },
-          "publication_date": {
-            "title": "Publication date",
+          "announced_date": {
+            "title": "Announced date",
             "description": "Date this version was announced.",
             "type": "string",
             "format": "date-time"
@@ -608,7 +609,7 @@
         "required": [
           "identifier",
           "submitted_date",
-          "publication_date",
+          "announced_date",
           "license",
           "content_types",
           "titles",
