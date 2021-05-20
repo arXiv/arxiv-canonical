@@ -6,11 +6,11 @@
   "versions": [
     {
       "identifier": "2105.01224v1",
-      "content_types": [
+      "document_types": [
         "article"
       ],
       "submitted_date": "2021-05-04T12:34:56Z",
-      "publication_date": "2021-05-06T12:00:00Z",
+      "announced_date": "2021-05-06T12:00:00Z",
       "license": "http://creativecommons.org/licenses/by/4.0/",
       "titles": [
         {
@@ -109,13 +109,13 @@
         "legacy_comments": "32 pages, 14 figures"
       },
       "arxiv_status": "posted",
-      "publication_status": {
-        "status": "posted",
-        "is_accepted_version": false
-      },
+      "external_publication_status": "preprint",
       "source_info": {
         "source_format": "tex",
-        "size_kilobytes": 5224
+        "size_kilobytes": 5224,
+        "checksum": [
+          {"algorithm": "MD5", "value": "805a012b9a36ff706a49fc6adce08085"}
+        ]
       }
     }
   ]

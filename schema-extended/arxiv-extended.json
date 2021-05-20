@@ -77,8 +77,8 @@
         "pattern": "^([a-z]{3,}-[a-z]{2,}|[a-z]{2,}-?[a-z]+\\.[A-Z]{2})$",
         "$comment": "TODO: enumeration"
       },
-      "content_type": {
-        "title": "Content type",
+      "document_type": {
+        "title": "Document type",
         "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
         "type": "string",
         "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
@@ -248,7 +248,7 @@
         "title": "External publication status",
         "description": "The publication status of this document version.",
         "type": "string",
-        "enum": ["pre-print", "submitted", "accepted", "published"],
+        "enum": ["preprint", "submitted", "accepted", "published"],
         "$comment": "Is this enough?"
       },
       "reference_string": {
@@ -290,7 +290,7 @@
                 },
                 "value": {
                   "type": "string",
-                  "minLength": 1
+                  "pattern": "^[0-9a-f]+$"
                 }
               },
               "required": [
@@ -386,11 +386,14 @@
 
         "type": "object",
         "properties": {
-          "content_types": {
-            "title": "List of content types",
+          "identifier": {
+            "$ref": "#/definitions/versioned_identifier"
+          },
+          "document_types": {
+            "title": "List of document types",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/content_type"
+              "$ref": "#/definitions/document_type"
             },
             "minItems": 1,
             "uniqueItems": true
@@ -582,10 +585,13 @@
             "title": "List of related links",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/author_link"
+              "$ref": "#/definitions/related_link"
             },
             "minItems": 1,
             "$comment": "should this be document-specific instead of version-specific?"
+          },
+          "arxiv_status": {
+            "$ref": "#/definitions/arxiv_status"
           },
           "external_publication_status": {
             "$ref": "#/definitions/external_publication_status"
@@ -611,7 +617,7 @@
           "submitted_date",
           "announced_date",
           "license",
-          "content_types",
+          "document_types",
           "titles",
           "abstracts",
           "legacy_authors",
@@ -619,16 +625,19 @@
           "arxiv_status",
           "source_info",
           "submitter"
-        ]
+        ],
+        "additionalProperties": false
       }
     },
 
-    "required": [
-      "identifier",
-      "classifications",
-      "versions"
-    ],
     "properties": {
+      "$schema": {
+        "description": "Schema URI this document adheres to.",
+        "type": "string",
+        "format": "uri",
+        "minLength": 1,
+        "$comment": "This is an unconventional/unsanctioned way to use the $schema property as a schema declaration in an instance, but there are some real-world precedents for this (e.g. INSPIRE, Azure templates)"
+      },
       "identifier": {
         "title": "arXiv identifier",
         "description": "Canonical arXiv e-print identifier, without a version affix.",
@@ -636,7 +645,7 @@
       },
       "classifications": {
         "title": "Classifications",
-        "description": "Primary and optional secondary classifications of this document. Primary must be listed first (0-index); secondaries are unranked must be sorted alphabetically.",
+        "description": "Primary and optional secondary classifications of this document. Primary must be listed first (0-index); secondaries are unranked.",
         "type": "array",
         "items": { "$ref": "#/definitions/category" },
         "minItems": 1,
@@ -655,5 +664,10 @@
         },
         "minItems": 1
       }
-    }
+    },
+    "required": [
+      "identifier",
+      "classifications",
+      "versions"
+    ]
 }
