@@ -398,7 +398,7 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "submitter": {
+          "submitter_info": {
             "title": "Submitter",
             "description": "Information about the submitter and possible proxy for the submitter.",
             "type": "object",
@@ -624,7 +624,7 @@
           "authors",
           "arxiv_status",
           "source_info",
-          "submitter"
+          "submitter_info"
         ],
         "additionalProperties": false
       }

@@ -24,7 +24,7 @@
       "document_types": [
         "article"
       ],
-      "submitter": {
+      "submitter_info": {
         "submitter": {
           "full_name": "Vasilii Gvaramadze",
           "first_name": "Vasilii",
@@ -105,7 +105,7 @@
       "document_types": [
         "article"
       ],
-      "submitter": {
+      "submitter_info": {
         "submitter": {
           "full_name": "Vasilii Gvaramadze",
           "first_name": "Vasilii",
@@ -186,7 +186,7 @@
       "document_types": [
         "article"
       ],
-      "submitter": {
+      "submitter_info": {
         "submitter": {
           "full_name": "Vasilii Gvaramadze",
           "first_name": "Vasilii",
