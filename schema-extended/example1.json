@@ -1,8 +1,7 @@
 {
   "identifier": "2105.01224",
-  "primary_classification": "hep-ex",
-  "secondary_classifications": [
-    "hep-ph"
+    "classifications": [
+    "hep-ex", "hep-ph"
   ],
   "versions": [
     {
