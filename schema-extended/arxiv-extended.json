@@ -116,9 +116,11 @@
               "C87-12-25",
               "C87-12-25.2"
             ]
-
           }
-        }
+        },
+        "required": [
+          "conference_titles"
+        ]
       },
       "document_type": {
         "title": "Document type",
