@@ -68,6 +68,9 @@ definitions:
         description: The fullest representation of the collaborations's name
         type: string
         minLength: 1
+    required:
+    - name
+    additionalProperties: false
   comment:
     title: Comment
     type: string
@@ -342,7 +345,7 @@ definitions:
               - en
       additionalProperties: false
   related_link:
-    tile: Related link
+    title: Related link
     description: Author-provided link to related resource.
     type: object
     properties:
@@ -464,7 +467,7 @@ definitions:
         type: object
         properties:
           author_comments:
-            Title: Author comments
+            title: Author comments
             description: Comments from authors.
             type: array
             items:
@@ -610,7 +613,7 @@ properties:
     - - cs.DL
     - - cs.SI
       - physics.soc-ph
-    $comments: This is an alternative to separate primary and secondary classification
+    $comment: This is an alternative to separate primary and secondary classification
       fields.
   versions:
     title: List of arXiv document versions
