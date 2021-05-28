@@ -132,7 +132,7 @@
         "title": "DOI",
         "description": "Digital Object Identifier.",
         "type": "string",
-        "pattern": "^10\\.\\d{4,9}/\\S+$",
+        "pattern": "^10\\.\\d+(\\.\\d+)?/\\S+$",
         "minLength": 1
       },
       "funding": {
