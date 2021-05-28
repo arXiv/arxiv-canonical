@@ -688,7 +688,7 @@
           ["cs.DL"],
           ["cs.SI", "physics.soc-ph"]
         ],
-        "$comments": "This is an alternative to separate primary and secondary classification fields."
+        "$comment": "This is an alternative to separate primary and secondary classification fields."
       },
       "versions": {
         "title": "List of arXiv document versions",
