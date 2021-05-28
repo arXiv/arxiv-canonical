@@ -375,7 +375,7 @@
         }
       },
       "related_link": {
-        "tile": "Related link",
+        "title": "Related link",
         "description": "Author-provided link to related resource.",
         "type": "object",
         "properties": {
@@ -514,7 +514,7 @@
             "type": "object",
             "properties": {
               "author_comments": {
-                "Title": "Author comments",
+                "title": "Author comments",
                 "description": "Comments from authors.",
                 "type": "array",
                 "items": {
