@@ -110,16 +110,6 @@
             },
             "minItems": 1,
             "uniqueItems": true
-          },
-          "cnum": {
-            "title": "CNUM identifier of the conference",
-            "description": "The CNUM is based on the starting day of the conference, with an extra number appended to distinguish conferences starting on the first day.",
-            "type": "string",
-            "pattern": "^C\\d\\d-\\d\\d-\\d\\d(\\.\\d+)?$",
-            "examples": [
-              "C87-12-25",
-              "C87-12-25.2"
-            ]
           }
         },
         "required": [
