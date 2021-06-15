@@ -1,0 +1,627 @@
+---
+$schema: http://json-schema.org/draft-07/schema#
+title: arXiv Document Metadata
+description: Extended metadata record for an arXiv document.
+type: object
+additionalProperties: false
+definitions:
+  abstracts:
+    title: List of abstracts
+    description: The English and non-English versions of the abstract. The English
+      abstract must be provided first.
+    type: array
+    items:
+    - type: object
+      properties:
+        abstract:
+          type: string
+          minLength: 1
+        language:
+          const: en
+      additionalProperties: false
+    additionalItems:
+      type: object
+      properties:
+        abstract:
+          type: string
+          minLength: 1
+        language:
+          allOf:
+          - $ref: '#/definitions/language'
+          - not:
+              enum:
+              - en
+      additionalProperties: false
+  affiliation:
+    title: Affiliation
+    description: Institutional affiliation.
+    type: object
+    properties:
+      name:
+        description: The complete name of the affiliation.
+        type: string
+        minLength: 1
+      ror_id:
+        title: ROR ID
+        description: Research Organization Registry ID.
+        type: string
+        pattern: "^https://ror\\.org/0\\w{6}\\d{2}$"
+        examples:
+        - https://ror.org/05bnh6r87
+        - https://ror.org/05gzmn429
+        - https://ror.org/01ggx4157
+        - https://ror.org/03c3r2d17
+    required:
+    - name
+    additionalProperties: false
+  category:
+    title: arXiv category
+    description: This is the abbreviated form of the arXiv category using the category
+      identifier
+    type: string
+    pattern: "^([a-z]{3,}-[a-z]{2,}|[a-z]{2,}-?[a-z]+\\.[A-Z]{2})$"
+    $comment: "TODO: enumeration"
+  collaboration:
+    type: object
+    properties:
+      name:
+        description: The fullest representation of the collaborations's name
+        type: string
+        minLength: 1
+    required:
+    - name
+    additionalProperties: false
+  comment:
+    title: Comment
+    type: string
+    minLength: 1
+  conference_info:
+    title: Conference information
+    type: object
+    $comment: based on subset of INSPIRE's definition
+    properties:
+      conference_titles:
+        title: List of conference titles
+        type: array
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+        uniqueItems: true
+      cnum:
+        title: CNUM identifier of the conference
+        description: "The CNUM is based on the starting day of the conference, with\
+          \ an extra number appended to distinguish conferences starting on the first\
+          \ day."
+        type: string
+        pattern: ^C\d\d-\d\d-\d\d(\.\d+)?$
+        examples:
+        - C87-12-25
+        - C87-12-25.2
+    required:
+    - conference_titles
+  document_type:
+    title: Document type
+    $comment: "TODO: enumeration needs further review, and will need to decide whether\
+      \ the items require their own definitions with more structure."
+    type: string
+    enum:
+    - article
+    - autobiography
+    - biography
+    - book
+    - book chapter
+    - book review
+    - conference proceeding
+    - conference proceeding index
+    - erratum
+    - memorial
+    - thesis
+    - lecture notes
+    - whitepaper
+  doi:
+    title: DOI
+    description: Digital Object Identifier.
+    type: string
+    pattern: ^10\.\d+(\.\d+)?/\S+$
+    minLength: 1
+  funding:
+    type: object
+    properties:
+      funding_statement:
+        title: Funding statement
+        type: string
+        minLength: 1
+      funder_doi:
+        description: DOI from the Funder Registry
+        $ref: '#/definitions/doi'
+      project_name:
+        title: Project name
+        description: The full name of the project.
+        type: string
+        minLength: 1
+      project_acronym:
+        title: Project acronym
+        description: The abbreviated name of the project.
+        type: string
+        minLength: 1
+      grant_number:
+        title: Grant number
+        type: string
+        minLength: 1
+    additionalProperties: false
+  language:
+    description: The 2-letter ISO 639-1 language classification.
+    type: string
+    $comment: "TODO: need complete list of language codes"
+    enum:
+    - en
+    - de
+    - fr
+    - ru
+    - cn
+  active_licenses:
+    title: Active licenses
+    description: Licenses that are selectable upon submission to arXiv.
+    type: string
+    enum:
+    - http://creativecommons.org/licenses/by/4.0/
+    - http://creativecommons.org/licenses/by-sa/4.0/
+    - http://creativecommons.org/licenses/by-nc-sa/4.0/
+    - http://creativecommons.org/licenses/by-nc-nd/4.0/
+    - http://arxiv.org/licenses/nonexclusive-distrib/1.0/
+    - http://creativecommons.org/publicdomain/zero/1.0/
+  inactive_licenses:
+    title: Inactive licenses
+    description: Historical licenses that are no longer selectable upon submission
+      to arXiv.
+    type: string
+    enum:
+    - http://arxiv.org/licenses/assumed-1991-2003/
+    - http://creativecommons.org/licenses/by/3.0/
+    - http://creativecommons.org/licenses/by-nc-sa/3.0/
+    - http://creativecommons.org/licenses/publicdomain
+  person:
+    type: object
+    properties:
+      full_name:
+        description: The fullest representation of the person's name available in
+          arXiv metadata.
+        type: string
+        minLength: 1
+      last_name:
+        description: "The family or surname part of the person's name, if available."
+        type: string
+        minLength: 1
+      first_name:
+        description: "The personal or forename part of the person's name, if available."
+        type: string
+        minLength: 1
+      suffix:
+        description: "The suffix part of the person's name, if available."
+        type: string
+        minLength: 1
+        examples:
+        - Jr.
+        - Sr.
+        - I
+        - II
+        - III
+      affiliations:
+        title: List of affiliations
+        description: Institutional affiliations
+        type: array
+        items:
+          $ref: '#/definitions/affiliation'
+        minItems: 1
+      orcid:
+        title: ORCID iD
+        allOf:
+        - type: string
+          pattern: "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$"
+        - type: string
+          $comment: "TODO: consider adding 'orcid' format here; would need to implement\
+            \ validator using checksum method described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
+      author_id:
+        description: "arXiv author identifier, if available."
+        type: string
+        pattern: "^[a-z]+_[a-z]{1}_[0-9]+$"
+        $comment: make generic?
+      is_submitter:
+        description: Indicates whether this person is the submitter of this submission
+        type: boolean
+    required:
+    - full_name
+    - last_name
+    $comment: Removed requirement for first name. Some people do not have a last name--optional
+      too?
+  arxiv_status:
+    title: arXiv posting status
+    description: The status of this document version on arXiv.
+    type: string
+    enum:
+    - posted
+    - withdrawn
+    minLength: 1
+  external_publication_status:
+    title: External publication status
+    description: The publication status of this document version.
+    type: string
+    enum:
+    - preprint
+    - submitted
+    - accepted
+    - published
+    $comment: Is this enough?
+  reference_string:
+    title: Reference string
+    description: An unstructured reference string.
+    type: string
+    minLength: 1
+  source_info:
+    title: Source information
+    description: Information about the source input.
+    type: object
+    properties:
+      source_format:
+        title: Source format
+        type: string
+        enum:
+        - tex
+        - pdftex
+        - pdf
+        - ps
+        - html
+        - docx
+        - none
+      legacy_source_flags:
+        title: Legacy source flags
+        type: string
+        enum:
+        - 1
+        - 1A
+        - 1S
+        - A
+        - AD
+        - AS
+        - D
+        - S
+        - S1
+      size_kilobytes:
+        title: Source size in kilobytes
+        description: "The size of the source file, in kilobytes."
+        type: number
+      checksum:
+        title: Checksum
+        description: "Checksum of the source file, if source file exists."
+        type: array
+        items:
+          type: object
+          properties:
+            algorithm:
+              type: string
+              enum:
+              - MD5
+              - SHA-1
+              - SHA-256
+              - SHA-512
+            value:
+              type: string
+              pattern: "^[0-9a-f]+$"
+          required:
+          - algorithm
+          - value
+          additionalProperties: false
+        minItems: 1
+    required:
+    - source_format
+    - size_kilobytes
+    additionalProperties: false
+  titles:
+    title: List of titles
+    description: The English and non-English versions of the title. The English title
+      must be provided first.
+    type: array
+    items:
+    - type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        language:
+          const: en
+      additionalProperties: false
+    additionalItems:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        language:
+          allOf:
+          - $ref: '#/definitions/language'
+          - not:
+              enum:
+              - en
+      additionalProperties: false
+  related_link:
+    title: Related link
+    description: Author-provided link to related resource.
+    type: object
+    properties:
+      uri:
+        type: string
+        format: uri
+      display_text:
+        description: Descriptive text to associate with the URI.
+        type: string
+        minLength: 1
+      category:
+        title: Link category
+        description: The type of resource the link resolves to.
+        type: string
+        $comment: "TODO: refine this enumeration"
+        enum:
+        - related article
+        - slides
+        - notes
+        - software
+        - dataset
+        - simulation
+        - video
+        - review
+        - news item
+        - personal website
+        - blog entry
+        - other
+    required:
+    - uri
+    - display_text
+    - category
+  unversioned_identifier:
+    title: arXiv canonical identifier
+    type: string
+    pattern: "^(([0-9]{4}\\.[0-9]{4,5})|([a-z\\-]+\\/[0-9]{2}[01][0-9]{4}))$"
+  versioned_identifier:
+    title: arXiv canonical identifier with version affix
+    type: string
+    pattern: "^(([0-9]{4}\\.[0-9]{4,5})|([a-z\\-]+\\/[0-9]{2}[01][0-9]{4}))v[0-9]+$"
+  version:
+    type: object
+    properties:
+      identifier:
+        $ref: '#/definitions/versioned_identifier'
+      document_types:
+        title: List of document types
+        type: array
+        items:
+          $ref: '#/definitions/document_type'
+        minItems: 1
+        uniqueItems: true
+      submitter_info:
+        title: Submitter
+        description: Information about the submitter and possible proxy for the submitter.
+        type: object
+        properties:
+          submitter:
+            $ref: '#/definitions/person'
+          proxy_name:
+            title: Proxy name
+            description: Name of the proxy that submitted on the submitter's behalf.
+            type: string
+            minLength: 1
+        required:
+        - submitter
+      submitted_date:
+        title: Submitted date
+        description: Date this version was submitted.
+        type: string
+        format: date-time
+      announced_date:
+        title: Announced date
+        description: Date this version was announced.
+        type: string
+        format: date-time
+      license:
+        title: License
+        description: The license associated with the content.
+        oneOf:
+        - $ref: '#/definitions/active_licenses'
+        - $ref: '#/definitions/inactive_licenses'
+      titles:
+        title: Titles
+        description: The English and non-English versions of the title.
+        $ref: '#/definitions/titles'
+      abstracts:
+        $ref: '#/definitions/abstracts'
+      legacy_authors:
+        title: Legacy authors
+        description: "The legacy authors field, which is an unstructured string."
+        type: string
+        minLength: 1
+        examples:
+        - "J. Doe (Cornell University), M. Smith (Stanford University), F. Bar"
+      authors:
+        title: Authors
+        type: array
+        items:
+          $ref: '#/definitions/person'
+        minItems: 1
+      collaborations:
+        title: Collaborations
+        description: Collaborations associated with this e-print. Should not include
+          'Collaboration' suffix.
+        type: array
+        items:
+          $ref: '#/definitions/collaboration'
+        examples:
+        - ATLAS
+        - BABAR
+        - L3
+        - ZEUS
+        minItems: 1
+        uniqueItems: true
+      comments:
+        title: Comments
+        description: Comments from authors or arXiv administrators.
+        type: object
+        properties:
+          author_comments:
+            title: Author comments
+            description: Comments from authors.
+            type: array
+            items:
+              $ref: '#/definitions/comment'
+            minItems: 1
+            uniqueItems: true
+          administrator_comments:
+            title: Administrator comments
+            description: Comments from by arXiv administrators
+            type: array
+            items:
+              $ref: '#/definitions/comment'
+            minItems: 1
+            uniqueItems: true
+          legacy_comments:
+            description: Unstructured comments from authors and/or arXiv administrators.
+            $ref: '#/definitions/comment'
+      journal_ref:
+        title: Journal reference
+        description: "The full bibliographic reference if the article has already\
+          \ appeared in a journal, proceedings, etc."
+        type: string
+        minLength: 1
+      publisher_dois:
+        title: List of publisher-provided DOIs
+        description: The publisher DOI(s).
+        type: array
+        items:
+          $ref: '#/definitions/doi'
+        minItems: 1
+        uniqueItems: true
+      submitter_dois:
+        title: List of submitter-provided DOIs
+        description: The submitter DOI(s).
+        type: array
+        items:
+          $ref: '#/definitions/doi'
+        minItems: 1
+        uniqueItems: true
+      arxiv_doi:
+        title: arXiv DOI
+        description: The arXiv-issued DOI.
+        $ref: '#/definitions/doi'
+      report_numbers:
+        title: List of report numbers
+        type: array
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+        uniqueItems: true
+      msc_classes:
+        title: List of MSC classes
+        description: Classifications from American Mathematical Society Mathematical
+          Subject Classification (MSC).
+        type: string
+        minLength: 1
+        examples:
+        - "Primary 14N35, Secondary 14H10, 14H20, 14J26"
+        - "Primary 46F30. Secondary: 44A10, 46S10, 46F10, 12J15, 12J25, 16W60"
+        - "46B20, 47H10, 54B20, 54F15, 68U05"
+        $comment: "TODO: consider array of an enumerated definition instead. Legacy\
+          \ input is inconsistent."
+      keywords:
+        title: List of keywords
+        description: Keywords may include ACM and MSC subject classes.
+        type: array
+        $comment: "WIP, consolidate subject classes"
+      acm_classes:
+        title: List of ACM classes
+        description: Classifications from ACM Computing Classification System.
+        type: string
+        minLength: 1
+        examples:
+        - C.2.0; C.2.2; C.2.3; C.2.6
+        - I.3.5
+        - G.1.6; F.1.1; I.2.6; G.1.3
+        $comment: "TODO: consider array of an enumerated definition instead. Legacy\
+          \ input is inconsistent."
+      related_links:
+        title: List of related links
+        type: array
+        items:
+          $ref: '#/definitions/related_link'
+        minItems: 1
+        $comment: should this be document-specific instead of version-specific?
+      arxiv_status:
+        $ref: '#/definitions/arxiv_status'
+      external_publication_status:
+        $ref: '#/definitions/external_publication_status'
+      source_info:
+        title: Source information
+        description: Information about the input source files.
+        $ref: '#/definitions/source_info'
+      conference_info:
+        $ref: '#/definitions/conference_info'
+        $comment: not currently tied to document_type.
+      references:
+        title: List of references
+        description: List of unstructured reference strings.
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/definitions/reference_string'
+        uniqueItems: true
+    required:
+    - identifier
+    - submitted_date
+    - announced_date
+    - license
+    - document_types
+    - titles
+    - abstracts
+    - legacy_authors
+    - authors
+    - arxiv_status
+    - source_info
+    - submitter_info
+    additionalProperties: false
+properties:
+  $schema:
+    description: Schema URI this document adheres to.
+    type: string
+    format: uri
+    minLength: 1
+    $comment: "This is an unconventional/unsanctioned way to use the $schema property\
+      \ as a schema declaration in an instance, but there are some real-world precedents\
+      \ for this (e.g. INSPIRE, Azure templates)"
+  identifier:
+    title: arXiv identifier
+    description: "Canonical arXiv e-print identifier, without a version affix."
+    $ref: '#/definitions/unversioned_identifier'
+  classifications:
+    title: Classifications
+    description: Primary and optional secondary classifications of this document.
+      Primary must be listed first (0-index); secondaries are unranked.
+    type: array
+    items:
+      $ref: '#/definitions/category'
+    minItems: 1
+    uniqueItems: true
+    examples:
+    - - cs.DL
+    - - cs.SI
+      - physics.soc-ph
+    $comment: This is an alternative to separate primary and secondary classification
+      fields.
+  versions:
+    title: List of arXiv document versions
+    type: array
+    items:
+      $ref: '#/definitions/version'
+    minItems: 1
+required:
+- identifier
+- classifications
+- versions
