@@ -577,36 +577,35 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "msc_classes": {
-            "title": "List of MSC classes",
-            "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC).",
-            "type": "string",
-            "minLength": 1,
-            "examples": [
-              "Primary 14N35, Secondary 14H10, 14H20, 14J26",
-              "Primary 46F30. Secondary: 44A10, 46S10, 46F10, 12J15, 12J25, 16W60",
-              "46B20, 47H10, 54B20, 54F15, 68U05"
-            ],
-            "$comment": "TODO: consider array of an enumerated definition instead. Legacy input is inconsistent."
-
-          },
           "keywords": {
             "title": "List of keywords",
-            "description": "Keywords may include ACM and MSC subject classes.",
+            "description": "A list of individual keywords that may belong to a vocabulary.",
             "type": "array",
-            "$comment": "WIP, consolidate subject classes"
-          },
-          "acm_classes": {
-            "title": "List of ACM classes",
-            "description": "Classifications from ACM Computing Classification System.",
-            "type": "string",
-            "minLength": 1,
-            "examples": [
-              "C.2.0; C.2.2; C.2.3; C.2.6",
-              "I.3.5",
-              "G.1.6; F.1.1; I.2.6; G.1.3"
-            ],
-            "$comment": "TODO: consider array of an enumerated definition instead. Legacy input is inconsistent."
+            "items": {
+              "type": "object",
+              "properties": {
+                "vocabulary": {
+                  "title": "Keyword vocabulary",
+                  "description": "The keyword vocabulary this keyword belongs to.",
+                  "type": "string",
+                  "enum": ["ACM", "INIS", "JACOW", "MSC", "PACS", "PDG", "UAT"]
+                },
+                "value": {
+                  "title": "Keyword",
+                  "description": "A keyword that is either part of a vocabulary or free-form.",
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "examples": [
+                [{"vocabulary": "ACM", "value": "C.2.0;"}, {"vocabulary": "ACM", "value": "C.2.2"}],
+                [{"vocabulary": "MSC", "value": "46B20"}]
+              ],
+              "required": ["value"],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "uniqueItems": true
           },
           "related_links": {
             "title": "List of related links",
