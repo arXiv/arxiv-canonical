@@ -266,8 +266,7 @@
           }
         },
         "required": [
-          "full_name",
-          "last_name"
+          "full_name"
         ],
         "$comment": "Removed requirement for first name. Some people do not have a last name--optional too?"
       },
