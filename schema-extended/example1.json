@@ -1,11 +1,16 @@
 {
-  "identifier": "2105.01224",
-    "classifications": [
-    "hep-ex", "hep-ph"
+  "identifiers": {
+      "arxiv_id": "2105.01224"
+  },
+    "primary_classification": "hep-ex",
+    "secondary_classifications": [
+    "hep-ph"
   ],
-  "versions": [
+"versions": [
     {
-      "identifier": "2105.01224v1",
+      "identifiers": {
+          "arxiv_idv": "2105.01224v1"
+      },
       "document_types": [
         "article"
       ],
@@ -37,7 +42,10 @@
           "full_name": "Kensuke Homma",
           "first_name": "Kensuke",
           "last_name": "Homma",
-          "is_submitter": true
+          "is_submitter": true,
+          "affiliations": [
+            {"name": "Example University"}
+          ]
         },
         {
           "full_name": "Yuri Kirita",
