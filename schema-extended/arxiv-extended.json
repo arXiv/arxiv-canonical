@@ -420,8 +420,23 @@
 
         "type": "object",
         "properties": {
-          "identifier": {
-            "$ref": "#/definitions/versioned_identifier"
+          "identifiers": {
+            "title": "arXiv-issued identifiers for this version.",
+            "type": "object",
+            "properties": {
+                "arxiv_idv": {
+                  "title": "arXiv identifier",
+                  "description": "The arXiv identifier for this version, with a version affix.",
+                  "$ref": "#/definitions/versioned_identifier"
+                },
+                "arxiv_doi": {
+                  "title": "arXiv DOI",
+                  "description": "The arXiv-issued DOI for this version.",
+                  "$ref": "#/definitions/doi"
+                }
+            },
+            "required": ["arxiv_idv"],
+            "additionalProperties": false
           },
           "document_types": {
             "title": "List of document types",
@@ -569,11 +584,6 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "arxiv_doi": {
-            "title": "arXiv DOI",
-            "description": "The arXiv-issued DOI.",
-            "$ref": "#/definitions/doi"
-          },
           "report_numbers": {
             "title": "List of report numbers",
             "type": "array",
@@ -651,7 +661,7 @@
           }
         },
         "required": [
-          "identifier",
+          "identifiers",
           "submitted_date",
           "announced_date",
           "license",
@@ -676,10 +686,23 @@
         "minLength": 1,
         "$comment": "This is an unconventional/unsanctioned way to use the $schema property as a schema declaration in an instance, but there are some real-world precedents for this (e.g. INSPIRE, Azure templates)"
       },
-      "identifier": {
-        "title": "arXiv identifier",
-        "description": "Canonical arXiv e-print identifier, without a version affix.",
-        "$ref": "#/definitions/unversioned_identifier"
+      "identifiers": {
+        "title": "arXiv-issued identifiers for this document.",
+        "type": "object",
+        "properties": {
+            "arxiv_id": {
+              "title": "arXiv identifier",
+              "description": "The canonical arXiv identifier for this document, without a version affix.",
+              "$ref": "#/definitions/unversioned_identifier"
+            },
+            "arxiv_doi": {
+              "title": "arXiv DOI",
+              "description": "The arXiv-issued DOI for this document.",
+              "$ref": "#/definitions/doi"
+            }
+        },
+        "required": ["arxiv_id"],
+        "additionalProperties": false
       },
       "primary_classification": {
         "title": "Primary classification",
@@ -692,7 +715,7 @@
       },
       "secondary_classifications": {
         "title": "Secondary classifications",
-        "description": "Optional and unranked secondary classifications of this document. Sorted alphabetically in display.",
+        "description": "Optional and unranked secondary classifications of this document; sorted alphabetically when displayed.",
         "type": "array",
         "items": { "$ref": "#/definitions/category" },
         "minItems": 1,
@@ -701,6 +724,7 @@
           ["cs.DL"],
           ["cs.SI", "physics.soc-ph"]
         ]
+
       },
       "versions": {
         "title": "List of arXiv document versions",
@@ -712,7 +736,7 @@
       }
     },
     "required": [
-      "identifier",
+      "identifiers",
       "primary_classification",
       "versions"
     ]
