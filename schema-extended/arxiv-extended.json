@@ -159,6 +159,7 @@
             "minLength": 1
           }
         },
+        "required": ["funding_statement"],
         "additionalProperties": false
       },
       "language": {
@@ -233,16 +234,9 @@
           },
           "orcid": {
             "title": "ORCID iD",
-            "allOf": [
-              {
-                "type": "string",
-                "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$"
-              },
-              {
-                "type": "string",
-                "$comment": "TODO: consider adding 'orcid' format here; would need to implement validator using checksum method described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
-              }
-            ]
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$",
+            "$comment": "TODO: implement custom validator using checksum method described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
           },
           "author_id": {
             "description": "arXiv author identifier, if available.",
