@@ -99,7 +99,6 @@
       "conference_info": {
         "title": "Conference information",
         "type": "object",
-        "$comment": "based on subset of INSPIRE's definition",
         "properties": {
           "conference_titles": {
             "title": "List of conference titles",
@@ -110,6 +109,13 @@
             },
             "minItems": 1,
             "uniqueItems": true
+          },
+          "conference_pid": {
+            "title": "Conference Persistent Identifier",
+            "$comment": "placeholder to support: https://www.crossref.org/working-groups/conferences-projects/",
+            "description": "The persistent identifier for the conference.",
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
