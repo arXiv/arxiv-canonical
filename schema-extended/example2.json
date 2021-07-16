@@ -1,11 +1,15 @@
 {
-  "identifier": "1904.00012",
-  "classifications": [
-    "astro-ph.SR"
-  ],
+  "identifiers": {
+      "arxiv_id": "1904.00012"
+  },
+  "classification": {
+    "primary": "astro-ph.SR"
+  },
   "versions": [
     {
-      "identifier": "1904.00012v1",
+       "identifiers": {
+          "arxiv_idv": "1904.00012v1"
+      },
       "submitted_date": "2019-03-29T18:00:00Z",
       "announced_date": "2019-04-01T01:23:45Z",
       "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
@@ -86,7 +90,9 @@
       }
     },
     {
-      "identifier": "1904.00012v2",
+      "identifiers": {
+          "arxiv_idv": "1904.00012v2"
+      },
       "submitted_date": "2019-04-23T07:52:54Z",
       "announced_date": "2019-04-24T01:23:45Z",
       "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
@@ -167,7 +173,9 @@
       }
     },
     {
-      "identifier": "1904.00012v3",
+      "identifiers": {
+          "arxiv_idv": "1904.00012v3"
+      },
       "submitted_date": "2019-05-21T12:34:56Z",
       "announced_date": "2019-05-22T01:23:45Z",
       "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",

@@ -99,7 +99,6 @@
       "conference_info": {
         "title": "Conference information",
         "type": "object",
-        "$comment": "based on subset of INSPIRE's definition",
         "properties": {
           "conference_titles": {
             "title": "List of conference titles",
@@ -111,15 +110,12 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "cnum": {
-            "title": "CNUM identifier of the conference",
-            "description": "The CNUM is based on the starting day of the conference, with an extra number appended to distinguish conferences starting on the first day.",
+          "conference_pid": {
+            "title": "Conference Persistent Identifier",
+            "$comment": "placeholder to support: https://www.crossref.org/working-groups/conferences-projects/",
+            "description": "The persistent identifier for the conference.",
             "type": "string",
-            "pattern": "^C\\d\\d-\\d\\d-\\d\\d(\\.\\d+)?$",
-            "examples": [
-              "C87-12-25",
-              "C87-12-25.2"
-            ]
+            "minLength": 1
           }
         },
         "required": [
@@ -169,6 +165,7 @@
             "minLength": 1
           }
         },
+        "required": ["funding_statement"],
         "additionalProperties": false
       },
       "language": {
@@ -243,16 +240,9 @@
           },
           "orcid": {
             "title": "ORCID iD",
-            "allOf": [
-              {
-                "type": "string",
-                "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$"
-              },
-              {
-                "type": "string",
-                "$comment": "TODO: consider adding 'orcid' format here; would need to implement validator using checksum method described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
-              }
-            ]
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$",
+            "$comment": "TODO: implement custom validator using checksum method described in https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier"
           },
           "author_id": {
             "description": "arXiv author identifier, if available.",
@@ -266,8 +256,7 @@
           }
         },
         "required": [
-          "full_name",
-          "last_name"
+          "full_name"
         ],
         "$comment": "Removed requirement for first name. Some people do not have a last name--optional too?"
       },
@@ -417,11 +406,26 @@
         "pattern": "^(([0-9]{4}\\.[0-9]{4,5})|([a-z\\-]+\\/[0-9]{2}[01][0-9]{4}))v[0-9]+$"
       },
       "version": {
-
         "type": "object",
         "properties": {
-          "identifier": {
-            "$ref": "#/definitions/versioned_identifier"
+
+          "identifiers": {
+            "title": "arXiv-issued identifiers for this version.",
+            "type": "object",
+            "properties": {
+                "arxiv_idv": {
+                  "title": "arXiv identifier",
+                  "description": "The arXiv identifier for this version, with a version affix.",
+                  "$ref": "#/definitions/versioned_identifier"
+                },
+                "arxiv_doi": {
+                  "title": "arXiv DOI",
+                  "description": "The arXiv-issued DOI for this version.",
+                  "$ref": "#/definitions/doi"
+                }
+            },
+            "required": ["arxiv_idv"],
+            "additionalProperties": false
           },
           "document_types": {
             "title": "List of document types",
@@ -569,11 +573,6 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "arxiv_doi": {
-            "title": "arXiv DOI",
-            "description": "The arXiv-issued DOI.",
-            "$ref": "#/definitions/doi"
-          },
           "report_numbers": {
             "title": "List of report numbers",
             "type": "array",
@@ -584,36 +583,35 @@
             "minItems": 1,
             "uniqueItems": true
           },
-          "msc_classes": {
-            "title": "List of MSC classes",
-            "description": "Classifications from American Mathematical Society Mathematical Subject Classification (MSC).",
-            "type": "string",
-            "minLength": 1,
-            "examples": [
-              "Primary 14N35, Secondary 14H10, 14H20, 14J26",
-              "Primary 46F30. Secondary: 44A10, 46S10, 46F10, 12J15, 12J25, 16W60",
-              "46B20, 47H10, 54B20, 54F15, 68U05"
-            ],
-            "$comment": "TODO: consider array of an enumerated definition instead. Legacy input is inconsistent."
-
-          },
           "keywords": {
             "title": "List of keywords",
-            "description": "Keywords may include ACM and MSC subject classes.",
+            "description": "A list of individual keywords that may belong to a vocabulary.",
             "type": "array",
-            "$comment": "WIP, consolidate subject classes"
-          },
-          "acm_classes": {
-            "title": "List of ACM classes",
-            "description": "Classifications from ACM Computing Classification System.",
-            "type": "string",
-            "minLength": 1,
-            "examples": [
-              "C.2.0; C.2.2; C.2.3; C.2.6",
-              "I.3.5",
-              "G.1.6; F.1.1; I.2.6; G.1.3"
-            ],
-            "$comment": "TODO: consider array of an enumerated definition instead. Legacy input is inconsistent."
+            "items": {
+              "type": "object",
+              "properties": {
+                "vocabulary": {
+                  "title": "Keyword vocabulary",
+                  "description": "The keyword vocabulary this keyword belongs to.",
+                  "type": "string",
+                  "enum": ["ACM", "INIS", "JACOW", "MSC", "PACS", "PDG", "UAT"]
+                },
+                "value": {
+                  "title": "Keyword",
+                  "description": "A keyword that is either part of a vocabulary or free-form.",
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "examples": [
+                [{"vocabulary": "ACM", "value": "C.2.0;"}, {"vocabulary": "ACM", "value": "C.2.2"}],
+                [{"vocabulary": "MSC", "value": "46B20"}]
+              ],
+              "required": ["value"],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "uniqueItems": true
           },
           "related_links": {
             "title": "List of related links",
@@ -651,7 +649,7 @@
           }
         },
         "required": [
-          "identifier",
+          "identifiers",
           "submitted_date",
           "announced_date",
           "license",
@@ -676,23 +674,53 @@
         "minLength": 1,
         "$comment": "This is an unconventional/unsanctioned way to use the $schema property as a schema declaration in an instance, but there are some real-world precedents for this (e.g. INSPIRE, Azure templates)"
       },
-      "identifier": {
-        "title": "arXiv identifier",
-        "description": "Canonical arXiv e-print identifier, without a version affix.",
-        "$ref": "#/definitions/unversioned_identifier"
+      "identifiers": {
+        "title": "arXiv-issued identifiers for this document.",
+        "type": "object",
+        "properties": {
+            "arxiv_id": {
+              "title": "arXiv identifier",
+              "description": "The canonical arXiv identifier for this document, without a version affix.",
+              "$ref": "#/definitions/unversioned_identifier"
+            },
+            "arxiv_doi": {
+              "title": "arXiv DOI",
+              "description": "The arXiv-issued DOI for this document.",
+              "$ref": "#/definitions/doi"
+            }
+        },
+        "required": ["arxiv_id"],
+        "additionalProperties": false
       },
-      "classifications": {
-        "title": "Classifications",
-        "description": "Primary and optional secondary classifications of this document. Primary must be listed first (0-index); secondaries are unranked.",
-        "type": "array",
-        "items": { "$ref": "#/definitions/category" },
-        "minItems": 1,
-        "uniqueItems": true,
-        "examples": [
-          ["cs.DL"],
-          ["cs.SI", "physics.soc-ph"]
-        ],
-        "$comment": "This is an alternative to separate primary and secondary classification fields."
+      "classification": {
+        "title": "Classification",
+        "description": "Classification of this document as it relates to arXiv's category taxonomy.",
+        "type": "object",
+        "properties": {
+          "primary": {
+            "title": "Primary classification",
+            "description": "Primary classification of this document.",
+            "$ref": "#/definitions/category",
+            "examples": [
+              "cs.AI",
+              "hep-th"
+            ]
+          },
+          "secondaries": {
+            "title": "Secondary classifications",
+            "description": "Optional and unranked secondary classifications of this document; sorted alphabetically when displayed.",
+            "type": "array",
+            "items": { "$ref": "#/definitions/category" },
+            "minItems": 1,
+            "uniqueItems": true,
+            "examples": [
+              ["cs.DL"],
+              ["cs.SI", "physics.soc-ph"]
+            ]
+          }
+        },
+        "required": ["primary"],
+        "additionalProperties": false
       },
       "versions": {
         "title": "List of arXiv document versions",
@@ -704,8 +732,8 @@
       }
     },
     "required": [
-      "identifier",
-      "classifications",
+      "identifiers",
+      "classification",
       "versions"
     ]
 }
