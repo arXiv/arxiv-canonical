@@ -2,7 +2,9 @@
   "identifiers": {
       "arxiv_id": "1904.00012"
   },
-  "primary_classification": "astro-ph.SR",
+  "classification": {
+    "primary": "astro-ph.SR"
+  },
   "versions": [
     {
        "identifiers": {

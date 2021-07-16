@@ -78,7 +78,6 @@ definitions:
   conference_info:
     title: Conference information
     type: object
-    $comment: based on subset of INSPIRE's definition
     properties:
       conference_titles:
         title: List of conference titles
@@ -88,6 +87,12 @@ definitions:
           minLength: 1
         minItems: 1
         uniqueItems: true
+      conference_pid:
+        title: Conference Persistent Identifier
+        $comment: "placeholder to support: https://www.crossref.org/working-groups/conferences-projects/"
+        description: The persistent identifier for the conference.
+        type: string
+        minLength: 1
     required:
     - conference_titles
   document_type:
@@ -618,26 +623,35 @@ properties:
     required:
     - arxiv_id
     additionalProperties: false
-  primary_classification:
-    title: Primary classification
-    description: Primary classification of this document.
-    $ref: '#/definitions/category'
-    examples:
-    - cs.AI
-    - hep-th
-  secondary_classifications:
-    title: Secondary classifications
-    description: Optional and unranked secondary classifications of this document;
-      sorted alphabetically when displayed.
-    type: array
-    items:
-      $ref: '#/definitions/category'
-    minItems: 1
-    uniqueItems: true
-    examples:
-    - - cs.DL
-    - - cs.SI
-      - physics.soc-ph
+  classification:
+    title: Classification
+    description: Classification of this document as it relates to arXiv's category
+      taxonomy.
+    type: object
+    properties:
+      primary:
+        title: Primary classification
+        description: Primary classification of this document.
+        $ref: '#/definitions/category'
+        examples:
+        - cs.AI
+        - hep-th
+      secondaries:
+        title: Secondary classifications
+        description: Optional and unranked secondary classifications of this document;
+          sorted alphabetically when displayed.
+        type: array
+        items:
+          $ref: '#/definitions/category'
+        minItems: 1
+        uniqueItems: true
+        examples:
+        - - cs.DL
+        - - cs.SI
+          - physics.soc-ph
+    required:
+    - primary
+    additionalProperties: false
   versions:
     title: List of arXiv document versions
     type: array
@@ -646,5 +660,5 @@ properties:
     minItems: 1
 required:
 - identifiers
-- primary_classification
+- classification
 - versions

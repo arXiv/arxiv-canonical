@@ -692,27 +692,35 @@
         "required": ["arxiv_id"],
         "additionalProperties": false
       },
-      "primary_classification": {
-        "title": "Primary classification",
-        "description": "Primary classification of this document.",
-        "$ref": "#/definitions/category",
-        "examples": [
-          "cs.AI",
-          "hep-th"
-        ]
-      },
-      "secondary_classifications": {
-        "title": "Secondary classifications",
-        "description": "Optional and unranked secondary classifications of this document; sorted alphabetically when displayed.",
-        "type": "array",
-        "items": { "$ref": "#/definitions/category" },
-        "minItems": 1,
-        "uniqueItems": true,
-        "examples": [
-          ["cs.DL"],
-          ["cs.SI", "physics.soc-ph"]
-        ]
-
+      "classification": {
+        "title": "Classification",
+        "description": "Classification of this document as it relates to arXiv's category taxonomy.",
+        "type": "object",
+        "properties": {
+          "primary": {
+            "title": "Primary classification",
+            "description": "Primary classification of this document.",
+            "$ref": "#/definitions/category",
+            "examples": [
+              "cs.AI",
+              "hep-th"
+            ]
+          },
+          "secondaries": {
+            "title": "Secondary classifications",
+            "description": "Optional and unranked secondary classifications of this document; sorted alphabetically when displayed.",
+            "type": "array",
+            "items": { "$ref": "#/definitions/category" },
+            "minItems": 1,
+            "uniqueItems": true,
+            "examples": [
+              ["cs.DL"],
+              ["cs.SI", "physics.soc-ph"]
+            ]
+          }
+        },
+        "required": ["primary"],
+        "additionalProperties": false
       },
       "versions": {
         "title": "List of arXiv document versions",
@@ -725,7 +733,7 @@
     },
     "required": [
       "identifiers",
-      "primary_classification",
+      "classification",
       "versions"
     ]
 }
