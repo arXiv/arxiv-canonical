@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+
+    "doi": {
+      "title": "DOI",
+      "description": "Digital Object Identifier.",
+      "type": "string",
+      "pattern": "^10\\.\\d+(\\.\\d+)?/\\S+$",
+      "minLength": 1
+    }
+  }
+}

@@ -9,7 +9,7 @@
     ]
   },
   "versions": [{
-    "identifier": "2105.01224v1",
+    "identifiers": {"arxiv_idv": "2105.01224v1"},
     "document_types": [
       "article"
     ],

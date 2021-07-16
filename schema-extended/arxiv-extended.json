@@ -42,34 +42,6 @@
           "additionalProperties": false
         }
       },
-      "affiliation": {
-        "title": "Affiliation",
-        "description": "Institutional affiliation.",
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The complete name of the affiliation.",
-            "type": "string",
-            "minLength": 1
-          },
-          "ror_id": {
-            "title": "ROR ID",
-            "description": "Research Organization Registry ID.",
-            "type": "string",
-            "pattern": "^https://ror\\.org/0\\w{6}\\d{2}$",
-            "examples": [
-              "https://ror.org/05bnh6r87",
-              "https://ror.org/05gzmn429",
-              "https://ror.org/01ggx4157",
-              "https://ror.org/03c3r2d17"
-            ]
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "additionalProperties": false
-      },
       "category": {
         "title": "arXiv category",
         "description": "This is the abbreviated form of the arXiv category using the category identifier",
@@ -127,46 +99,6 @@
         "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
         "type": "string",
         "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
-      },
-      "doi": {
-        "title": "DOI",
-        "description": "Digital Object Identifier.",
-        "type": "string",
-        "pattern": "^10\\.\\d+(\\.\\d+)?/\\S+$",
-        "minLength": 1
-      },
-      "funding": {
-        "type": "object",
-        "properties": {
-          "funding_statement": {
-            "title": "Funding statement",
-            "type": "string",
-            "minLength": 1
-          },
-          "funder_doi": {
-            "description": "DOI from the Funder Registry",
-            "$ref": "#/definitions/doi"
-          },
-          "project_name": {
-            "title": "Project name",
-            "description": "The full name of the project.",
-            "type": "string",
-            "minLength": 1
-          },
-          "project_acronym": {
-            "title": "Project acronym",
-            "description": "The abbreviated name of the project.",
-            "type": "string",
-            "minLength": 1
-          },
-          "grant_number": {
-            "title": "Grant number",
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": ["funding_statement"],
-        "additionalProperties": false
       },
       "language": {
         "description": "The 2-letter ISO 639-1 language classification.",
@@ -234,7 +166,7 @@
             "description": "Institutional affiliations",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/affiliation"
+              "$ref": "Affiliation.json"
             },
             "minItems": 1
           },
@@ -421,7 +353,7 @@
                 "arxiv_doi": {
                   "title": "arXiv DOI",
                   "description": "The arXiv-issued DOI for this version.",
-                  "$ref": "#/definitions/doi"
+                  "$ref": "Common.json#/definitions/doi"
                 }
             },
             "required": ["arxiv_idv"],
@@ -516,6 +448,9 @@
             "minItems": 1,
             "uniqueItems": true
           },
+          "funding": {
+            "$ref": "Funding.json"
+          },
           "comments": {
             "title": "Comments",
             "description": "Comments from authors or arXiv administrators.",
@@ -558,7 +493,7 @@
             "description": "The publisher DOI(s).",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/doi"
+              "$ref": "Common.json#/definitions/doi"
             },
             "minItems": 1,
             "uniqueItems": true
@@ -568,7 +503,7 @@
             "description": "The submitter DOI(s).",
             "type": "array",
             "items": {
-              "$ref": "#/definitions/doi"
+              "$ref": "Common.json#/definitions/doi"
             },
             "minItems": 1,
             "uniqueItems": true
@@ -686,7 +621,7 @@
             "arxiv_doi": {
               "title": "arXiv DOI",
               "description": "The arXiv-issued DOI for this document.",
-              "$ref": "#/definitions/doi"
+              "$ref": "Common.json#/definitions/doi"
             }
         },
         "required": ["arxiv_id"],
