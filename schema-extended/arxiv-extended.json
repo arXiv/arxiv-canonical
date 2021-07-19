@@ -34,7 +34,7 @@
             },
             "language": {
                "allOf": [
-                 {"$ref": "#/definitions/language"},
+                 {"$ref": "LanguageCode.json"},
                  {"not": {"enum": ["en"]}}
              ]
             }
@@ -99,12 +99,6 @@
         "$comment": "TODO: enumeration needs further review, and will need to decide whether the items require their own definitions with more structure.",
         "type": "string",
         "enum": ["article", "autobiography", "biography", "book", "book chapter", "book review", "conference proceeding", "conference proceeding index", "erratum", "memorial", "thesis", "lecture notes", "whitepaper"]
-      },
-      "language": {
-        "description": "The 2-letter ISO 639-1 language classification.",
-        "type": "string",
-        "$comment": "TODO: need complete list of language codes",
-        "enum": ["en", "de", "fr", "ru", "cn"]
       },
       "person": {
         "type": "object",
@@ -266,7 +260,7 @@
             },
             "language": {
                "allOf": [
-                 {"$ref": "#/definitions/language"},
+                 {"$ref": "LanguageCode.json"},
                  {"not": {"enum": ["en"]}}
              ]
             }
