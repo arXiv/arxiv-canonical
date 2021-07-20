@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+
+  "definitions": {
+    "arxiv_status": {
+      "title": "arXiv posting status",
+      "description": "The status of this document version on arXiv.",
+      "type": "string",
+      "enum": [
+        "posted",
+        "withdrawn"
+      ],
+      "minLength": 1
+    }
+  }
+
+  "properties": {
+    "identifiers": {
+      "title": "arXiv-issued identifiers for this version.",
+      "type": "object",
+      "properties": {
+        "arxiv_idv": {
+          "title": "arXiv identifier",
+          "description": "The arXiv identifier for this version, with a version affix.",
+          "$ref": "Common.json#/definitions/versioned_identifier"
+        },
+        "arxiv_doi": {
+          "title": "arXiv DOI",
+          "description": "The arXiv-issued DOI for this version.",
+          "$ref": "Common.json#/definitions/doi"
+        }
+      },
+      "required": [
+        "arxiv_idv"
+      ],
+      "additionalProperties": false
+    },
+    "document_types": {
+      "title": "List of document types",
+      "type": "array",
+      "items": {
+        "$ref": "Common.json#/definitions/document_type"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "submitter_info": {
+      "title": "Submitter",
+      "description": "Information about the submitter and possible proxy for the submitter.",
+      "type": "object",
+      "properties": {
+        "submitter": {
+          "$ref": "Person.json"
+        },
+        "proxy_name": {
+          "title": "Proxy name",
+          "description": "Name of the proxy that submitted on the submitter's behalf.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "submitter"
+      ]
+    },
+    "submitted_date": {
+      "title": "Submitted date",
+      "description": "Date this version was submitted.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "announced_date": {
+      "title": "Announced date",
+      "description": "Date this version was announced.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "license": {
+      "title": "License",
+      "description": "The license associated with the content.",
+      "oneOf": [
+        {
+          "$ref": "License.json#/definitions/active_licenses"
+        },
+        {
+          "$ref": "License.json#/definitions/inactive_licenses"
+        }
+      ]
+    },
+    "titles": {
+      "title": "Titles",
+      "description": "The English and non-English versions of the title.",
+      "$ref": "Common.json#/definitions/titles"
+    },
+    "abstracts": {
+      "$ref": "Common.json#/definitions/abstracts"
+    },
+    "legacy_authors": {
+      "title": "Legacy authors",
+      "description": "The legacy authors field, which is an unstructured string.",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "J. Doe (Cornell University), M. Smith (Stanford University), F. Bar"
+      ]
+    },
+    "authors": {
+      "title": "Authors",
+      "type": "array",
+      "items": {
+        "$ref": "Person.json"
+      },
+      "minItems": 1
+    },
+    "collaborations": {
+      "title": "Collaborations",
+      "description": "Collaborations associated with this e-print. Should not include 'Collaboration' suffix.",
+      "type": "array",
+      "items": {
+        "$ref": "Common.json#/definitions/collaboration"
+      },
+      "examples": [
+        "ATLAS",
+        "BABAR",
+        "L3",
+        "ZEUS"
+      ],
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "funding": {
+      "$ref": "Funding.json"
+    },
+    "comments": {
+      "title": "Comments",
+      "description": "Comments from authors or arXiv administrators.",
+      "type": "object",
+      "properties": {
+        "author_comments": {
+          "title": "Author comments",
+          "description": "Comments from authors.",
+          "type": "array",
+          "items": {
+            "$ref": "Common.json#/definitions/comment"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "administrator_comments": {
+          "title": "Administrator comments",
+          "description": "Comments from arXiv administrators",
+          "type": "array",
+          "items": {
+            "$ref": "Common.json#/definitions/comment"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "legacy_comments": {
+          "description": "Unstructured comments from authors and/or arXiv administrators.",
+          "$ref": "Common.json#/definitions/comment"
+        }
+      }
+    },
+    "journal_ref": {
+      "title": "Journal reference",
+      "description": "The full bibliographic reference if the article has already appeared in a journal, proceedings, etc.",
+      "$ref": "Common.json#/definitions/journal_ref"
+    },
+    "publisher_dois": {
+      "title": "List of publisher-provided DOIs",
+      "description": "The publisher DOI(s).",
+      "type": "array",
+      "items": {
+        "$ref": "Common.json#/definitions/doi"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "submitter_dois": {
+      "title": "List of submitter-provided DOIs",
+      "description": "The submitter DOI(s).",
+      "type": "array",
+      "items": {
+        "$ref": "Common.json#/definitions/doi"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "report_numbers": {
+      "title": "List of report numbers",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "keywords": {
+      "title": "List of keywords",
+      "description": "A list of individual keywords that may belong to a vocabulary.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "vocabulary": {
+            "title": "Keyword vocabulary",
+            "description": "The keyword vocabulary this keyword belongs to.",
+            "type": "string",
+            "enum": [
+              "ACM",
+              "INIS",
+              "JACOW",
+              "MSC",
+              "PACS",
+              "PDG",
+              "UAT"
+            ]
+          },
+          "value": {
+            "title": "Keyword",
+            "description": "A keyword that is either part of a vocabulary or free-form.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "examples": [
+          [
+            {
+              "vocabulary": "ACM",
+              "value": "C.2.0;"
+            },
+            {
+              "vocabulary": "ACM",
+              "value": "C.2.2"
+            }
+          ],
+          [
+            {
+              "vocabulary": "MSC",
+              "value": "46B20"
+            }
+          ]
+        ],
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "related_links": {
+      "title": "List of related links",
+      "type": "array",
+      "items": {
+        "$ref": "Common.json#/definitions/related_link"
+      },
+      "minItems": 1,
+      "$comment": "should this be document-specific instead of version-specific?"
+    },
+    "arxiv_status": {
+      "$ref": "Common.json#/definitions/arxiv_status"
+    },
+    "external_publication_status": {
+      "$ref": "Common.json#/definitions/external_publication_status"
+    },
+    "source_info": {
+      "title": "Source information",
+      "description": "Information about the input source files.",
+      "$ref": "Common.js#/definitions/source_info"
+    },
+    "conference_info": {
+      "$ref": "Common.js#/definitions/conference_info",
+      "$comment": "not currently tied to document_type."
+    },
+    "references": {
+      "title": "List of references",
+      "description": "List of unstructured reference strings.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "Common.js#/definitions/reference_string"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "identifiers",
+    "submitted_date",
+    "announced_date",
+    "license",
+    "document_types",
+    "titles",
+    "abstracts",
+    "legacy_authors",
+    "authors",
+    "arxiv_status",
+    "source_info",
+    "submitter_info"
+  ]
+}
