@@ -3,19 +3,6 @@
   "type": "object",
   "additionalProperties": false,
 
-  "definitions": {
-    "arxiv_status": {
-      "title": "arXiv posting status",
-      "description": "The status of this document version on arXiv.",
-      "type": "string",
-      "enum": [
-        "posted",
-        "withdrawn"
-      ],
-      "minLength": 1
-    }
-  }
-
   "properties": {
     "identifiers": {
       "title": "arXiv-issued identifiers for this version.",
@@ -271,10 +258,10 @@
     "source_info": {
       "title": "Source information",
       "description": "Information about the input source files.",
-      "$ref": "Common.js#/definitions/source_info"
+      "$ref": "Common.json#/definitions/source_info"
     },
     "conference_info": {
-      "$ref": "Common.js#/definitions/conference_info",
+      "$ref": "Common.json#/definitions/conference_info",
       "$comment": "not currently tied to document_type."
     },
     "references": {
@@ -283,7 +270,7 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "Common.js#/definitions/reference_string"
+        "$ref": "Common.json#/definitions/reference_string"
       },
       "uniqueItems": true
     }

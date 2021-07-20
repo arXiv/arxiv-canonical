@@ -4,7 +4,8 @@
   "description": "Common definitions.",
   "type": "object",
   "additionalProperties": false,
-  "definitions": {
+ 
+ "definitions": {
     "abstracts": {
       "title": "List of abstracts",
       "description": "The English and non-English versions of the abstract. The English abstract must be provided first.",
@@ -34,7 +35,7 @@
           "language": {
             "allOf": [
               {
-                "$ref": "#/definitions/language"
+                "$ref": "LanguageCode.json"
               },
               {
                 "not": {
@@ -49,7 +50,17 @@
         "additionalProperties": false
       }
     },
-    "author_id": {
+    "arxiv_status": {
+      "title": "arXiv posting status",
+      "description": "The status of this document version on arXiv.",
+      "type": "string",
+      "enum": [
+        "posted",
+        "withdrawn"
+      ],
+      "minLength": 1
+    }, 
+  "author_id": {
       "description": "arXiv author identifier, if available.",
       "type": "string",
       "pattern": "^[a-z]+_[a-z]{1}_[0-9]+$"
