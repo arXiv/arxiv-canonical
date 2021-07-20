@@ -45,9 +45,7 @@
       "category": {
         "title": "arXiv category",
         "description": "This is the abbreviated form of the arXiv category using the category identifier",
-        "type": "string",
-        "pattern": "^([a-z]{3,}-[a-z]{2,}|[a-z]{2,}-?[a-z]+\\.[A-Z]{2})$",
-        "$comment": "TODO: enumeration"
+        "$ref": "Taxonomy.json#definitions/active_categories"
       },
       "collaboration": {
         "type": "object",
@@ -296,16 +294,7 @@
           "category"
         ]
       },
-      "unversioned_identifier": {
-        "title": "arXiv canonical identifier",
-        "type": "string",
-        "pattern": "^(([0-9]{4}\\.[0-9]{4,5})|([a-z\\-]+\\/[0-9]{2}[01][0-9]{4}))$"
-      },
-      "versioned_identifier": {
-        "title": "arXiv canonical identifier with version affix",
-        "type": "string",
-        "pattern": "^(([0-9]{4}\\.[0-9]{4,5})|([a-z\\-]+\\/[0-9]{2}[01][0-9]{4}))v[0-9]+$"
-      },
+
       "version": {
         "type": "object",
         "properties": {
@@ -317,7 +306,7 @@
                 "arxiv_idv": {
                   "title": "arXiv identifier",
                   "description": "The arXiv identifier for this version, with a version affix.",
-                  "$ref": "#/definitions/versioned_identifier"
+                  "$ref": "Common.json#/definitions/versioned_identifier"
                 },
                 "arxiv_doi": {
                   "title": "arXiv DOI",
@@ -585,7 +574,7 @@
             "arxiv_id": {
               "title": "arXiv identifier",
               "description": "The canonical arXiv identifier for this document, without a version affix.",
-              "$ref": "#/definitions/unversioned_identifier"
+              "$ref": "Common.json#/definitions/unversioned_identifier"
             },
             "arxiv_doi": {
               "title": "arXiv DOI",
