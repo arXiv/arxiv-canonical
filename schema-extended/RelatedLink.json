@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Related link",
+  "description": "Author-provided link to a related resource.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "display_text": {
+      "description": "Descriptive text to associate with the URI.",
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "title": "Link category",
+      "description": "The type of resource the link resolves to.",
+      "type": "string",
+      "$comment": "TODO: refine this enumeration",
+      "enum": [
+        "related article",
+        "slides",
+        "notes",
+        "software",
+        "dataset",
+        "simulation",
+        "video",
+        "review",
+        "news item",
+        "personal website",
+        "blog entry",
+        "other"
+      ]
+    }
+  },
+  "required": [
+    "uri",
+    "display_text",
+    "category"
+  ]
+}

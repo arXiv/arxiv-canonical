@@ -4,8 +4,7 @@
   "description": "Common definitions.",
   "type": "object",
   "additionalProperties": false,
- 
- "definitions": {
+  "definitions": {
     "abstracts": {
       "title": "List of abstracts",
       "description": "The English and non-English versions of the abstract. The English abstract must be provided first.",
@@ -59,8 +58,8 @@
         "withdrawn"
       ],
       "minLength": 1
-    }, 
-  "author_id": {
+    },
+    "author_id": {
       "description": "arXiv author identifier, if available.",
       "type": "string",
       "pattern": "^[a-z]+_[a-z]{1}_[0-9]+$"
@@ -100,7 +99,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "The fullest representation of the collaborations's name",
+          "description": "The fullest representation of a collaborations's name",
           "allOf": [
             {
               "type": "string",
@@ -214,47 +213,6 @@
         },
         "additionalProperties": false
       }
-    },
-    "related_link": {
-      "title": "Related link",
-      "description": "Author-provided link to related resource.",
-      "type": "object",
-      "properties": {
-        "uri": {
-          "type": "string",
-          "format": "uri"
-        },
-        "display_text": {
-          "description": "Descriptive text to associate with the URI.",
-          "type": "string",
-          "minLength": 1
-        },
-        "category": {
-          "title": "Link category",
-          "description": "The type of resource the link resolves to.",
-          "type": "string",
-          "$comment": "TODO: refine this enumeration",
-          "enum": [
-            "related article",
-            "slides",
-            "notes",
-            "software",
-            "dataset",
-            "simulation",
-            "video",
-            "review",
-            "news item",
-            "personal website",
-            "blog entry",
-            "other"
-          ]
-        }
-      },
-      "required": [
-        "uri",
-        "display_text",
-        "category"
-      ]
     },
     "reference_string": {
       "title": "Reference string",
