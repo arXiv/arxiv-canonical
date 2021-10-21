@@ -9,7 +9,7 @@
     ]
   },
   "versions": [{
-    "identifier": "2105.01224v1",
+    "identifiers": {"arxiv_idv": "2105.01224v1"},
     "document_types": [
       "article"
     ],
@@ -19,6 +19,10 @@
     "titles": [{
       "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
       "language": "en"
+    },
+    {
+      "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
+      "language": "afa"
     }],
     "abstracts": [{
       "abstract": "We have searched for axion-like resonance states by colliding optical photons in a focused laser field (creation beam) by adding another laser field (inducing beam) for stimulation of the resonance decays, where frequency-converted signal photons can be created as a result of stimulated photon-photon scattering via exchanges of axion-like resonances. A quasi-parallel collision system (QPS) in such a focused field allows access to the sub-eV mass range of resonance particles. In past searches in QPS, for simplicity, we interpreted the scattering rate based on an analytically calculable symmetric collision geometry in both incident angles and incident energies by partially implementing the asymmetric nature to meet the actual experimental conditions. In this paper, we present new search results based on a complete parameterization including fully asymmetric collisional geometries. In particular, we combined a linearly polarized creation laser and a circularly polarized inducing laser to match the new parameterization. A 0.10 mJ / 36 fs Ti:sapphire laser pulse and a 0.20 mJ / 9 ns Nd:YAG laser pulse were spatiotemporally synchronized by sharing a common optical axis and focused into the vacuum system. Under a condition in which atomic background processes were completely negligible, no significant scattering signal was observed at the vacuum pressure of $2.6 \times 10^{-5}$ Pa, thereby providing upper bounds on the coupling-mass relation by assuming exchanges of scalar and pseudoscalar fields at a 95 % confidence level in the sub-eV mass range.",

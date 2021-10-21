@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Funding",
+    "description": "License information.",
+    "type": "object",
+    "additionalProperties": false,
+    "definitions": {
+      "active_licenses": {
+        "title": "Active licenses",
+        "description": "Licenses that are selectable upon submission to arXiv.",
+        "type": "string",
+        "enum": [
+          "http://creativecommons.org/licenses/by/4.0/",
+          "http://creativecommons.org/licenses/by-sa/4.0/",
+          "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+          "http://creativecommons.org/licenses/by-nc-nd/4.0/",
+          "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+          "http://creativecommons.org/publicdomain/zero/1.0/"
+        ]
+
+      },
+      "inactive_licenses": {
+        "title": "Inactive licenses",
+        "description": "Historical licenses that are no longer selectable upon submission to arXiv.",
+        "type": "string",
+        "enum": [
+          "http://arxiv.org/licenses/assumed-1991-2003/",
+          "http://creativecommons.org/licenses/by/3.0/",
+          "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+          "http://creativecommons.org/licenses/publicdomain"
+        ]
+      }
+    }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "full_name": {
+      "description": "The fullest representation of the person's name available in arXiv metadata.",
+      "type": "string",
+      "minLength": 1
+    },
+    "last_name": {
+      "description": "The family or surname part of the person's name, if available.",
+      "type": "string",
+      "minLength": 1
+    },
+    "first_name": {
+      "description": "The personal or forename part of the person's name, if available.",
+      "type": "string",
+      "minLength": 1
+    },
+    "suffix": {
+      "description": "The suffix part of the person's name, if available.",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Jr.",
+        "Sr.",
+        "I",
+        "II",
+        "III"
+      ]
+    },
+    "affiliations": {
+      "title": "List of affiliations",
+      "description": "Institutional affiliations",
+      "type": "array",
+      "items": {
+        "$ref": "Affiliation.json"
+      },
+      "minItems": 1
+    },
+    "orcid": {
+      "title": "ORCID",
+      "$ref": "Common.json#/definitions/orcid"
+    },
+    "author_id": {
+      "title": "arXiv author ID",
+      "description": "arXiv author identifier.",
+      "$ref": "Common.json#/definitions/author_id"
+    },
+    "is_submitter": {
+      "description": "Indicates whether this person is the submitter of this submission",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "full_name"
+  ]
+}
