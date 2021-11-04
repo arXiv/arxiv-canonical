@@ -9,21 +9,19 @@
       "title": "List of abstracts",
       "description": "The English and non-English versions of the abstract. The English abstract must be provided first.",
       "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "abstract": {
-              "type": "string",
-              "minLength": 1
-            },
-            "language": {
-              "const": "en"
-            }
+      "items": [{
+        "type": "object",
+        "properties": {
+          "abstract": {
+            "type": "string",
+            "minLength": 1
           },
-          "additionalProperties": false
-        }
-      ],
+          "language": {
+            "const": "en"
+          }
+        },
+        "additionalProperties": false
+      }],
       "additionalItems": {
         "type": "object",
         "properties": {
@@ -32,8 +30,7 @@
             "minLength": 1
           },
           "language": {
-            "allOf": [
-              {
+            "allOf": [{
                 "$ref": "LanguageCode.json"
               },
               {
@@ -100,18 +97,8 @@
       "properties": {
         "name": {
           "description": "The fullest representation of a collaborations's name",
-          "allOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "not": {
-                "type": "string",
-                "pattern": "(?i)(collaboration)"
-              }
-            }
-          ]
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
@@ -174,21 +161,19 @@
       "title": "List of titles",
       "description": "The English and non-English versions of the title. The English title must be provided first.",
       "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "title": {
-              "type": "string",
-              "minLength": 1
-            },
-            "language": {
-              "const": "en"
-            }
+      "items": [{
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
           },
-          "additionalProperties": false
-        }
-      ],
+          "language": {
+            "const": "en"
+          }
+        },
+        "additionalProperties": false
+      }],
       "additionalItems": {
         "type": "object",
         "properties": {
@@ -197,8 +182,7 @@
             "minLength": 1
           },
           "language": {
-            "allOf": [
-              {
+            "allOf": [{
                 "$ref": "LanguageCode.json"
               },
               {
