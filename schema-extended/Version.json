@@ -151,7 +151,8 @@
           "examples": [
             ["text overlap with arXiv:YYMM.NNNNN"],
             [
-              "This version has been removed because it is in violation of arXiv's copyright policy"]
+              "This version has been removed because it is in violation of arXiv's copyright policy"
+            ]
           ],
           "minItems": 1,
           "uniqueItems": true
@@ -172,22 +173,33 @@
       "description": "The full bibliographic reference if the article has already appeared in a journal, proceedings, etc.",
       "$ref": "Common.json#/definitions/journal_ref"
     },
-    "publisher_dois": {
-      "title": "List of publisher-provided DOIs",
-      "description": "The publisher DOI(s).",
+    "dois": {
+      "title": "DOIs",
+      "description": "Publisher- and submitter-provided DOIs for this version.",
       "type": "array",
       "items": {
-        "$ref": "Common.json#/definitions/doi"
-      },
-      "minItems": 1,
-      "uniqueItems": true
-    },
-    "submitter_dois": {
-      "title": "List of submitter-provided DOIs",
-      "description": "The submitter DOI(s).",
-      "type": "array",
-      "items": {
-        "$ref": "Common.json#/definitions/doi"
+        "type": "object",
+        "properties": {
+          "doi": {
+            "$ref": "Common.json#/definitions/doi"
+          },
+          "provider": {
+            "title": "DOI provider",
+            "description": "The provider of the DOI.",
+            "$comment": "The provider is not always known, hence optional.",
+            "type": "string",
+            "enum": [
+              "submitter",
+              "publisher"
+            ]
+          },
+          "last_updated": {
+            "description": "The time this DOI was last updated by the provider.",
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["doi"]
       },
       "minItems": 1,
       "uniqueItems": true
