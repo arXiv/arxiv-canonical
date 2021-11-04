@@ -53,21 +53,20 @@
     },
     "submitted_date": {
       "title": "Submitted date",
-      "description": "Date this version was submitted.",
+      "description": "Date this version was submitted to arXiv.",
       "type": "string",
       "format": "date-time"
     },
-    "announced_date": {
-      "title": "Announced date",
-      "description": "Date this version was announced.",
+    "posted_date": {
+      "title": "Posted date",
+      "description": "Date this version was posted to arXiv, making it publicly available.",
       "type": "string",
       "format": "date-time"
     },
     "license": {
       "title": "License",
       "description": "The license associated with the content.",
-      "oneOf": [
-        {
+      "oneOf": [{
           "$ref": "License.json#/definitions/active_licenses"
         },
         {
@@ -131,22 +130,40 @@
           "items": {
             "$ref": "Common.json#/definitions/comment"
           },
+          "examples": [
+            ["26 pages"],
+            ["25 pages, 12 figures, 2 appendices", "submitted to MNRAS"],
+            ["14 pages, 2 figures",
+              "references and comments on conformal diagrams added",
+              "matches published version"
+            ]
+          ],
           "minItems": 1,
           "uniqueItems": true
         },
         "administrator_comments": {
           "title": "Administrator comments",
-          "description": "Comments from arXiv administrators",
+          "description": "Comments from arXiv administrators.",
           "type": "array",
           "items": {
             "$ref": "Common.json#/definitions/comment"
           },
+          "examples": [
+            ["text overlap with arXiv:YYMM.NNNNN"],
+            [
+              "This version has been removed because it is in violation of arXiv's copyright policy"]
+          ],
           "minItems": 1,
           "uniqueItems": true
         },
         "legacy_comments": {
           "description": "Unstructured comments from authors and/or arXiv administrators.",
-          "$ref": "Common.json#/definitions/comment"
+          "$ref": "Common.json#/definitions/comment",
+          "examples": [
+            "9 pages, 8 figures, 2 tables",
+            "Research work paper, 9 pages, 10 figures, Appendix",
+            "25 pages. arXiv admin note: substantial text overlap with arXiv:YYMM.NNNNN"
+          ]
         }
       }
     },
@@ -193,8 +210,7 @@
         "$ref": "Keyword.json"
       },
       "examples": [
-        [
-          {
+        [{
             "vocabulary": "ACM",
             "value": "C.2.0;"
           },
@@ -203,12 +219,10 @@
             "value": "C.2.2"
           }
         ],
-        [
-          {
-            "vocabulary": "MSC",
-            "value": "46B20"
-          }
-        ]
+        [{
+          "vocabulary": "MSC",
+          "value": "46B20"
+        }]
       ],
       "minItems": 1,
       "uniqueItems": true
