@@ -52,7 +52,9 @@
       "type": "string",
       "enum": [
         "posted",
-        "withdrawn"
+        "withdrawn",
+        "withdrawn_by_author",
+        "removed"
       ],
       "minLength": 1
     },
@@ -86,6 +88,12 @@
           "description": "The persistent identifier for the conference.",
           "type": "string",
           "minLength": 1
+        },
+        "year": {
+          "title": "Conference year",
+          "description": "The year the conference took place.",
+          "type": "str",
+          "pattern": "^\\d{4}"
         }
       },
       "required": [
@@ -141,9 +149,9 @@
         "preprint",
         "submitted",
         "accepted",
-        "published"
-      ],
-      "$comment": "Is this enough?"
+        "published",
+        "retracted"
+      ]
     },
     "journal_ref": {
       "title": "Journal reference",
