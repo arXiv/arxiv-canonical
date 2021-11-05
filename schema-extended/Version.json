@@ -264,16 +264,6 @@
     "conference_info": {
       "$ref": "Common.json#/definitions/conference_info",
       "$comment": "not currently tied to document_type."
-    },
-    "references": {
-      "title": "List of references",
-      "description": "List of unstructured reference strings.",
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "Common.json#/definitions/reference_string"
-      },
-      "uniqueItems": true
     }
   },
   "required": [

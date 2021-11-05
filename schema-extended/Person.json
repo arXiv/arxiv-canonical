@@ -50,7 +50,7 @@
       "$ref": "Common.json#/definitions/author_id"
     },
     "is_submitter": {
-      "description": "Indicates whether this person is the submitter of this submission",
+      "description": "Indicates whether this person was the submitter of this submission",
       "type": "boolean"
     }
   },
