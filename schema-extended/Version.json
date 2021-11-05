@@ -11,11 +11,6 @@
           "title": "arXiv identifier",
           "description": "The arXiv identifier for this version, with a version affix.",
           "$ref": "Common.json#/definitions/versioned_identifier"
-        },
-        "arxiv_doi": {
-          "title": "arXiv DOI",
-          "description": "The arXiv-issued DOI for this version.",
-          "$ref": "Common.json#/definitions/doi"
         }
       },
       "required": [
@@ -125,7 +120,7 @@
       "properties": {
         "author_comments": {
           "title": "Author comments",
-          "description": "Comments from authors.",
+          "description": "Comments from authors. This field is not intended for soliciting feedback from readers.",
           "type": "array",
           "items": {
             "$ref": "Common.json#/definitions/comment"
@@ -171,7 +166,13 @@
     "journal_ref": {
       "title": "Journal reference",
       "description": "The full bibliographic reference if the article has already appeared in a journal, proceedings, etc.",
-      "$ref": "Common.json#/definitions/journal_ref"
+      "$ref": "Common.json#/definitions/journal_ref",
+      "examples": [
+        "Phys. Rev. A 103, L040402 (2021)",
+        "J. Geom. Mech. 12(1) (2020) 1-2",
+        "Astronomy Letters 47 (2021) 71-87",
+        "Journal of Open Source Software 6(60), 3099, 2021"
+      ]
     },
     "dois": {
       "title": "DOIs",
