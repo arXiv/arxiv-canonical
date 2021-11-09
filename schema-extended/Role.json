@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contributions",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "role": {
+      "type": "string",
+      "oneOf": [{
+          "const": "Conceptualization",
+          "description": "Ideas; formulation or evolution of overarching research goals and aims."
+        },
+        {
+          "const": "Data curation",
+          "description": "Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later re-use."
+        },
+        {
+          "const": "Formal analysis ",
+          "description": "Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data."
+        },
+        {
+          "const": "Funding acquisition",
+          "description": "Acquisition of the financial support for the project leading to this publication."
+        },
+        {
+          "const": "Investigation",
+          "description": "Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection."
+        },
+        {
+          "const": "Methodology",
+          "description": "Development or design of methodology; creation of models."
+        },
+        {
+          "const": "Project administration",
+          "description": "Management and coordination responsibility for the research activity planning and execution."
+        },
+        {
+          "const": "Software",
+          "description": "Programming, software development; designing computer programs; implementation of the computer code and supporting algorithms; testing of existing code components."
+        },
+        {
+          "const": "Supervision",
+          "description": "Oversight and leadership responsibility for the research activity planning and execution, including mentorship external to the core team."
+        },
+        {
+          "const": "Validation",
+          "description": "Verification, whether as a part of the activity or separate, of the overall replication/reproducibility of results/experiments and other research outputs."
+        },
+        {
+          "const": "Visualization",
+          "description": "Preparation, creation and/or presentation of the published work, specifically visualization/data presentation."
+        },
+        {
+          "const": "Writing – original draft",
+          "description": "Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation)."
+        },
+        {
+          "const": "Writing – review & editing",
+          "description": "Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision – including pre- or post-publication stages."
+        }
+      ]
+    }
+  },
+  "properties": {
+    "contributions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/role" },
+      "uniqueItems": true
+    }
+  }
+}

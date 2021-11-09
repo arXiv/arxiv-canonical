@@ -40,6 +40,16 @@
       },
       "minItems": 1
     },
+    "contributions": {
+      "title": "List of contributions",
+      "description": "Contributions of the author. Based on the CRediT taxonomy.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "Role.json#/definitions/role"
+      },
+      "uniqueItems": true
+    },
     "orcid": {
       "title": "ORCID",
       "$ref": "Common.json#/definitions/orcid"
