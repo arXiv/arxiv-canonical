@@ -54,7 +54,8 @@
         "posted",
         "withdrawn",
         "withdrawn_by_author",
-        "removed"
+        "removed",
+        "private"
       ],
       "minLength": 1
     },
