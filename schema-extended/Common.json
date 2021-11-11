@@ -93,7 +93,7 @@
         "year": {
           "title": "Conference year",
           "description": "The year the conference took place.",
-          "type": "str",
+          "type": "string",
           "pattern": "^\\d{4}"
         }
       },

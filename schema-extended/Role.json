@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Contributions",
+  "title": "Role",
+  "description": "Contribution role. Based on the CRediT taxonomy from JATS xml v1.2",
   "type": "object",
   "additionalProperties": false,
   "definitions": {
@@ -59,14 +60,6 @@
           "description": "Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision – including pre- or post-publication stages."
         }
       ]
-    }
-  },
-  "properties": {
-    "contributions": {
-      "type": "array",
-      "minItems": 1,
-      "items": { "$ref": "#/definitions/role" },
-      "uniqueItems": true
     }
   }
 }

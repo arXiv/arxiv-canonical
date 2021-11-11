@@ -269,7 +269,7 @@
   "required": [
     "identifiers",
     "submitted_date",
-    "announced_date",
+    "posted_date",
     "license",
     "document_types",
     "titles",
