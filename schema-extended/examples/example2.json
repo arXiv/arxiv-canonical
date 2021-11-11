@@ -80,7 +80,7 @@
       "external_publication_status": "submitted",
       "source_info": {
         "source_format": "tex",
-        "size_kilobytes": 1393
+        "size_bytes": 1393
       }
     },
     {
@@ -158,7 +158,7 @@
       "external_publication_status": "submitted",
       "source_info": {
         "source_format": "tex",
-        "size_kilobytes": 1393
+        "size_bytes": 1393
       }
     },
     {
@@ -241,7 +241,7 @@
       "external_publication_status": "accepted",
       "source_info": {
         "source_format": "tex",
-        "size_kilobytes": 1393
+        "size_bytes": 1393000
       }
     }
   ]

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Person",
+  "title": "Author",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -30,6 +30,18 @@
         "II",
         "III"
       ]
+    },
+    "native_names": {
+      "description": "Native names of the author, not using the Latin alphabet",
+      "$comment": "This matches INSPIRE's schema definition for native names.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+
     },
     "affiliations": {
       "title": "List of affiliations",

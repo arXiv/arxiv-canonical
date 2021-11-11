@@ -33,7 +33,7 @@
       "type": "object",
       "properties": {
         "submitter": {
-          "$ref": "Person.json"
+          "$ref": "Author.json"
         },
         "proxy_name": {
           "title": "Proxy name",
@@ -90,7 +90,7 @@
       "title": "Authors",
       "type": "array",
       "items": {
-        "$ref": "Person.json"
+        "$ref": "Author.json"
       },
       "minItems": 1
     },
@@ -258,7 +258,7 @@
     },
     "source_info": {
       "title": "Source information",
-      "description": "Information about the input source files.",
+      "description": "Technical information about the submitted source files.",
       "$ref": "Common.json#/definitions/source_info"
     },
     "conference_info": {

@@ -129,6 +129,7 @@
         "conference proceeding",
         "conference proceeding index",
         "erratum",
+        "living review",
         "memorial",
         "thesis",
         "lecture notes",
@@ -240,14 +241,14 @@
             "S1"
           ]
         },
-        "size_kilobytes": {
+        "size_bytes": {
           "title": "Source size in kilobytes",
-          "description": "The size of the source file, in kilobytes.",
+          "description": "The size of the submitted source file, in bytes.",
           "type": "number"
         },
         "checksum": {
           "title": "Checksum",
-          "description": "Checksum of the source file, if source file exists.",
+          "description": "Checksum of the submitted source file, if source file exists.",
           "type": "array",
           "items": {
             "type": "object",
@@ -277,7 +278,7 @@
       },
       "required": [
         "source_format",
-        "size_kilobytes"
+        "size_bytes"
       ],
       "additionalProperties": false
     },
