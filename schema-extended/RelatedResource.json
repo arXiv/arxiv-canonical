@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "identifier": {
-      "oneOf": [{
-          "type": "string",
-          "format": "uri"
-        },
-        {
-          "$ref": "Common.json#/definitions/doi"
-        }
-      ]
+    "link": {
+      "title": "Link",
+      "description": "The link (URI) to the resource.",
+      "type": "string",
+      "format": "uri"
+    },
+    "doi": {
+      "title": "DOI",
+      "description": "DOI for the resource.",
+      "$ref": "Common.json#/definitions/doi"
     },
     "display_text": {
       "title": "Display text",
@@ -42,7 +43,7 @@
     }
   },
   "required": [
-    "identifier",
+    "link",
     "display_text",
     "resource_type"
   ]
