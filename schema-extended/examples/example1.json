@@ -28,80 +28,109 @@
     }],
     "submitter_info": {
       "submitter": {
-        "full_name": "Kensuke Homma",
-        "first_name": "Kensuke",
-        "last_name": "Homma"
+        "name": {
+          "full_name": "Kensuke Homma",
+          "first_name": "Kensuke",
+          "last_name": "Homma"          
+        }
       }
     },
     "legacy_authors": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
     "authors": [{
-        "full_name": "Kensuke Homma",
-        "first_name": "Kensuke",
-        "last_name": "Homma",
+        "name": {
+          "full_name": "Kensuke Homma",
+          "first_name": "Kensuke",
+          "last_name": "Homma"
+        },
         "is_submitter": true,
         "affiliations": [{
           "name": "Example University"
         }]
       },
       {
-        "full_name": "Yuri Kirita",
-        "first_name": "Yuri",
-        "last_name": "Kirita"
+        "name": {
+          "full_name": "Yuri Kirita",
+          "first_name": "Yuri",
+          "last_name": "Kirita"
+        }
       },
       {
-        "full_name": "Masaki Hashida",
-        "first_name": "Masaki",
-        "last_name": "Hashida"
+        "name": {
+          "full_name": "Masaki Hashida",
+          "first_name": "Masaki",
+          "last_name": "Hashida"
+        }
       },
       {
-        "full_name": "Yusuke Hirahara",
-        "first_name": "Yusuke",
-        "last_name": "Hirahara"
+        "name": {
+          "full_name": "Yusuke Hirahara",
+          "first_name": "Yusuke",
+          "last_name": "Hirahara"
+        }
       },
       {
-        "full_name": "Shunsuke Inoue",
-        "first_name": "Shunsuke",
-        "last_name": "Inoue"
+        "name": {
+          "full_name": "Shunsuke Inoue",
+          "first_name": "Shunsuke",
+          "last_name": "Inoue"
+        }
       },
       {
-        "full_name": "Fumiya Ishibashi",
-        "first_name": "Fumiya",
-        "last_name": "Ishibashi"
+        "name": {
+          "full_name": "Fumiya Ishibashi",
+          "first_name": "Fumiya",
+          "last_name": "Ishibashi"
+        }
       },
       {
-        "full_name": "Yoshihide Nakamiya",
-        "first_name": "Yoshihide",
-        "last_name": "Nakamiya"
+        "name": {
+          "full_name": "Yoshihide Nakamiya",
+          "first_name": "Yoshihide",
+          "last_name": "Nakamiya"
+        }
       },
       {
-        "full_name": "Liviu Neagu",
-        "first_name": "Liviu",
-        "last_name": "Neagu"
+        "name": {
+          "full_name": "Liviu Neagu",
+          "first_name": "Liviu",
+          "last_name": "Neagu"
+        }
+
       },
       {
-        "full_name": "Akihide Nobuhiro",
-        "first_name": "Akihide",
-        "last_name": "Nobuhiro"
+        "name": {
+          "full_name": "Akihide Nobuhiro",
+          "first_name": "Akihide",
+          "last_name": "Nobuhiro"
+        }
       },
       {
-        "full_name": "Takaya Ozaki",
-        "first_name": "Takaya",
-        "last_name": "Ozaki"
+        "name": {
+          "full_name": "Takaya Ozaki",
+          "first_name": "Takaya",
+          "last_name": "Ozaki"
+        }
       },
       {
-        "full_name": "Madalin-Mihai Rosu",
-        "first_name": "Madalin-Mihai",
-        "last_name": "Rosu"
+        "name": {
+          "full_name": "Madalin-Mihai Rosu",
+          "first_name": "Madalin-Mihai",
+          "last_name": "Rosu"
+        }
       },
       {
-        "full_name": "Shuji Sakabe",
-        "first_name": "Shuji",
-        "last_name": "Sakabe"
+        "name": {
+          "full_name": "Shuji Sakabe",
+          "first_name": "Shuji",
+          "last_name": "Sakabe"
+        }
       },
       {
-        "full_name": "Ovidiu Tesileanu",
-        "first_name": "Ovidiu",
-        "last_name": "Tesileanu"
+        "name": {
+          "full_name": "Ovidiu Tesileanu",
+          "first_name": "Ovidiu",
+          "last_name": "Tesileanu"
+        }
       }
     ],
     "collaborations": [{
@@ -110,9 +139,11 @@
     "comments": {
       "legacy_comments": "32 pages, 14 figures"
     },
-    "related_resources": [
-      {"resource_type": "personal website", "link": "https://www.exampl.org/foo", "display_text": "my personal website"}
-    ],
+    "related_resources": [{
+      "resource_type": "personal website",
+      "link": "https://www.exampl.org/foo",
+      "display_text": "my personal website"
+    }],
     "arxiv_status": "posted",
     "external_publication_status": "preprint",
     "source_info": {

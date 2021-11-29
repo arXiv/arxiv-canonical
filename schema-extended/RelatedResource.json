@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Related Resource",
+  "title": "Related resource",
   "description": "Author-provided identifier (URI or DOI) for a related resource.",
   "type": "object",
   "additionalProperties": false,

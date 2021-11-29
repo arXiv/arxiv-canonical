@@ -4,44 +4,65 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "full_name": {
-      "description": "The fullest representation of the person's name available in arXiv metadata.",
-      "type": "string",
-      "minLength": 1
-    },
-    "last_name": {
-      "description": "The family or surname part of the person's name, if available.",
-      "type": "string",
-      "minLength": 1
-    },
-    "first_name": {
-      "description": "The personal or forename part of the person's name, if available.",
-      "type": "string",
-      "minLength": 1
-    },
-    "suffix": {
-      "description": "The suffix part of the person's name, if available.",
-      "type": "string",
-      "minLength": 1,
-      "examples": [
-        "Jr.",
-        "Sr.",
-        "I",
-        "II",
-        "III"
-      ]
-    },
-    "native_names": {
-      "description": "Native names of the author, not using the Latin alphabet",
-      "$comment": "This matches INSPIRE's schema definition for native names.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
+    "name": {
+      "title": "Author name",
+      "description": "Author name data.",
+      "type": "object",
+      "properties": {
+        "full_name": {
+          "description": "The fullest representation of the person's name available in arXiv metadata.",
+          "type": "string",
+          "minLength": 1
+        },
+        "last_name": {
+          "description": "The family or surname part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1
+        },
+        "first_name": {
+          "description": "The personal or forename part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1
+        },
+        "suffix": {
+          "description": "The suffix part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "Jr.",
+            "Sr.",
+            "I",
+            "II",
+            "III"
+          ]
+        },
+        "native_names": {
+          "title": "List of native names",
+          "description": "Native names of the author, not using the Latin alphabet",
+          "$comment": "This matches INSPIRE's schema definition for native names.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
       },
-      "minItems": 1,
-      "uniqueItems": true
-
+      "name_variants": {
+        "title": "List of name variants",
+        "description": "Includes variations of the `full_name`, alternative spellings, and transliterations of `native_names`.",
+        "$comment": "This is similar to INSPIRE's schema definition for name variants.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "full_name"
+      ]
     },
     "affiliations": {
       "title": "List of affiliations",
@@ -77,6 +98,6 @@
     }
   },
   "required": [
-    "full_name"
+    "name"
   ]
 }

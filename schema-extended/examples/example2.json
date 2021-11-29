@@ -25,52 +25,76 @@
       ],
       "submitter_info": {
         "submitter": {
-          "full_name": "Vasilii Gvaramadze",
-          "first_name": "Vasilii",
-          "last_name": "Gvaramadze"
+          "name": {
+            "full_name": "Vasilii Gvaramadze",
+            "first_name": "Vasilii",
+            "last_name": "Gvaramadze"
+          }
         }
       },
       "legacy_authors": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
       "authors": [{
-          "full_name": "V.V. Gvaramadze",
-          "first_name": "V.V.",
-          "last_name": "Gvaramadze",
+          "name": {
+            "full_name": "V.V. Gvaramadze",
+            "first_name": "V.V.",
+            "last_name": "Gvaramadze"
+          },
           "is_submitter": true
         },
         {
-          "full_name": "G. Gräfener",
-          "first_name": "G.",
-          "last_name": "Gräfener"
+          "name": {
+            "full_name": "G. Gräfener",
+            "first_name": "G.",
+            "last_name": "Gräfener"
+          }
+
         },
         {
-          "full_name": "N. Langer",
-          "first_name": "N.",
-          "last_name": "N. Langer"
+          "name": {
+            "full_name": "N. Langer",
+            "first_name": "N.",
+            "last_name": "N. Langer"
+          }
+
         },
         {
-          "full_name": "O.V. Maryeva",
-          "first_name": "O.V.",
-          "last_name": "Maryeva"
+          "name": {
+            "full_name": "O.V. Maryeva",
+            "first_name": "O.V.",
+            "last_name": "Maryeva"
+          }
+
         },
         {
-          "full_name": "Shunsuke Inoue",
-          "first_name": "Shunsuke",
-          "last_name": "Inoue"
+          "name": {
+            "full_name": "Shunsuke Inoue",
+            "first_name": "Shunsuke",
+            "last_name": "Inoue"
+          }
+
         },
         {
-          "full_name": "A.Y. Kniazev",
-          "first_name": "A.Y.",
-          "last_name": "A.Y. Kniazev"
+          "name": {
+            "full_name": "A.Y. Kniazev",
+            "first_name": "A.Y.",
+            "last_name": "A.Y. Kniazev"
+          }
+
         },
         {
-          "full_name": "A.S. Moskvitin",
-          "first_name": "A.S.",
-          "last_name": "Moskvitin"
+          "name": {
+            "full_name": "A.S. Moskvitin",
+            "first_name": "A.S.",
+            "last_name": "Moskvitin"
+          }
+
         },
         {
-          "full_name": "O.I. Spiridonova",
-          "first_name": "O.I.",
-          "last_name": "Spiridonova"
+          "name": {
+            "full_name": "O.I. Spiridonova",
+            "first_name": "O.I.",
+            "last_name": "Spiridonova"
+          }
         }
       ],
       "comments": {
@@ -103,52 +127,77 @@
       ],
       "submitter_info": {
         "submitter": {
-          "full_name": "Vasilii Gvaramadze",
-          "first_name": "Vasilii",
-          "last_name": "Gvaramadze"
+          "name": {
+            "full_name": "Vasilii Gvaramadze",
+            "first_name": "Vasilii",
+            "last_name": "Gvaramadze"
+          }
         }
       },
       "legacy_authors": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
       "authors": [{
-          "full_name": "V.V. Gvaramadze",
-          "first_name": "V.V.",
-          "last_name": "Gvaramadze",
+          "name": {
+            "full_name": "V.V. Gvaramadze",
+            "first_name": "V.V.",
+            "last_name": "Gvaramadze"
+          },
           "is_submitter": true
         },
         {
-          "full_name": "G. Gräfener",
-          "first_name": "G.",
-          "last_name": "Gräfener"
+          "name": {
+            "full_name": "G. Gräfener",
+            "first_name": "G.",
+            "last_name": "Gräfener"
+          }
+
         },
         {
-          "full_name": "N. Langer",
-          "first_name": "N.",
-          "last_name": "N. Langer"
+          "name": {
+            "full_name": "N. Langer",
+            "first_name": "N.",
+            "last_name": "N. Langer"
+          }
+
         },
         {
-          "full_name": "O.V. Maryeva",
-          "first_name": "O.V.",
-          "last_name": "Maryeva"
+          "name": {
+            "full_name": "O.V. Maryeva",
+            "first_name": "O.V.",
+            "last_name": "Maryeva"
+          }
+
         },
         {
-          "full_name": "Shunsuke Inoue",
-          "first_name": "Shunsuke",
-          "last_name": "Inoue"
+          "name": {
+            "full_name": "Shunsuke Inoue",
+            "first_name": "Shunsuke",
+            "last_name": "Inoue"
+          }
+
         },
         {
-          "full_name": "A.Y. Kniazev",
-          "first_name": "A.Y.",
-          "last_name": "A.Y. Kniazev"
+          "name": {
+            "full_name": "A.Y. Kniazev",
+            "first_name": "A.Y.",
+            "last_name": "A.Y. Kniazev"
+          }
+
         },
         {
-          "full_name": "A.S. Moskvitin",
-          "first_name": "A.S.",
-          "last_name": "Moskvitin"
+          "name": {
+            "full_name": "A.S. Moskvitin",
+            "first_name": "A.S.",
+            "last_name": "Moskvitin"
+          }
+
         },
         {
-          "full_name": "O.I. Spiridonova",
-          "first_name": "O.I.",
-          "last_name": "Spiridonova"
+          "name": {
+            "full_name": "O.I. Spiridonova",
+            "first_name": "O.I.",
+            "last_name": "Spiridonova"
+          }
+
         }
       ],
       "comments": {
@@ -181,52 +230,74 @@
       ],
       "submitter_info": {
         "submitter": {
-          "full_name": "Vasilii Gvaramadze",
-          "first_name": "Vasilii",
-          "last_name": "Gvaramadze"
+          "name": {
+            "full_name": "Vasilii Gvaramadze",
+            "first_name": "Vasilii",
+            "last_name": "Gvaramadze"
+          }
         }
       },
       "legacy_authors": "V.V. Gvaramadze, G. Gräfener, N. Langer, O.V. Maryeva, A.Y. Kniazev, A.S. Moskvitin, O.I. Spiridonova",
       "authors": [{
-          "full_name": "V.V. Gvaramadze",
-          "first_name": "V.V.",
-          "last_name": "Gvaramadze",
+          "name": {
+            "full_name": "V.V. Gvaramadze",
+            "first_name": "V.V.",
+            "last_name": "Gvaramadze"
+          },
           "is_submitter": true
         },
         {
-          "full_name": "G. Gräfener",
-          "first_name": "G.",
-          "last_name": "Gräfener"
+          "name": {
+            "full_name": "G. Gräfener",
+            "first_name": "G.",
+            "last_name": "Gräfener"
+          }
         },
         {
-          "full_name": "N. Langer",
-          "first_name": "N.",
-          "last_name": "N. Langer"
+          "name": {
+            "full_name": "N. Langer",
+            "first_name": "N.",
+            "last_name": "N. Langer"
+          }
         },
         {
-          "full_name": "O.V. Maryeva",
-          "first_name": "O.V.",
-          "last_name": "Maryeva"
+          "name": {
+            "full_name": "O.V. Maryeva",
+            "first_name": "O.V.",
+            "last_name": "Maryeva"
+          }
         },
         {
-          "full_name": "Shunsuke Inoue",
-          "first_name": "Shunsuke",
-          "last_name": "Inoue"
+          "name": {
+            "full_name": "Shunsuke Inoue",
+            "first_name": "Shunsuke",
+            "last_name": "Inoue"
+          }
+
         },
         {
-          "full_name": "A.Y. Kniazev",
-          "first_name": "A.Y.",
-          "last_name": "A.Y. Kniazev"
+          "name": {
+            "full_name": "A.Y. Kniazev",
+            "first_name": "A.Y.",
+            "last_name": "A.Y. Kniazev"
+          }
+
         },
         {
-          "full_name": "A.S. Moskvitin",
-          "first_name": "A.S.",
-          "last_name": "Moskvitin"
+          "name": {
+            "full_name": "A.S. Moskvitin",
+            "first_name": "A.S.",
+            "last_name": "Moskvitin"
+          }
+
         },
         {
-          "full_name": "O.I. Spiridonova",
-          "first_name": "O.I.",
-          "last_name": "Spiridonova"
+          "name": {
+            "full_name": "O.I. Spiridonova",
+            "first_name": "O.I.",
+            "last_name": "Spiridonova"
+          }
+
         }
       ],
       "comments": {
