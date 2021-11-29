@@ -240,12 +240,12 @@
       "minItems": 1,
       "uniqueItems": true
     },
-    "related_links": {
-      "title": "Related Links",
-      "description": "List of related links.",
+    "related_resources": {
+      "title": "Related Resources",
+      "description": "List of related resources.",
       "type": "array",
       "items": {
-        "$ref": "RelatedLink.json"
+        "$ref": "RelatedResource.json"
       },
       "minItems": 1,
       "$comment": "should this be document-specific instead of version-specific?"

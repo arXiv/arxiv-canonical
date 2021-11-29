@@ -16,7 +16,7 @@ schema_files = [
     "License.json",
     "Author.json",
     "References.json",
-    "RelatedLink.json",
+    "RelatedResource.json",
     "Role.json",
     "Taxonomy.json",
     "Version.json"

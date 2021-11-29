@@ -110,6 +110,9 @@
     "comments": {
       "legacy_comments": "32 pages, 14 figures"
     },
+    "related_resources": [
+      {"resource_type": "personal website", "identifier": "https://www.exampl.org/foo", "display_text": "my personal website"}
+    ],
     "arxiv_status": "posted",
     "external_publication_status": "preprint",
     "source_info": {
