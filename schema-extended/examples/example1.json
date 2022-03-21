@@ -9,20 +9,18 @@
     ]
   },
   "versions": [{
-    "identifiers": {"arxiv_idv": "2105.01224v1"},
+    "identifiers": {
+      "arxiv_idv": "2105.01224v1"
+    },
     "document_types": [
       "article"
     ],
     "submitted_date": "2021-05-04T12:34:56Z",
-    "announced_date": "2021-05-06T12:00:00Z",
+    "posted_date": "2021-05-06T12:00:00Z",
     "license": "http://creativecommons.org/licenses/by/4.0/",
     "titles": [{
       "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
       "language": "en"
-    },
-    {
-      "title": "Search for sub-eV axion-like resonance states via stimulated quasi-parallel laser collisions with the parameterization including fully asymmetric collisional geometry",
-      "language": "afa"
     }],
     "abstracts": [{
       "abstract": "We have searched for axion-like resonance states by colliding optical photons in a focused laser field (creation beam) by adding another laser field (inducing beam) for stimulation of the resonance decays, where frequency-converted signal photons can be created as a result of stimulated photon-photon scattering via exchanges of axion-like resonances. A quasi-parallel collision system (QPS) in such a focused field allows access to the sub-eV mass range of resonance particles. In past searches in QPS, for simplicity, we interpreted the scattering rate based on an analytically calculable symmetric collision geometry in both incident angles and incident energies by partially implementing the asymmetric nature to meet the actual experimental conditions. In this paper, we present new search results based on a complete parameterization including fully asymmetric collisional geometries. In particular, we combined a linearly polarized creation laser and a circularly polarized inducing laser to match the new parameterization. A 0.10 mJ / 36 fs Ti:sapphire laser pulse and a 0.20 mJ / 9 ns Nd:YAG laser pulse were spatiotemporally synchronized by sharing a common optical axis and focused into the vacuum system. Under a condition in which atomic background processes were completely negligible, no significant scattering signal was observed at the vacuum pressure of $2.6 \times 10^{-5}$ Pa, thereby providing upper bounds on the coupling-mass relation by assuming exchanges of scalar and pseudoscalar fields at a 95 % confidence level in the sub-eV mass range.",
@@ -30,80 +28,109 @@
     }],
     "submitter_info": {
       "submitter": {
-        "full_name": "Kensuke Homma",
-        "first_name": "Kensuke",
-        "last_name": "Homma"
+        "name": {
+          "full_name": "Kensuke Homma",
+          "first_name": "Kensuke",
+          "last_name": "Homma"          
+        }
       }
     },
     "legacy_authors": "Kensuke Homma, Yuri Kirita, Masaki Hashida, Yusuke Hirahara, Shunsuke Inoue, Fumiya Ishibashi, Yoshihide Nakamiya, Liviu Neagu, Akihide Nobuhiro, Takaya Ozaki, Madalin-Mihai Rosu, Shuji Sakabe, Ovidiu Tesileanu (SAPPHIRES collaboration)",
     "authors": [{
-        "full_name": "Kensuke Homma",
-        "first_name": "Kensuke",
-        "last_name": "Homma",
+        "name": {
+          "full_name": "Kensuke Homma",
+          "first_name": "Kensuke",
+          "last_name": "Homma"
+        },
         "is_submitter": true,
         "affiliations": [{
           "name": "Example University"
         }]
       },
       {
-        "full_name": "Yuri Kirita",
-        "first_name": "Yuri",
-        "last_name": "Kirita"
+        "name": {
+          "full_name": "Yuri Kirita",
+          "first_name": "Yuri",
+          "last_name": "Kirita"
+        }
       },
       {
-        "full_name": "Masaki Hashida",
-        "first_name": "Masaki",
-        "last_name": "Hashida"
+        "name": {
+          "full_name": "Masaki Hashida",
+          "first_name": "Masaki",
+          "last_name": "Hashida"
+        }
       },
       {
-        "full_name": "Yusuke Hirahara",
-        "first_name": "Yusuke",
-        "last_name": "Hirahara"
+        "name": {
+          "full_name": "Yusuke Hirahara",
+          "first_name": "Yusuke",
+          "last_name": "Hirahara"
+        }
       },
       {
-        "full_name": "Shunsuke Inoue",
-        "first_name": "Shunsuke",
-        "last_name": "Inoue"
+        "name": {
+          "full_name": "Shunsuke Inoue",
+          "first_name": "Shunsuke",
+          "last_name": "Inoue"
+        }
       },
       {
-        "full_name": "Fumiya Ishibashi",
-        "first_name": "Fumiya",
-        "last_name": "Ishibashi"
+        "name": {
+          "full_name": "Fumiya Ishibashi",
+          "first_name": "Fumiya",
+          "last_name": "Ishibashi"
+        }
       },
       {
-        "full_name": "Yoshihide Nakamiya",
-        "first_name": "Yoshihide",
-        "last_name": "Nakamiya"
+        "name": {
+          "full_name": "Yoshihide Nakamiya",
+          "first_name": "Yoshihide",
+          "last_name": "Nakamiya"
+        }
       },
       {
-        "full_name": "Liviu Neagu",
-        "first_name": "Liviu",
-        "last_name": "Neagu"
+        "name": {
+          "full_name": "Liviu Neagu",
+          "first_name": "Liviu",
+          "last_name": "Neagu"
+        }
+
       },
       {
-        "full_name": "Akihide Nobuhiro",
-        "first_name": "Akihide",
-        "last_name": "Nobuhiro"
+        "name": {
+          "full_name": "Akihide Nobuhiro",
+          "first_name": "Akihide",
+          "last_name": "Nobuhiro"
+        }
       },
       {
-        "full_name": "Takaya Ozaki",
-        "first_name": "Takaya",
-        "last_name": "Ozaki"
+        "name": {
+          "full_name": "Takaya Ozaki",
+          "first_name": "Takaya",
+          "last_name": "Ozaki"
+        }
       },
       {
-        "full_name": "Madalin-Mihai Rosu",
-        "first_name": "Madalin-Mihai",
-        "last_name": "Rosu"
+        "name": {
+          "full_name": "Madalin-Mihai Rosu",
+          "first_name": "Madalin-Mihai",
+          "last_name": "Rosu"
+        }
       },
       {
-        "full_name": "Shuji Sakabe",
-        "first_name": "Shuji",
-        "last_name": "Sakabe"
+        "name": {
+          "full_name": "Shuji Sakabe",
+          "first_name": "Shuji",
+          "last_name": "Sakabe"
+        }
       },
       {
-        "full_name": "Ovidiu Tesileanu",
-        "first_name": "Ovidiu",
-        "last_name": "Tesileanu"
+        "name": {
+          "full_name": "Ovidiu Tesileanu",
+          "first_name": "Ovidiu",
+          "last_name": "Tesileanu"
+        }
       }
     ],
     "collaborations": [{
@@ -112,11 +139,16 @@
     "comments": {
       "legacy_comments": "32 pages, 14 figures"
     },
+    "related_resources": [{
+      "resource_type": "personal website",
+      "link": "https://www.exampl.org/foo",
+      "display_text": "my personal website"
+    }],
     "arxiv_status": "posted",
     "external_publication_status": "preprint",
     "source_info": {
       "source_format": "tex",
-      "size_kilobytes": 5224,
+      "size_bytes": 5224000,
       "checksum": [{
         "algorithm": "MD5",
         "value": "805a012b9a36ff706a49fc6adce08085"

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Related resource",
+  "description": "Author-provided identifier (URI or DOI) for a related resource.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "link": {
+      "title": "Link",
+      "description": "The link (URI) to the resource.",
+      "type": "string",
+      "format": "uri"
+    },
+    "doi": {
+      "title": "DOI",
+      "description": "DOI for the resource.",
+      "$ref": "Common.json#/definitions/doi"
+    },
+    "display_text": {
+      "title": "Display text",
+      "description": "Descriptive text associated with the resource.",
+      "type": "string",
+      "minLength": 1
+    },
+    "resource_type": {
+      "title": "Resource type",
+      "description": "The type of resource associated with the identifier.",
+      "type": "string",
+      "enum": [
+        "related article",
+        "slides",
+        "notes",
+        "software",
+        "dataset",
+        "simulation",
+        "video",
+        "review",
+        "news item",
+        "personal website",
+        "blog entry",
+        "other"
+      ]
+    }
+  },
+  "required": [
+    "link",
+    "display_text",
+    "resource_type"
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Author",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "title": "Author name",
+      "description": "Author name data.",
+      "type": "object",
+      "properties": {
+        "full_name": {
+          "description": "The fullest representation of the person's name available in arXiv metadata.",
+          "type": "string",
+          "minLength": 1
+        },
+        "last_name": {
+          "description": "The family or surname part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1
+        },
+        "first_name": {
+          "description": "The personal or forename part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1
+        },
+        "suffix": {
+          "description": "The suffix part of the person's name, if available.",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "Jr.",
+            "Sr.",
+            "I",
+            "II",
+            "III"
+          ]
+        },
+        "native_names": {
+          "title": "List of native names",
+          "description": "Native names of the author, not using the Latin alphabet",
+          "$comment": "This matches INSPIRE's schema definition for native names.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "name_variants": {
+        "title": "List of name variants",
+        "description": "Includes variations of the `full_name`, alternative spellings, and transliterations of `native_names`.",
+        "$comment": "This is similar to INSPIRE's schema definition for name variants.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "full_name"
+      ]
+    },
+    "affiliations": {
+      "title": "List of affiliations",
+      "description": "Institutional affiliations",
+      "type": "array",
+      "items": {
+        "$ref": "Affiliation.json"
+      },
+      "minItems": 1
+    },
+    "contributions": {
+      "title": "List of contributions",
+      "description": "Contributions of the author. Based on the CRediT taxonomy.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "Role.json#/definitions/role"
+      },
+      "uniqueItems": true
+    },
+    "orcid": {
+      "title": "ORCID",
+      "$ref": "Common.json#/definitions/orcid"
+    },
+    "author_id": {
+      "title": "arXiv author ID",
+      "description": "arXiv author identifier.",
+      "$ref": "Common.json#/definitions/author_id"
+    },
+    "is_submitter": {
+      "description": "Indicates whether this person was the submitter of this submission",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

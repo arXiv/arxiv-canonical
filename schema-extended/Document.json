@@ -1,53 +1,53 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "arXiv Document Metadata",
-    "description": "Extended metadata record for an arXiv document.",
-    "type": "object",
-    "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "arXiv Document Metadata",
+  "description": "Extended metadata record for an arXiv document.",
+  "type": "object",
+  "additionalProperties": false,
 
-    "properties": {
-      "$schema": {
-        "description": "Schema URI this document adheres to.",
-        "type": "string",
-        "format": "uri",
-        "minLength": 1,
-        "$comment": "This is an unconventional/unsanctioned way to use the $schema property as a schema declaration in an instance, but there are some real-world precedents for this (e.g. INSPIRE, Azure templates)"
-      },
-      "identifiers": {
-        "title": "arXiv-issued identifiers for this document.",
-        "type": "object",
-        "properties": {
-            "arxiv_id": {
-              "title": "arXiv identifier",
-              "description": "The canonical arXiv identifier for this document, without a version affix.",
-              "$ref": "Common.json#/definitions/unversioned_identifier"
-            },
-            "arxiv_doi": {
-              "title": "arXiv DOI",
-              "description": "The arXiv-issued DOI for this document.",
-              "$ref": "Common.json#/definitions/doi"
-            }
-        },
-        "required": ["arxiv_id"],
-        "additionalProperties": false
-      },
-      "classification": {
-        "title": "Classification",
-        "description": "Classification of this document as it relates to arXiv's category taxonomy.",
-        "$ref": "Taxonomy.json#/definitions/classification"
-      },
-      "versions": {
-        "title": "List of arXiv document versions",
-        "type": "array",
-        "items": {
-          "$ref": "Version.json"
-        },
-        "minItems": 1
-      }
+  "properties": {
+    "$schema": {
+      "description": "Schema URI this document adheres to.",
+      "type": "string",
+      "format": "uri",
+      "minLength": 1,
+      "$comment": "This is an unconventional/unsanctioned way to use the $schema property as a schema declaration in an instance, but there are some real-world precedents for this (e.g. INSPIRE, Azure templates)"
     },
-    "required": [
-      "identifiers",
-      "classification",
-      "versions"
-    ]
+    "identifiers": {
+      "title": "arXiv-issued identifiers for this document.",
+      "type": "object",
+      "properties": {
+        "arxiv_id": {
+          "title": "arXiv identifier",
+          "description": "The canonical arXiv identifier for this document, without a version affix.",
+          "$ref": "Common.json#/definitions/unversioned_identifier"
+        },
+        "arxiv_doi": {
+          "title": "arXiv DOI",
+          "description": "The arXiv-issued DOI for this document.",
+          "$ref": "Common.json#/definitions/doi"
+        }
+      },
+      "required": ["arxiv_id"],
+      "additionalProperties": false
+    },
+    "classification": {
+      "title": "Classification",
+      "description": "Classification of this document as it relates to arXiv's category taxonomy.",
+      "$ref": "Taxonomy.json#/definitions/classification"
+    },
+    "versions": {
+      "title": "List of arXiv document versions",
+      "type": "array",
+      "items": {
+        "$ref": "Version.json"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "identifiers",
+    "classification",
+    "versions"
+  ]
 }

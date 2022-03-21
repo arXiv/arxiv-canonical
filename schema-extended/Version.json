@@ -11,11 +11,6 @@
           "title": "arXiv identifier",
           "description": "The arXiv identifier for this version, with a version affix.",
           "$ref": "Common.json#/definitions/versioned_identifier"
-        },
-        "arxiv_doi": {
-          "title": "arXiv DOI",
-          "description": "The arXiv-issued DOI for this version.",
-          "$ref": "Common.json#/definitions/doi"
         }
       },
       "required": [
@@ -38,7 +33,7 @@
       "type": "object",
       "properties": {
         "submitter": {
-          "$ref": "Person.json"
+          "$ref": "Author.json"
         },
         "proxy_name": {
           "title": "Proxy name",
@@ -53,21 +48,20 @@
     },
     "submitted_date": {
       "title": "Submitted date",
-      "description": "Date this version was submitted.",
+      "description": "Date this version was submitted to arXiv.",
       "type": "string",
       "format": "date-time"
     },
-    "announced_date": {
-      "title": "Announced date",
-      "description": "Date this version was announced.",
+    "posted_date": {
+      "title": "Posted date",
+      "description": "Date this version was posted to arXiv, making it publicly available.",
       "type": "string",
       "format": "date-time"
     },
     "license": {
       "title": "License",
       "description": "The license associated with the content.",
-      "oneOf": [
-        {
+      "oneOf": [{
           "$ref": "License.json#/definitions/active_licenses"
         },
         {
@@ -96,7 +90,7 @@
       "title": "Authors",
       "type": "array",
       "items": {
-        "$ref": "Person.json"
+        "$ref": "Author.json"
       },
       "minItems": 1
     },
@@ -126,51 +120,87 @@
       "properties": {
         "author_comments": {
           "title": "Author comments",
-          "description": "Comments from authors.",
+          "description": "Comments from authors. This field is not intended for soliciting feedback from readers.",
           "type": "array",
           "items": {
             "$ref": "Common.json#/definitions/comment"
           },
+          "examples": [
+            ["26 pages"],
+            ["25 pages, 12 figures, 2 appendices", "submitted to MNRAS"],
+            ["14 pages, 2 figures",
+              "references and comments on conformal diagrams added",
+              "matches published version"
+            ]
+          ],
           "minItems": 1,
           "uniqueItems": true
         },
         "administrator_comments": {
           "title": "Administrator comments",
-          "description": "Comments from arXiv administrators",
+          "description": "Comments from arXiv administrators.",
           "type": "array",
           "items": {
             "$ref": "Common.json#/definitions/comment"
           },
+          "examples": [
+            ["text overlap with arXiv:YYMM.NNNNN"],
+            [
+              "This version has been removed because it is in violation of arXiv's copyright policy"
+            ]
+          ],
           "minItems": 1,
           "uniqueItems": true
         },
         "legacy_comments": {
           "description": "Unstructured comments from authors and/or arXiv administrators.",
-          "$ref": "Common.json#/definitions/comment"
+          "$ref": "Common.json#/definitions/comment",
+          "examples": [
+            "9 pages, 8 figures, 2 tables",
+            "Research work paper, 9 pages, 10 figures, Appendix",
+            "25 pages. arXiv admin note: substantial text overlap with arXiv:YYMM.NNNNN"
+          ]
         }
       }
     },
     "journal_ref": {
       "title": "Journal reference",
       "description": "The full bibliographic reference if the article has already appeared in a journal, proceedings, etc.",
-      "$ref": "Common.json#/definitions/journal_ref"
+      "$ref": "Common.json#/definitions/journal_ref",
+      "examples": [
+        "Phys. Rev. A 103, L040402 (2021)",
+        "J. Geom. Mech. 12(1) (2020) 1-2",
+        "Astronomy Letters 47 (2021) 71-87",
+        "Journal of Open Source Software 6(60), 3099, 2021"
+      ]
     },
-    "publisher_dois": {
-      "title": "List of publisher-provided DOIs",
-      "description": "The publisher DOI(s).",
+    "dois": {
+      "title": "DOIs",
+      "description": "Publisher- and submitter-provided DOIs for this version.",
       "type": "array",
       "items": {
-        "$ref": "Common.json#/definitions/doi"
-      },
-      "minItems": 1,
-      "uniqueItems": true
-    },
-    "submitter_dois": {
-      "title": "List of submitter-provided DOIs",
-      "description": "The submitter DOI(s).",
-      "type": "array",
-      "items": {
-        "$ref": "Common.json#/definitions/doi"
+        "type": "object",
+        "properties": {
+          "doi": {
+            "$ref": "Common.json#/definitions/doi"
+          },
+          "provider": {
+            "title": "DOI provider",
+            "description": "The provider of the DOI.",
+            "$comment": "The provider is not always known, hence optional.",
+            "type": "string",
+            "enum": [
+              "submitter",
+              "publisher"
+            ]
+          },
+          "last_updated": {
+            "description": "The time this DOI was last updated by the provider.",
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["doi"]
       },
       "minItems": 1,
       "uniqueItems": true
@@ -193,8 +223,7 @@
         "$ref": "Keyword.json"
       },
       "examples": [
-        [
-          {
+        [{
             "vocabulary": "ACM",
             "value": "C.2.0;"
           },
@@ -203,22 +232,20 @@
             "value": "C.2.2"
           }
         ],
-        [
-          {
-            "vocabulary": "MSC",
-            "value": "46B20"
-          }
-        ]
+        [{
+          "vocabulary": "MSC",
+          "value": "46B20"
+        }]
       ],
       "minItems": 1,
       "uniqueItems": true
     },
-    "related_links": {
-      "title": "Related Links",
-      "description": "List of related links.",
+    "related_resources": {
+      "title": "Related Resources",
+      "description": "List of related resources.",
       "type": "array",
       "items": {
-        "$ref": "RelatedLink.json"
+        "$ref": "RelatedResource.json"
       },
       "minItems": 1,
       "$comment": "should this be document-specific instead of version-specific?"
@@ -231,28 +258,18 @@
     },
     "source_info": {
       "title": "Source information",
-      "description": "Information about the input source files.",
+      "description": "Technical information about the submitted source files.",
       "$ref": "Common.json#/definitions/source_info"
     },
     "conference_info": {
       "$ref": "Common.json#/definitions/conference_info",
       "$comment": "not currently tied to document_type."
-    },
-    "references": {
-      "title": "List of references",
-      "description": "List of unstructured reference strings.",
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "Common.json#/definitions/reference_string"
-      },
-      "uniqueItems": true
     }
   },
   "required": [
     "identifiers",
     "submitted_date",
-    "announced_date",
+    "posted_date",
     "license",
     "document_types",
     "titles",

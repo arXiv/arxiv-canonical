@@ -9,21 +9,19 @@
       "title": "List of abstracts",
       "description": "The English and non-English versions of the abstract. The English abstract must be provided first.",
       "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "abstract": {
-              "type": "string",
-              "minLength": 1
-            },
-            "language": {
-              "const": "en"
-            }
+      "items": [{
+        "type": "object",
+        "properties": {
+          "abstract": {
+            "type": "string",
+            "minLength": 1
           },
-          "additionalProperties": false
-        }
-      ],
+          "language": {
+            "const": "en"
+          }
+        },
+        "additionalProperties": false
+      }],
       "additionalItems": {
         "type": "object",
         "properties": {
@@ -32,8 +30,7 @@
             "minLength": 1
           },
           "language": {
-            "allOf": [
-              {
+            "allOf": [{
                 "$ref": "LanguageCode.json"
               },
               {
@@ -55,7 +52,10 @@
       "type": "string",
       "enum": [
         "posted",
-        "withdrawn"
+        "withdrawn",
+        "withdrawn_by_author",
+        "removed",
+        "private"
       ],
       "minLength": 1
     },
@@ -89,6 +89,12 @@
           "description": "The persistent identifier for the conference.",
           "type": "string",
           "minLength": 1
+        },
+        "year": {
+          "title": "Conference year",
+          "description": "The year the conference took place.",
+          "type": "string",
+          "pattern": "^\\d{4}"
         }
       },
       "required": [
@@ -100,18 +106,8 @@
       "properties": {
         "name": {
           "description": "The fullest representation of a collaborations's name",
-          "allOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "not": {
-                "type": "string",
-                "pattern": "(?i)(collaboration)"
-              }
-            }
-          ]
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
@@ -133,6 +129,7 @@
         "conference proceeding",
         "conference proceeding index",
         "erratum",
+        "living review",
         "memorial",
         "thesis",
         "lecture notes",
@@ -154,9 +151,9 @@
         "preprint",
         "submitted",
         "accepted",
-        "published"
-      ],
-      "$comment": "Is this enough?"
+        "published",
+        "retracted"
+      ]
     },
     "journal_ref": {
       "title": "Journal reference",
@@ -174,21 +171,19 @@
       "title": "List of titles",
       "description": "The English and non-English versions of the title. The English title must be provided first.",
       "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "title": {
-              "type": "string",
-              "minLength": 1
-            },
-            "language": {
-              "const": "en"
-            }
+      "items": [{
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
           },
-          "additionalProperties": false
-        }
-      ],
+          "language": {
+            "const": "en"
+          }
+        },
+        "additionalProperties": false
+      }],
       "additionalItems": {
         "type": "object",
         "properties": {
@@ -197,8 +192,7 @@
             "minLength": 1
           },
           "language": {
-            "allOf": [
-              {
+            "allOf": [{
                 "$ref": "LanguageCode.json"
               },
               {
@@ -213,12 +207,6 @@
         },
         "additionalProperties": false
       }
-    },
-    "reference_string": {
-      "title": "Reference string",
-      "description": "An unstructured reference string.",
-      "type": "string",
-      "minLength": 1
     },
     "source_info": {
       "title": "Source information",
@@ -253,14 +241,14 @@
             "S1"
           ]
         },
-        "size_kilobytes": {
+        "size_bytes": {
           "title": "Source size in kilobytes",
-          "description": "The size of the source file, in kilobytes.",
+          "description": "The size of the submitted source file, in bytes.",
           "type": "number"
         },
         "checksum": {
           "title": "Checksum",
-          "description": "Checksum of the source file, if source file exists.",
+          "description": "Checksum of the submitted source file, if source file exists.",
           "type": "array",
           "items": {
             "type": "object",
@@ -290,7 +278,7 @@
       },
       "required": [
         "source_format",
-        "size_kilobytes"
+        "size_bytes"
       ],
       "additionalProperties": false
     },
