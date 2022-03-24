@@ -1,4 +1,16 @@
-# arXiv NG Canonical Record
+# arXiv Extended Metadata Model
+### 2022-03-23
+
+The most recent work on the new/extended arXiv metadata model is in the
+`schema-extended` folder.
+
+The sections below referring to the canonical record are from 2019 arXiv NG
+plans and are obsolete at least as far as the metadata model for arXiv documents is is concerned; however, many of the original objectives
+are still relevant for consideration.
+
+---
+
+# arXiv NG Canonical Record (OLD)
 
 This repository contains a library and applications for working with the core
 arXiv canonical record. The canonical record is the authoritative history and
