@@ -1,4 +1,11 @@
 # arXiv Extended Metadata Model
+
+# IMPORTANT: As of 2023-03-17 nothing in this repository is in use at arxiv.org
+
+This README and other texts in this repo are written in a style that use the present
+tense and give the impression that elements from this repo are in use. This should be taken as 
+aspirational.
+
 ### 2022-03-23
 
 The most recent work on the new/extended arXiv metadata model is in the
